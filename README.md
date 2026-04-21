@@ -1,21 +1,18 @@
-# Magic Memory 知识库
+# vLLM 架构数字锚点记忆法
 
-> 使用数字锚点记忆法记忆技术知识
+> 基于数字锚点记忆法记忆 vLLM 技术架构
 
-## 目录结构
+---
 
-```
-~/source/magic-memory/
-├── README.md              # 本文件
-├── vllm-architecture.md  # vLLM 架构记忆法
-└── ...
-```
+## 核心理念
 
-## 已收录知识
+**一个数字 → 一个锚点图像 → 一个 vLLM 概念**
 
-### vLLM 架构 (vllm-architecture.md)
+锚点是预先植入大脑的记忆挂钩，你的任务是把 vLLM 概念连接到这些锚点上。
 
-基于 vLLM 技术架构，从易到难分为三个级别：
+---
+
+## 难度分级
 
 | 级别 | 数字范围 | 难度 | 内容 |
 |------|----------|------|------|
@@ -23,43 +20,275 @@
 | Level 2 | 10-29 | ⭐⭐ 中级 | 模型执行、缓存、注意力机制 |
 | Level 3 | 30-50 | ⭐⭐⭐ 高级 | 优化、调度、服务化特性 |
 
-## 记忆原理
+---
 
-**锚点连接法**：
+## Level 1: 基础 (⭐ 入门) — 数字 0-9
+
+> 基础设施层，理解 vLLM 最核心的抽象
+
+| 数字 | 锚点 | vLLM 概念 | 记忆故事 | 详细文档 |
+|------|------|-----------|----------|----------|
+| **0** | 🥚 鸡蛋 | **VllmConfig**: 配置中心 | 鸡蛋是源头，所有配置的"蛋黄"。VllmConfig 包含 model/cache/scheduler 三个配置 | [📖 docs](./docs/level-1/00-egg.md) |
+| **1** | 🕯️ 蜡烛 | **Device 抽象**: GPU 设备抽象，第一层抽象 | 蜡烛点亮 GPU，Device trait 是照亮系统的第一层 | [📖 docs](./docs/level-1/01-candle.md) |
+| **2** | 🦆 鸭子 | **Tensor**: 张量 | 张量像鸭子浮在水面上，漂浮在 GPU 内存上 | [📖 docs](./docs/level-1/02-duck.md) |
+| **3** | 👂 耳朵 | **Logger/Tracing**: 监听日志 | 日志被耳朵监听，记录系统状态 | [📖 docs](./docs/level-1/03-ear.md) |
+| **4** | ⛵ 帆船 | **vllm-core**: 核心库 | 帆船承载 vLLM 核心库一切 | [📖 docs](./docs/level-1/04-boat.md) |
+| **5** | 🪝 钩子 | **GpuAllocator**: GPU 内存分配器 | 钩子钩住 GPU 显存分配 | [📖 docs](./docs/level-1/05-hook.md) |
+| **6** | 🥄 勺子 | **Error Handling**: VllmError | 勺子舀出错误 VllmError | [📖 docs](./docs/level-1/06-spoon.md) |
+| **7** | 🩼 拐杖 | **Init**: 初始化 | 初始化需要支撑，像拐杖。init_logger 支撑整个系统 | [📖 docs](./docs/level-1/07-crutch.md) |
+| **8** | 🫚 葫芦 | **Foundation Layer**: 基础层 | 基础层像葫芦装所有底层功能 | [📖 docs](./docs/level-1/08-gourd.md) |
+| **9** | 🎈 气球 | **KV Cache**: 键值缓存 | 气球膨胀如缓存增长 | [📖 docs](./docs/level-1/09-balloon.md) |
+
+### Level 1 记忆要点
+- **0-2**: 配置、设备、张量三层基础
+- **4-8**: core 核心库、内存分配、错误处理
+- **9**: KV Cache 是贯穿全局的缓存
+
+---
+
+## Level 2: 核心 (⭐⭐ 中级) — 数字 10-29
+
+> 模型执行层，理解推理全过程
+
+| 数字 | 锚点 | vLLM 概念 | 记忆故事 | 详细文档 |
+|------|------|-----------|----------|----------|
+| **10** | ⚾ 棒球 | **ModelRegistry**: 模型注册 | 模型注册如棒球规则有限制（10个字符内命名） | [📖 docs](./docs/level-2/10-baseball.md) |
+| **11** | 🥢 筷子 | **ModelLoader**: 模型加载器 | 筷子夹取权重，11=夹取 | [📖 docs](./docs/level-2/11-chopsticks.md) |
+| **12** | 🪑 婴儿椅 | **Model**: 模型本身 | 模型如婴儿被加载到 Model Runner 上 | [📖 docs](./docs/level-2/12-highchair.md) |
+| **13** | ☔ 雨伞 | **ModelRunner**: 模型运行器 | ModelRunner 如雨伞保护前向传播 | [📖 docs](./docs/level-2/13-umbrella.md) |
+| **14** | 🌹 玫瑰 | **Embedding**: 词嵌入 | 玫瑰芳香嵌入向量 | [📖 docs](./docs/level-2/14-rose.md) |
+| **15** | 🦜 鹦鹉 | **Transformer Layers**: 层叠 | 鹦鹉学舌对应多层 Transformer | [📖 docs](./docs/level-2/15-parrot.md) |
+| **16** | �石榴 | **PagedAttention**: 分页注意力 | 石榴多籽 = 多分页，KV 分页管理 | [📖 docs](./docs/level-2/16-pomegranate.md) |
+| **17** | 🔬 显微镜 | **Block Table**: 块表映射 | Block Table 如显微镜看物理块映射 | [📖 docs](./docs/level-2/17-microscope.md) |
+| **18** | 💵 钞票 | **CacheBlock**: 缓存块 | CacheBlock 如钞票管理显存资源 | [📖 docs](./docs/level-2/18-money.md) |
+| **19** | 🧪 药酒 | **KVCacheManager**: 缓存管理器 | KVCacheManager 如药剂师分配缓存 | [📖 docs](./docs/level-2/19-medicine.md) |
+| **20** | 🚬 香烟 | **Sampler**: 采样器 | Sampler 如点燃决定下一个 token | [📖 docs](./docs/level-2/20-cigarette.md) |
+| **21** | 🐊 鳄鱼 | **Sampling Params**: 采样参数 | temperature/top_k/top_p 如鳄鱼参数凶猛 | [📖 docs](./docs/level-2/21-crocodile.md) |
+| **22** | 👯 双胞胎 | **Logits**: 对数几率 | Logits 如双胞胎成对出现 | [📖 docs](./docs/level-2/22-twins.md) |
+| **23** | 🎧 耳塞 | **Token**: 词元 | 一个 Token 如耳塞塞住信息 | [📖 docs](./docs/level-2/23-earplugs.md) |
+| **24** | ⏰ 闹钟 | **Decode Step**: 解码步骤 | 解码如闹钟每步滴答产生 token | [📖 docs](./docs/level-2/24-alarm.md) |
+| **25** | 🎻 二胡 | **Forward Pass**: 前向传播 | 前向传播如二胡弦动 | [📖 docs](./docs/level-2/25-erhu.md) |
+| **26** | 🌊 河流 | **GPU Memory Pool**: 显存池 | GPU 内存如河流流动 | [📖 docs](./docs/level-2/26-river.md) |
+| **27** | 🎧 耳机 | **FlashAttention**: 快速注意力 | FlashAttention 如耳机快速聆听处理 | [📖 docs](./docs/level-2/27-headphones.md) |
+| **28** | 👊 恶霸 | **Quantization**: 量化 | 量化如恶霸暴力压缩精度 | [📖 docs](./docs/level-2/28-bully.md) |
+| **29** | 👨 二舅 | **Weights Loading**: 权重加载 | load_hf_model 如二舅帮忙加载 | [📖 docs](./docs/level-2/29-uncle.md) |
+
+### Level 2 记忆要点
+- **10-13**: 模型加载注册流程
+- **14-17**: Embedding → Transformer → PagedAttention → BlockTable
+- **18-19**: CacheBlock → KVCacheManager
+- **20-25**: Sampler → Logits → Token → Forward
+- **26-29**: 内存优化与权重加载
+
+---
+
+## Level 3: 高级 (⭐⭐⭐ 进阶) — 数字 30-50
+
+> 优化与服务层，理解高级特性
+
+| 数字 | 锚点 | vLLM 概念 | 记忆故事 | 详细文档 |
+|------|------|-----------|----------|----------|
+| **30** | 🔺 三菱 | **Speculative Decoding**: 投机解码 | 推测解码如三菱标志三分支 | [📖 docs](./docs/level-3/30-mitsubishi.md) |
+| **31** | 🥔 山药 | **Draft Token**: 起草 token | Draft token 如山药生长 | [📖 docs](./docs/level-3/31-yam.md) |
+| **32** | 🪭 扇子 | **Verifier**: 验证器 | 验证器扇出正确 token | [📖 docs](./docs/level-3/32-fan.md) |
+| **33** | ⭐ 星星 | **N-gram Proposer**: N元提议 | N-gram 如星空群星 | [📖 docs](./docs/level-3/33-stars.md) |
+| **34** | 🥬 三丝 | **Continuous Batching**: 连续批处理 | 批处理如蔬菜条条有序 | [📖 docs](./docs/level-3/34-vegetable.md) |
+| **35** | 🪸 珊瑚 | **Scheduler**: 调度器 | 调度器如珊瑚礁分支多 | [📖 docs](./docs/level-3/35-coral.md) |
+| **36** | 🦌 山鹿 | **Prefill**: 预填充 | Prefill 如鹿冲锋快速 | [📖 docs](./docs/level-3/36-deer.md) |
+| **37** | 🦃 山鸡 | **Decode**: 解码 | Decode 如野鸡慢走解码 | [📖 docs](./docs/level-3/37-pheasant.md) |
+| **38** | 👩 妇女 | **Prefix Caching**: 前缀缓存 | 女性记前缀能力强 | [📖 docs](./docs/level-3/38-woman.md) |
+| **39** | ⚔️ 剑 | **Request Queue**: 请求队列 | 请求队列如剑林排列 | [📖 docs](./docs/level-3/39-sword.md) |
+| **40** | 👨‍✈️ 司令 | **vllm-engine**: 引擎 | Engine 司令指挥全流程 | [📖 docs](./docs/level-3/40-commander.md) |
+| **41** | 🦎 蜥蜴 | **Engine API**: 引擎 API | API 如蜥蜴爬行接口层 | [📖 docs](./docs/level-3/41-lizard.md) |
+| **42** | 🌽 玉米 | **vllm-serving**: 服务层 | Serving 如玉米棒包万物 | [📖 docs](./docs/level-3/42-corn.md) |
+| **43** | 🪨 石山 | **OpenAI API**: OpenAI 协议 | OpenAI 兼容如石山稳固 | [📖 docs](./docs/level-3/43-rock.md) |
+| **44** | 🐍 眼镜蛇 | **gRPC**: gRPC 协议 | gRPC 如眼镜蛇快速 | [📖 docs](./docs/level-3/44-cobra.md) |
+| **45** | 👨‍🏫 师傅 | **WebSocket**: WebSocket | WS 实时推流如师傅传功 | [📖 docs](./docs/level-3/45-master.md) |
+| **46** | �石榴 | **Multi-Lora**: 多 Lora | 多 Lora 如石榴多籽 | [📖 docs](./docs/level-3/46-pomegranate.md) |
+| **47** | 🚗 司机 | **GPU Driver**: GPU 驱动 | 驱动如司机驾驶 GPU | [📖 docs](./docs/level-3/47-driver.md) |
+| **48** | 🧽 丝瓜 | **Prefix Lookup**: 前缀查找 | 前缀查找如丝瓜络过滤 | [📖 docs](./docs/level-3/48-loofah.md) |
+| **49** | 🐕 湿狗 | **Cache Eviction**: 缓存驱逐 | 缓存驱逐如湿狗甩水 | [📖 docs](./docs/level-3/49-wetdog.md) |
+| **50** | 🚐 五菱 | **Distributed**: 分布式 | 分布式如五菱装更多节点 | [📖 docs](./docs/level-3/50-minivan.md) |
+
+### Level 3 记忆要点
+- **30-33**: Speculative Decoding 四步
+- **34-37**: Continuous Batching + Prefill/Decode 分离
+- **38-39**: 前缀缓存 + 请求队列
+- **40-45**: Engine → API → Serving 完整服务链
+- **46-50**: 多 LoRA + 分布式扩展
+
+---
+
+## 数据流记忆路径
 
 ```
-数字 → 锚点图像 → 概念 → 记忆故事
+API 请求进入
+   ↓
+[43 石山] OpenAI API 协议层
+   ↓
+[41 蜥蜴] Engine API 接口层
+   ↓
+[40 司令] vllm-engine 引擎
+   ↓
+[35 珊瑚] Scheduler 调度器
+   ↓
+[34 三丝] Batching 批处理
+   ↓
+[13 雨伞] ModelRunner 模型运行器
+   ↓
+[25 二胡] Forward Pass 前向传播
+   ↓
+[15 鹦鹉] Transformer Layers 层
+   ↓
+[16 石榴] PagedAttention 注意力
+   ↓
+[19 药酒] KVCache 管理
+   ↓
+[20 香烟] Sampler 采样器
+   ↓
+[24 闹钟] Decode Step 解码步
+   ↓
+Token 输出
 ```
 
-例如：
-- **16** = 石榴 → PagedAttention → 石榴多籽 = 多分页管理
+---
 
-## 如何使用
+## 核心概念快速参考
 
-1. **查表**：遇到需要记忆的概念，查找对应数字
-2. **回忆锚点**：看到数字想到锚点图像
-3. **联想概念**：通过锚点想到对应概念
-4. **串联故事**：多个概念用数据流路径串联
+### 🔑 PagedAttention 核心 (16-19)
 
-## 添加新知识
+| 数字 | 锚点 | 概念 |
+|------|------|------|
+| 16 | 石榴 | 分页管理 |
+| 17 | 显微镜 | Block Table 映射 |
+| 18 | 钞票 | CacheBlock 显存 |
+| 19 | 药酒 | KVCacheManager |
 
-参考 `vllm-architecture.md` 格式：
+> 记忆口诀：**石**榴 **显**微镜 **钞**票 **药**酒
 
-```markdown
-| 数字 | 锚点 | vLLM 概念 | 记忆故事 |
-|------|------|-----------|----------|
-| XX | 锚点 | 概念名 | 简短故事 |
-```
+### 🔑 Speculative Decoding (30-33)
 
-## 数字锚点快速查询
+| 数字 | 锚点 | 概念 |
+|------|------|------|
+| 30 | 三菱 | 3路分支推测 |
+| 31 | 山药 | Draft token |
+| 32 | 扇子 | Verifier 验证 |
+| 33 | 星星 | N-gram proposer |
 
-### Level 1 (0-9)
-0: 鸡蛋 | 1: 蜡烛 | 2: 鸭子 | 3: 耳朵 | 4: 帆船 | 5: 钩子 | 6: 勺子 | 7: 拐杖 | 8: 葫芦 | 9: 气球
+> 记忆口诀：**三**菱 **山**药 **扇**子 **星**星
 
-### Level 2 (10-29)
-10: 棒球 | 11: 筷子 | 12: 婴儿椅 | 13: 雨伞 | 14: 玫瑰 | 15: 鹦鹉 | 16: 石榴 | 17: 显微镜 | 18: 钞票 | 19: 药酒
-20: 香烟 | 21: 鳄鱼 | 22: 双胞胎 | 23: 耳塞 | 24: 闹钟 | 25: 二胡 | 26: 河流 | 27: 耳机 | 28: 恶霸 | 29: 二舅
+### 🔑 Continuous Batching (34-37)
 
-### Level 3 (30-50)
-30: 三菱 | 31: 山药 | 32: 扇子 | 33: 星星 | 34: 三丝 | 35: 珊瑚 | 36: 山鹿 | 37: 山鸡 | 38: 妇女 | 39: 剑
-40: 司令 | 41: 蜥蜴 | 42: 玉米 | 43: 石山 | 44: 眼镜蛇 | 45: 师傅 | 46: 石榴 | 47: 司机 | 48: 丝瓜 | 49: 湿狗 | 50: 五菱
+| 数字 | 锚点 | 概念 |
+|------|------|------|
+| 34 | 三丝 | 批处理 |
+| 35 | 珊瑚 | Scheduler 调度 |
+| 36 | 山鹿 | Prefill 优先 |
+| 37 | 山鸡 | Decode 慢速 |
+
+> 记忆口诀：**三**丝 **珊**瑚 **山**鹿 **山**鸡
+
+---
+
+## 记忆实践
+
+### 记住一次请求的旅程
+
+1. 看到 "OpenAI API 调用进入"
+2. 想到：**43** (石山 = OpenAI) → **41** (蜥蜴 = API) → **40** (司令 = Engine)
+3. 继续：**35** (珊瑚 = Scheduler) → **34** (三丝 = Batching)
+4. 完整链路记住，调试不慌
+
+### 记住 PagedAttention
+
+想到 **16** (石榴 = 分页) → **17** (显微镜 = Block Table) → **18** (钞票 = CacheBlock)
+- 三个锚点记住 KV Cache 管理精髓
+
+### 记住 Speculative Decoding
+
+想到 **30** (三菱 = 3分支) → **31** (山药 = Draft) → **32** (扇子 = Verify)
+- 推测解码三步曲
+
+---
+
+## 附录：数字锚点对照表
+
+### 象形基础 (0-9)
+
+| 数字 | 锚点 | 联想 |
+|------|------|------|
+| 0 | 鸡蛋 / 甜甜圈 | 圆形轮廓 |
+| 1 | 蜡烛 / 大树 | 笔直一条线 |
+| 2 | 鸭子 / 天鹅 | 弯曲的脖颈 |
+| 3 | 耳朵 / 弹簧 | 耳朵形状 |
+| 4 | 帆船 / 小红旗 | 帆的三角轮廓 |
+| 5 | 钩子 / 手套 | 像挂钩 |
+| 6 | 勺子 / 烟斗 | 勺头和勺柄 |
+| 7 | 拐杖 / 镰刀 | 拐棍形状 |
+| 8 | 葫芦 / 雪人 | 上下两个圆 |
+| 9 | 气球 / 蝌蚪 | 线牵着圆球 |
+
+### 10-19
+
+| 数字 | 锚点 | 联想 |
+|------|------|------|
+| 10 | 棒球 / 衣领 | 1是棒子0是球 |
+| 11 | 筷子 | 最经典的两根直棍 |
+| 12 | 椅儿（婴儿椅） | 儿化音谐音 |
+| 13 | 雨伞 | 直接谐音 |
+| 14 | 玫瑰 | 🌹 2月14日情人节 |
+| 15 | 鹦鹉 | 直接谐音 |
+| 16 | 石榴 | 水果，多子多福 |
+| 17 | 仪器（显微镜） | 直接谐音 |
+| 18 | 钞票（要发） | 谐音引申 |
+| 19 | 药酒（酒坛） | 直接谐音 |
+
+### 20-29
+
+| 数字 | 锚点 | 联想 |
+|------|------|------|
+| 20 | 香烟 | 🚬 一包烟20支 |
+| 21 | 鳄鱼 | 直接谐音 |
+| 22 | 双胞胎 / 鸳鸯 | 成双成对 |
+| 23 | 耳塞 / 篮球 | 谐音或文化梗 |
+| 24 | 闹钟 | 一天24小时 |
+| 25 | 二胡 | 直接谐音 |
+| 26 | 河流（二流子） | 谐音，流动的水 |
+| 27 | 耳机 | 直接谐音 |
+| 28 | 恶霸（凶汉） | 直接谐音 |
+| 29 | 二舅 / 饿囚 | 谐音人物 |
+
+### 30-39
+
+| 数字 | 锚点 | 联想 |
+|------|------|------|
+| 30 | 三菱汽车标志 | 谐音品牌 |
+| 31 | 山药 / 鲨鱼 | 谐音 |
+| 32 | 扇儿（扇子） | 儿化音谐音 |
+| 33 | 星星 / 钻石 | 闪闪发亮的两颗星 |
+| 34 | 三丝（一盘菜） | 谐音，鱼香肉丝 |
+| 35 | 珊瑚 | 直接谐音 |
+| 36 | 山鹿（梅花鹿） | 直接谐音 |
+| 37 | 山鸡（野鸡） | 直接谐音 |
+| 38 | 妇女（时尚女郎） | 三八妇女节 |
+| 39 | ⚔️ 武剑（侠客） | 冬练三九，大雪中舞剑 |
+
+### 40-50
+
+| 数字 | 锚点 | 联想 |
+|------|------|------|
+| 40 | 司令（军官） | 直接谐音 |
+| 41 | 蜥蜴 / 司仪 | 谐音 |
+| 42 | 包谷穗（玉米棒） | 🌽 方言/象形 |
+| 43 | 石山 / 唐僧（师傅） | 谐音 |
+| 44 | 眼镜蛇（嘶嘶） | 声音象形 |
+| 45 | 师傅（唐僧） | 谐音文化梗 |
+| 46 | 石榴（喂牛的石榴） | 谐音 |
+| 47 | 司机（方向盘） | 直接谐音 |
+| 48 | 石板 / 丝瓜 | 谐音 |
+| 49 | 湿狗（落汤狗） | 直接谐音 |
+| 50 | 五菱宏光（面包车） | 🚐 品牌谐音 |
+
+---
+
+*记忆法核心：看到数字 → 想到锚点 → 想到概念 → 串联成故事*
