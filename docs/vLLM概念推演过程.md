@@ -238,6 +238,364 @@ FlashAttention 本身也是推导出来的，不是凭空出现的：
 
 ---
 
+## 9. 深层推导：所有概念的底层问题
+
+每个表层概念，继续往下推，直到"不能再分"为止。
+
+### 9.1 Tokenizer (23) - 分词器
+
+```
+    [文本→Token]
+          │
+    ┌─────┴─────┐
+    │           │
+[分词方式] [编码方式]
+    │           │
+    ▼           ▼
+[规则/MER] [ID映射]
+    │           │
+    └─────┬─────┘
+          │
+    [Tokenizer]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | 文本切成什么？ | 分词 | Tokenizer |
+| 底层 | 分词算法 | BPE/WordPiece/SentencePiece | 分词模式 |
+| 底层 | 词表太大 | 频次过滤 | Vocab Pruning |
+| 底层 | 未登录词 | Byte-level | BPE |
+
+**Tokenizer = 分词模式 + 词表 + Byte fallback**
+
+### 9.2 Embedding (14) - 词嵌入
+
+```
+    [Token ID → 向量]
+          │
+    ┌─────┴─────┐
+    │           │
+[语义向量] [位置信息]
+    │           │
+    ▼           ▼
+[词嵌入矩阵]  [位置编码]
+    │           │
+    └─────┬─────┘
+          │
+    [Embedding]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | ID怎么变向量？ | 查表 | Embedding |
+| 底层 | 向量表示什么？ | 语义相似 | 词向量 |
+| 底层 | 位置信息丢失？ | 加位置编码 | Positional Encoding |
+| 底层 | 位置编码类型 | 绝对/相对/RoPE | 编码类型 |
+
+**Embedding = 词表矩阵 + 位置编码函数**
+
+### 9.3 Transformer (15) - transformer层
+
+```
+    [向量序列 → 向量序列]
+          │
+    ┌─────┴─────┐
+    │           │
+[多头注意] [前馈网络]
+    │           │
+    ▼           ▼
+[Multi-Head]  [FFN]
+    │           │
+    └─────┬─────┘
+          │
+    [Transformer]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | 多层怎么叠加？ | 残差连接 | Residual |
+| 底层 | 层间变化 | 归一化 | LayerNorm |
+| 底层 | 注意力 | 多头 | Multi-Head Attention |
+| 底层 | 非线性变换 | 两层FC | FFN |
+
+**Transformer = Multi-Head + FFN + Residual + LayerNorm**
+
+### 9.4 Sampler (20) - 采样器
+
+```
+    [Logits → Token]
+          │
+    ┌─────┴─────┐
+    │           │
+[概率计算] [采样策略]
+    │           │
+    ▼           ▼
+[Softmax]   [Top-K/P]
+    │           │
+    └─────┬─────┘
+          │
+    [Sampler]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | 选哪个token？ | 采样 | Sampler |
+| 底层 | 分数变概率 | Softmax | Distribution |
+| 底层 | 候选太多 | Top-K | Pruning |
+| 底层 | 分布截断 | Top-P | Truncation |
+| 底层 | 随机性控制 | Temperature | Temperature |
+
+**Sampler = Softmax + Temperature + Top-K/P**
+
+### 9.5 Forward Pass (25) - 前向传播
+
+```
+    [输入 → 输出]
+          │
+    ┌─────┴─────┐
+    │           │
+[单层计算] [混合精度]
+    │           │
+    ▼           ▼
+[层层堆叠] [FP16/BF16]
+    │           │
+    └─────┬─────┘
+          │
+    [Forward Pass]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | 如何计算整个模型？ | 顺序执行 | Forward Pass |
+| 底层 | 单层如何计算 | 算子融合 | Kernel Fusion |
+| 底层 | 精度与速度 | 混合精度 | AMP |
+| 底层 | 计算图 | 图优化 | Graph Optimization |
+
+**Forward Pass = 算子 + 融合 + 精度**
+
+### 9.6 Quantization (28) - 量化
+
+```
+    [FP32 → INT8]
+          │
+    ┌─────┴─────┐
+    │           │
+[权重量化] [激活量化]
+    │           │
+    ▼           ▼
+[Per-Channel] [Dynamic]
+    │           │
+    └─────┬─────┘
+          │
+    [Quantization]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | 如何减少内存？ | 降低精度 | Quantization |
+| 底层 | 权重怎么量化 | 标度缩放 | Scale |
+| 底层 | 量化方案 | INT8/INT4 | 精度选择 |
+| 底层 | 如何减少误差 | 校准 | Calibration |
+
+**Quantization = Scale + 方案 + 校准**
+
+### 9.7 Speculative Decoding (30) - 推测解码
+
+```
+    [自回归 → 推测]
+          │
+    ┌─────┴─────┐
+    │           │
+[起草] [验证]
+    │           │
+    ▼           ▼
+[Proposer] [Verifier]
+    │           │
+    └─────┬─────┘
+          │
+    [Speculative Decoding]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | 如何加速自回归？ | 推测 | Speculative Decoding |
+| 底层 | 如何起草？ | N-gram/小模型 | Proposer |
+| 底层 | 如何验证？ | 大模型验证 | Verifier |
+| 底层 | 如何接受？ | 拒绝采样 | Acceptance |
+
+**Speculative Decoding = Proposer + Verifier + Acceptance**
+
+### 9.8 Prefix Caching (38) - 前缀缓存
+
+```
+    [相同前缀 → 缓存]
+          │
+    ┌─────┴─────┐
+    │           │
+[如何存储] [如何查找]
+    │           │
+    ▼           ▼
+[Key-Value] [哈希]
+    │           │
+    └─────┬─────┘
+          │
+    [Prefix Cache]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | 相同前缀能复用？ | 缓存 | Prefix Caching |
+| 底层 | 如何标识前缀 | 哈希 | Hash |
+| 底层 | 如何存储 | KV Cache | Storage |
+| 底层 | 缓存满了？ | 驱逐 | Eviction Policy |
+
+**Prefix Caching = Hash + Storage + Eviction**
+
+### 9.9 Scheduler (35) - 调度器
+
+```
+    [多请求 → 执行]
+          │
+    ┌─────┴─────┐
+    │           │
+[优先级] [资源分配]
+    │           │
+    ▼           ▼
+[FCFS/Priority] [GPU分配]
+    │           │
+    └─────┬─────┘
+          │
+    [Scheduler]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | 请求先后的顺序？ | 调度 | Scheduler |
+| 底层 | 调度策略 | FCFS/优先级 | Policy |
+| 底层 | GPU不够 | 抢占 | Preemption |
+| 底层 | 如何选择 | 亲和度 | Affinity |
+
+**Scheduler = Policy + Preemption + Affinity**
+
+### 9.10 Continuous Batching (34) - 动态批处理
+
+```
+    [请求 → 批]
+          │
+    ┌─────┴─────┐
+    │           │
+[静态批] [动态批]
+    │           │
+    ▼           ▼
+[Fixed Size] [Marquez]
+    │           │
+    └─────┬─────┘
+          │
+    [Continuous Batching]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | 多请求一起算？ | 批处理 | Batching |
+| 底层 | 批大小固定？ | 静态批 | Static Batch |
+| 底层 | 动态加入？ | 动态批 | Continuous Batching |
+| 底层 | 何时换出 | 演化算法 | Policy |
+
+**Batching = Static/Dynamic + Policy**
+
+### 9.11 Quantization 方案细分
+
+```
+    [量化方案]
+          │
+    ┌─────┴─────┐
+    │           │
+[训练后量化] [训练中量化]
+    │           │
+    ▼           ▼
+[GPTQ/AWQ] [QAT]
+    │           │
+    └─────┬─────┘
+          │
+    [Quantization]
+```
+
+| 方案 | 描述 | 特点 |
+|------|------|------|
+| INT8 | 8位整数 | 2x压缩，精度损失小 |
+| INT4 | 4位整数 | 4x压缩，需要校准 |
+| GPTQ | 训练后量化 | 逐通道校准 |
+| AWQ | 激活感知量化 | 逐token校准 |
+| SQ | 标度量化 | 简单有效 |
+
+### 9.12 Distributed (50) - 分布式
+
+```
+    [单卡 → 多卡]
+          │
+    ┌─────┴─────┐
+    │           │
+[数据并行] [模型并行]
+    │           │
+    ▼           ▼
+[DP] [TP/PP/EP]
+    │           │
+    └─────┬─────┘
+          │
+    [Distributed]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | 单卡不够？ | 多卡 | Distributed |
+| 底层 | 多卡如何分工 | TP/PP/EP | 并行策略 |
+| 底层 | 参数如何分 | 层切分 | Sharding |
+| 底层 | 通信如何优化 | NCCL | Communication |
+
+**Distributed = 并行策略 + Sharding + NCCL**
+
+---
+
+## 10. 完整推导链总结
+
+```
+根：核心循环
+  │
+  ├── 编码 → Tokenizer
+  │         │
+  │         └── 分词模式 + 词表 + Byte
+  │
+  ├── 计算 → Transformer
+  │         │
+  │         └── Multi-Head + FFN + Residual + LN
+  │                │
+  │                ├── Attention → FlashAttention → Tiling + Online + Recompute
+  │                │
+  │                └── KV Cache → PagedAttention → Block + Table + Ref
+  │
+  ├── 采样 → Sampler
+  │         │
+  │         └── Softmax + Temp + Top-K/P
+  │
+  ├── 调度 → Scheduler
+  │         │
+  │         └── Policy + Preemption
+  │                │
+  │                └── Batching → Continuous → Dynamic
+  │
+  └── 优化 → Quantization
+            │
+            └── Scale + 方案 + 校准
+
+            → Speculative Decoding
+            │
+            └── Proposer + Verifier + Acceptance
+```
+
+**这就是完整的50概念推导树！**
+
+---
+
 ## 6. 核心公式
 
 ```
