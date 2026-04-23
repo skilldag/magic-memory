@@ -674,3 +674,66 @@ FlashAttention 本身也是推导出来的，不是凭空出现的：
 | 调度器 | [vllm-tree/scheduler.md](./vllm-tree/scheduler.md) | Policy + Preemption + Affinity |
 | 批处理 | [vllm-tree/batching.md](./vllm-tree/batching.md) | Static/Dynamic + Policy |
 | 分布式 | [vllm-tree/distributed.md](./vllm-tree/distributed.md) | TP/PP/EP + Sharding + NCCL |
+
+---
+
+## 12. 问题发现方法论
+
+**这些问题是 如何被发现的？**
+
+### 方法1：流程分析法
+
+从核心循环的每个环节发现问题：
+
+```
+根循环：编码 → 计算 → 采样 → 判断
+           │       │       │
+           ▼       ▼       ▼
+      输入处理？ 计算复杂？ 采样策略？
+```
+
+### 方法2：瓶颈分析法
+
+从性能瓶颈倒推问题：
+
+```
+发现：慢
+    │
+    为什么慢？→ O(N²)复杂度
+    │       │
+    为什么是N²？→ 需要QKᵀ矩阵
+    │           │
+    解决：FlashAttention
+```
+
+### 方法3：对比分析法
+
+从"理想vs现状"找差距：
+
+```
+理想：高吞吐 + 低延迟 + 低显存
+        │        │        │
+        ▼        ▼        ▼
+    差距：批处理  差距：串行  差距：碎片化
+        │        │        │
+        ▼        ▼        ▼
+    Scheduler   PagedAttention
+```
+
+### 方法4：需求驱动法
+
+从用户需求追溯问题：
+
+```
+用户需求：更长上下文
+    │
+    需要处理更长序列 → 显存爆炸
+    │           │
+    解决：分页管理
+            │
+            PagedAttention
+```
+
+**问题发现 = 多维度交叉验证**
+
+详细见：[vllm-tree/问题发现方法论.md](./vllm-tree/问题发现方法论.md)
