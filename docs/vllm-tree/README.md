@@ -70,6 +70,12 @@
 | FFN | [ffn.md](./ffn.md) | 两层FC + 激活 + SwiGLU | 📉 |
 | Residual | [residual.md](./residual.md) | 残差 + 梯度直连 + Pre-LN | 📉 |
 | LayerNorm | [layernorm.md](./layernorm.md) | 均值方差 + 归一化 + 可学习 | 📉 |
+| Q、K、V 本质 | [qkv-essence.md](./qkv-essence.md) | Query + Key + Value | 🔄 |
+| 单层局限 | [single-layer-limitation.md](./single-layer-limitation.md) | 间接推理断裂 + 高阶抽象缺失 | 📉 |
+| 多层作用 | [multi-layer-purpose.md](./multi-layer-purpose.md) | 迭代式精炼 + 层级化特征 | 🔄📉 |
+| Embedding vs Transformer | [embedding-vs-transformer.md](./embedding-vs-transformer.md) | 静态语义 + 动态语境 | ⚖️ |
+| Transformer 导航 | [transformer-navigation.md](./transformer-navigation.md) | 语义导航系统 | 🔄 |
+| 位置编码知识树 | [position-encoding-knowledge-tree.md](./position-encoding-knowledge-tree.md) | 四种方案完整推导 | 🔄📉⚖️ |
 | **问题发现** | [问题发现方法论.md](./问题发现方法论.md) | 四大方法 | - |
 
 ---

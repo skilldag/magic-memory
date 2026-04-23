@@ -4,6 +4,15 @@
 
 ---
 
+## 📍 来时路
+
+```
+核心循环 → 计算环节 → Transformer → Attention → 计算瓶颈 → FlashAttention
+发现方法: 📉 瓶颈分析
+```
+
+---
+
 ## 表层问题
 
 **输入**：Q, K, V 向量
