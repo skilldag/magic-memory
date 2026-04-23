@@ -654,3 +654,23 @@ FlashAttention 本身也是推导出来的，不是凭空出现的：
 ```
 
 **50个概念，都是从这一棵树长出来的！**
+
+---
+
+## 11. 深层推导（子文档）
+
+部分概念已拆分为独立文档，深入理解请查看：
+
+| 主题 | 详细文档 | 核心公式 |
+|------|---------|----------|
+| 分词器 | [vllm-tree/tokenizer.md](./vllm-tree/tokenizer.md) | BPE → WordPiece → SentencePiece |
+| 词嵌入 | [vllm-tree/embedding.md](./vllm-tree/embedding.md) | 查表 + 位置编码 |
+| FlashAttention | [vllm-tree/flash-attention.md](./vllm-tree/flash-attention.md) | Tiling + Online + Recompute |
+| PagedAttention | [vllm-tree/paged-attention.md](./vllm-tree/paged-attention.md) | Block + Table + Ref |
+| 采样器 | [vllm-tree/sampler.md](./vllm-tree/sampler.md) | Softmax + Temp + Top-K/P |
+| 量化 | [vllm-tree/quantization.md](./vllm-tree/quantization.md) | Scale + 方案 + 校准 |
+| 推测解码 | [vllm-tree/speculative-decoding.md](./vllm-tree/speculative-decoding.md) | Proposer + Verifier + Acceptance |
+| 前缀缓存 | [vllm-tree/prefix-caching.md](./vllm-tree/prefix-caching.md) | Hash + Storage + Eviction |
+| 调度器 | [vllm-tree/scheduler.md](./vllm-tree/scheduler.md) | Policy + Preemption + Affinity |
+| 批处理 | [vllm-tree/batching.md](./vllm-tree/batching.md) | Static/Dynamic + Policy |
+| 分布式 | [vllm-tree/distributed.md](./vllm-tree/distributed.md) | TP/PP/EP + Sharding + NCCL |
