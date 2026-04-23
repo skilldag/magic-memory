@@ -76,6 +76,7 @@
 | Embedding vs Transformer | [embedding-vs-transformer.md](./embedding-vs-transformer.md) | 静态语义 + 动态语境 | ⚖️ |
 | Transformer 导航 | [transformer-navigation.md](./transformer-navigation.md) | 语义导航系统 | 🔄 |
 | 位置编码知识树 | [position-encoding-knowledge-tree.md](./position-encoding-knowledge-tree.md) | 四种方案完整推导 | 🔄📉⚖️ |
+| Transformer 前向推导 | [transformer-forward-pass.md](./transformer-forward-pass.md) | 完整前向传播推导 | 🔄 |
 | **问题发现** | [问题发现方法论.md](./问题发现方法论.md) | 四大方法 | - |
 
 ---
