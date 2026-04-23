@@ -147,6 +147,36 @@ Batching     Queue      Decode
 | 物理映射 | 块表 | Block Table (17) |
 | 物理块 | 存储单位 | CacheBlock (18) |
 
+### FlashAttention 深层推导
+
+FlashAttention 本身也是推导出来的，不是凭空出现的：
+
+```
+    [Attention 计算问题]
+           │
+    ┌─────┴─────┐
+    │           │
+[显存O(N²)] [计算O(N²)]
+    │           │
+    ▼           ▼
+[分块计算]  [在线计算]
+    │           │
+    └─────┬─────┘
+          │
+    [FlashAttention]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | Attention 计算慢 | 用高效算法 | FlashAttention |
+| 底层 | 显存O(N²) | 分块tiling | Tiling |
+| 底层 | 需要存储QKᵀ | 在线计算 | Online Softmax |
+| 底层 | 梯度存储 | 重新计算 | Recomputation |
+
+**FlashAttention = Tiling + Online Softmax + Recomputation**
+
+这三个底层技术才是真正的"实现层"。
+
 ### 采样阶段
 
 | 问题 | 解决 | 概念 |
@@ -171,6 +201,32 @@ Batching     Queue      Decode
 | 自回归慢 | 推测 | Speculative Decoding (30) |
 | 前缀重复 | 缓存 | Prefix Caching (38) |
 | 参数太大 | 压缩 | Quantization (28) |
+
+### PagedAttention 深层推导
+
+```
+    [KV Cache 显存问题]
+           │
+    ┌──────┴──────┐
+    │             │
+[预分配固定] [不连续]
+    │             │
+    ▼             ▼
+[动态分页]   [块表映射]
+    │             │
+    └──────┬──────┘
+           │
+    [PagedAttention]
+```
+
+| 层级 | 问题 | 解决 | 概念 |
+|------|------|------|------|
+| 表层 | 显存碎片化 | 分页管理 | PagedAttention |
+| 底层 | 预分配固定长度 | 动态分配 | Block Allocation |
+| 底层 | 不连续内存 | 块表映射 | Block Table |
+| 底层 | 物理块管理 | 引用计数 | Ref Count |
+
+**PagedAttention = Block + Block Table + Ref Counting**
 
 ### 服务阶段
 
