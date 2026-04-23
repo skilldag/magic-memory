@@ -33,18 +33,43 @@
 
 | 主题 | 子文档 | 核心公式 | 发现方法 |
 |------|--------|----------|----------|
+| **编码环节** | | | | |
 | 分词器 | [tokenizer.md](./tokenizer.md) | BPE → WordPiece → SentencePiece | 🔄 |
 | 词嵌入 | [embedding.md](./embedding.md) | 查表 + 位置编码 | 🔄📉 |
+| **计算环节** | | | | |
 | Transformer | [transformer.md](./transformer.md) | Multi-Head + FFN + Residual + LN | 🔄📉 |
+| Model | [model.md](./model.md) | Registry + Loader + Model + Runner | 🔄 |
+| Prefill/Decode | [prefill-decode.md](./prefill-decode.md) | 预填充 + 逐token解码 | 🎯 |
+| KV Cache | [kv-cache.md](./kv-cache.md) | Cache + Manager + 引用计数 | 📉 |
+| Forward Pass | [forward-pass.md](./forward-pass.md) | 算子 + 融合 + 精度 | 🔄📉 |
+| **Attention 优化** | | | | |
 | FlashAttention | [flash-attention.md](./flash-attention.md) | Tiling + Online + Recompute | 📉 |
 | PagedAttention | [paged-attention.md](./paged-attention.md) | Block + Table + Ref | 📉 |
-| 采样器 | [sampler.md](./sampler.md) | Softmax + Temp + Top-K/P | 🔄📉⚖️ |
-| 量化 | [quantization.md](./quantization.md) | Scale + 方案 + 校准 | 📉⚖️ |
-| 推测解码 | [speculative-decoding.md](./speculative-decoding.md) | Proposer + Verifier + Acceptance | 🎯 |
-| 前缀缓存 | [prefix-caching.md](./prefix-caching.md) | Hash + Storage + Eviction | 🎯⚖️ |
-| 调度器 | [scheduler.md](./scheduler.md) | Policy + Preemption + Affinity | ⚖️🎯 |
-| 批处理 | [batching.md](./batching.md) | Static/Dynamic + Policy | ⚖️🎯 |
-| 分布式 | [distributed.md](./distributed.md) | TP/PP/EP + Sharding + NCCL | 🎯📉 |
+| **采样环节** | | | | |
+| Logits | [logits.md](./logits.md) | 原始分数 + Softmax + 采样 | 🔄📉 |
+| Sampling Params | [sampling-params.md](./sampling-params.md) | Temp + Top-K + Top-P | ⚖️ |
+| Sampler | [sampler.md](./sampler.md) | Softmax + Temp + Top-K/P | 🔄📉⚖️ |
+| Decode Step | [decode-step.md](./decode-step.md) | 前向传播 + 采样 + 终止检查 | 🔄 |
+| **调度环节** | | | | |
+| Scheduler | [scheduler.md](./scheduler.md) | Policy + Preemption + Affinity | ⚖️🎯 |
+| Batching | [batching.md](./batching.md) | Static/Dynamic + Policy | ⚖️🎯 |
+| Request Queue | [request-queue.md](./request-queue.md) | 队列 + 排序 + 调度 | 🔄 |
+| **优化** | | | | |
+| Quantization | [quantization.md](./quantization.md) | Scale + 方案 + 校准 | 📉⚖️ |
+| Speculative Decoding | [speculative-decoding.md](./speculative-decoding.md) | Proposer + Verifier + Acceptance | 🎯 |
+| Prefix Caching | [prefix-caching.md](./prefix-caching.md) | Hash + Storage + Eviction | 🎯⚖️ |
+| **扩展** | | | | |
+| Distributed | [distributed.md](./distributed.md) | TP/PP/EP + Sharding + NCCL | 🎯📉 |
+| **服务层** | | | | |
+| Engine API | [engine-api.md](./engine-api.md) | 接口 + 验证 + 流式返回 | 🔄 |
+| OpenAI API | [openai-api.md](./openai-api.md) | 兼容 + 映射 + 扩展 | ⚖️ |
+| **基础层** | | | | |
+| GPU Memory Pool | [gpu-memory-pool.md](./gpu-memory-pool.md) | 块管理 + 引用计数 + 池化 | 📉 |
+| **Transformer 组件** | | | | |
+| Multi-Head | [multi-head-attention.md](./multi-head-attention.md) | 头分割 + 独立计算 + 拼接 | 🔄 |
+| FFN | [ffn.md](./ffn.md) | 两层FC + 激活 + SwiGLU | 📉 |
+| Residual | [residual.md](./residual.md) | 残差 + 梯度直连 + Pre-LN | 📉 |
+| LayerNorm | [layernorm.md](./layernorm.md) | 均值方差 + 归一化 + 可学习 | 📉 |
 | **问题发现** | [问题发现方法论.md](./问题发现方法论.md) | 四大方法 | - |
 
 ---
