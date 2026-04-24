@@ -78,6 +78,7 @@
 | 位置编码知识树 | [position-encoding-knowledge-tree.md](./position-encoding-knowledge-tree.md) | 四种方案完整推导 | 🔄📉⚖️ |
 | Transformer 前向推导 | [transformer-forward-pass.md](./transformer-forward-pass.md) | 完整前向传播推导 | 🔄 |
 | d_model=768 | [dmodel-768-knowledge-tree.md](./dmodel-768-knowledge-tree.md) | 超参数选择推导 | 🔄 |
+| Embedding 本质 | [embedding-essence-knowledge-tree.md](./embedding-essence-knowledge-tree.md) | 标量到向量推导 | 🔄 |
 | **问题发现** | [问题发现方法论.md](./问题发现方法论.md) | 四大方法 | - |
 
 ---
