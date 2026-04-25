@@ -65,6 +65,11 @@
 | OpenAI API | [openai-api.md](./openai-api.md) | 兼容 + 映射 + 扩展 | ⚖️ |
 | **基础层** | | | | |
 | GPU Memory Pool | [gpu-memory-pool.md](./gpu-memory-pool.md) | 块管理 + 引用计数 + 池化 | 📉 |
+| **内存管理架构** | | | | |
+| GpuAllocator | [gpuallocator-knowledge-tree.md](./gpuallocator-knowledge-tree.md) | 物理内存分配器 | 📉 |
+| KVCache | [kvcache-knowledge-tree.md](./kvcache-knowledge-tree.md) | 逻辑块管理器 | 📉 |
+| KVCacheManager | [kvcachemanager-knowledge-tree.md](./kvcachemanager-knowledge-tree.md) | 序列级管理器 | 📉 |
+| PagedAttention | [pagedattention-knowledge-tree.md](./pagedattention-knowledge-tree.md) | 间接寻址 Attention | 📉 |
 | **Transformer 组件** | | | | |
 | Multi-Head | [multi-head-attention.md](./multi-head-attention.md) | 头分割 + 独立计算 + 拼接 | 🔄 |
 | FFN | [ffn.md](./ffn.md) | 两层FC + 激活 + SwiGLU | 📉 |
@@ -112,9 +117,15 @@
 │   ├── Batching
 │   └── Prefill/Decode
 │
-└── [优化] 📉⚖️🎯
-    ├── Speculative Decoding
-    └── Prefix Caching
+├── [优化] 📉⚖️🎯
+│   ├── Speculative Decoding
+│   └── Prefix Caching
+│
+└── [内存管理架构] 📉
+    ├── GpuAllocator (物理层)
+    ├── KVCache (块层)
+    ├── KVCacheManager (序列层)
+    └── PagedAttention (计算层)
 ```
 
 ---
