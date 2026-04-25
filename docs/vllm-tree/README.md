@@ -56,6 +56,7 @@
 | Request Queue | [request-queue.md](./request-queue.md) | 队列 + 排序 + 调度 | 🔄 |
 | **优化** | | | | |
 | Quantization | [quantization.md](./quantization.md) | Scale + 方案 + 校准 | 📉⚖️ |
+| 量化知识树 | [quantization-knowledge-tree.md](./quantization-knowledge-tree.md) | 完整量化方法推导 | 🔄📉⚖️🎯 |
 | Speculative Decoding | [speculative-decoding.md](./speculative-decoding.md) | Proposer + Verifier + Acceptance | 🎯 |
 | Prefix Caching | [prefix-caching.md](./prefix-caching.md) | Hash + Storage + Eviction | 🎯⚖️ |
 | **扩展** | | | | |
