@@ -13,6 +13,7 @@ interface KnowledgeGraphProps {
   focusEnabled?: boolean
   onSelectConcept: (concept: Concept) => void
   onNavigate?: (conceptId: string) => void
+  onDoubleTapConcept?: (concept: Concept) => void
   onBackgroundDoubleTap?: () => void
   onHoverConcept?: (payload: { concept: Concept; x: number; y: number; width: number; height: number }) => void
   onHoverLeave?: () => void
@@ -25,6 +26,7 @@ export function KnowledgeGraph({
   focusEnabled = false,
   onSelectConcept,
   onNavigate,
+  onDoubleTapConcept,
   onBackgroundDoubleTap,
   onHoverConcept,
   onHoverLeave
@@ -33,10 +35,13 @@ export function KnowledgeGraph({
   const cyRef = useRef<Core | null>(null)
   const onHoverConceptRef = useRef(onHoverConcept)
   const onHoverLeaveRef = useRef(onHoverLeave)
+  const onDoubleTapConceptRef = useRef(onDoubleTapConcept)
   onHoverConceptRef.current = onHoverConcept
   onHoverLeaveRef.current = onHoverLeave
+  onDoubleTapConceptRef.current = onDoubleTapConcept
   const lastBackgroundTapAtRef = useRef(0)
   const wasFocusedRef = useRef(false)
+  const lastNodeTapRef = useRef({ id: '', time: 0 })
   const conceptsRef = useRef(concepts)
   const edgesRef = useRef(edges)
   conceptsRef.current = concepts
@@ -193,6 +198,17 @@ export function KnowledgeGraph({
     
     cy.on('tap', 'node', (evt) => {
       const nodeId = evt.target.id()
+      const now = Date.now()
+      const prev = lastNodeTapRef.current
+      // Detect double-tap on same node within 400ms
+      if (prev.id === nodeId && now - prev.time < 400) {
+        const concept = conceptsRef.current.find(c => c.id === nodeId)
+        const handler = onDoubleTapConceptRef.current
+        if (concept && handler) handler(concept)
+        lastNodeTapRef.current = { id: '', time: 0 }
+        return
+      }
+      lastNodeTapRef.current = { id: nodeId, time: now }
       const concept = concepts.find(c => c.id === nodeId)
       if (concept) {
         onSelectConcept(concept)
@@ -224,12 +240,15 @@ export function KnowledgeGraph({
       }
     })
     
+    // doubleTap via Cytoscape gesture
     cy.on('doubleTap', 'node', (evt) => {
       const nodeId = evt.target.id()
-      if (onNavigate) {
-        onNavigate(nodeId)
-      }
+      const concept = conceptsRef.current.find(c => c.id === nodeId)
+      const handler = onDoubleTapConceptRef.current
+      if (concept && handler) handler(concept)
     })
+
+
     
     cyRef.current = cy
     setIsReady(true)

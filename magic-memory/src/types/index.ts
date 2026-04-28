@@ -79,6 +79,14 @@ export interface Concept {
   leads_to: string[]        // 引出概念ID列表
   related: string[]       // 相关概念
   
+  // 过程推导
+  process?: {
+    chain_id: string
+    step_index: number
+    role: string
+  }
+  elements?: ConceptElement[]
+
   // 内容
   content: string          // Markdown内容
   path: string           // 文件路径
@@ -106,6 +114,40 @@ export interface KnowledgeGraph {
   edges: ConceptEdge[]
 }
 
+// ========== 过程推导类型 ==========
+
+export interface ConceptElement {
+  name: string
+  description: string
+  type: 'core_field' | 'design_pattern' | 'key_insight' | 'boundary' | 'relation'
+  order: number
+}
+
+export interface ProcessStep {
+  id: string
+  label: string
+  description: string
+  question: string
+  hint: string
+  leads_to_type: 'element' | 'concept'
+  leads_to_id?: string
+  is_core: boolean
+}
+
+export interface ProcessChain {
+  id: string
+  name: string
+  steps: ProcessStep[]
+}
+
+export interface ProcessState {
+  user_flow: string[]
+  llm_flow: string[]
+  gaps: string[]
+  filled: boolean
+  compared: boolean
+}
+
 export interface LearningPath {
   id: string
   title: string
@@ -116,12 +158,13 @@ export interface LearningPath {
 
 export interface ReviewRecord {
   concept_id: string
-  last_reviewed: Date      // 上次复习时间
-  next_review: Date       // 下次复习时间
-  ease_factor: number      // 简易度因子 (初始2.5)
-  interval: number        // 间隔天数
-  review_count: number  // 复习次数
+  last_reviewed: Date
+  next_review: Date
+  ease_factor: number
+  interval: number
+  review_count: number
   status: 'new' | 'learning' | 'review' | 'mastered'
+  process_state?: ProcessState
 }
 
 export interface UserAnnotation {

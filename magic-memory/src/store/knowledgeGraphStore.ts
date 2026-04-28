@@ -1,11 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation } from '../types'
+import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain, ProcessState } from '../types'
 import { getMockGraphData } from '../data/mockGraphData'
 
 interface KnowledgeGraphStore {
   concepts: Concept[]
   edges: ConceptEdge[]
+  chains: ProcessChain[]
   selectedConcept: Concept | null
   reviewRecords: Map<string, ReviewRecord>
   annotations: UserAnnotation[]
@@ -29,6 +30,7 @@ interface KnowledgeGraphStore {
     relationType: 'leads_to' | 'depends_on' | 'related'
     metadataStatus?: 'ai-generated' | 'draft'
   }) => Concept
+  updateProcessState: (conceptId: string, state: Partial<ProcessState>) => void
 }
 
 export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
@@ -36,6 +38,7 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
     (set, get) => ({
       concepts: [],
       edges: [],
+      chains: [],
       selectedConcept: null,
       reviewRecords: new Map(),
       annotations: [],
@@ -51,6 +54,7 @@ loadGraph: async () => {
       set({
         concepts: data.concepts,
         edges: data.edges,
+        chains: data.chains ?? [],
         isLoading: false
       })
     } catch (error) {
@@ -199,6 +203,37 @@ loadGraph: async () => {
         }
 
         return concept
+      },
+
+      updateProcessState: (conceptId, state) => {
+        const { reviewRecords } = get()
+        const existing = reviewRecords.get(conceptId)
+        const currentProcess = existing?.process_state ?? {
+          user_flow: [],
+          llm_flow: [],
+          gaps: [],
+          filled: false,
+          compared: false,
+        }
+        const updated: ReviewRecord = {
+          ...(existing ?? {
+            concept_id: conceptId,
+            last_reviewed: new Date(),
+            next_review: new Date(),
+            ease_factor: 2.5,
+            interval: 0,
+            review_count: 0,
+            status: 'new' as const,
+          }),
+          process_state: { ...currentProcess, ...state },
+        }
+        if (!existing) {
+          updated.last_reviewed = new Date()
+          updated.next_review = new Date()
+        }
+        const newRecords = new Map(reviewRecords)
+        newRecords.set(conceptId, updated)
+        set({ reviewRecords: newRecords })
       }
     }),
     {

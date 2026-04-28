@@ -1,4 +1,94 @@
-import type { Concept, ConceptEdge } from '../types'
+import type { Concept, ConceptEdge, ProcessChain, ConceptElement } from '../types'
+
+// ========== 过程链定义 ==========
+
+export const mockProcessChains: ProcessChain[] = [
+  {
+    id: 'inference-startup',
+    name: '推理启动流程',
+    steps: [
+      {
+        id: 'step-config',
+        label: '配置读取',
+        description: 'Engine 启动前读取 VllmConfig，确定模型、缓存、调度策略',
+        question: 'vLLM 启动时，第一个需要的是什么？',
+        hint: '想想要跑推理，最少需要知道哪些信息',
+        leads_to_type: 'concept',
+        leads_to_id: '0',
+        is_core: true,
+      },
+      {
+        id: 'step-device',
+        label: '设备初始化',
+        description: '确定推理在哪种设备上运行（GPU/CPU），初始化 Device 抽象',
+        question: '有了配置，代码跑在什么硬件上？',
+        hint: '推理计算需要特定的硬件加速器',
+        leads_to_type: 'concept',
+        leads_to_id: '1',
+        is_core: true,
+      },
+      {
+        id: 'step-tensor',
+        label: '张量准备',
+        description: '创建 Tensor 抽象作为数据容器，准备存储模型权重和中间结果',
+        question: '在分配显存之前，数据本身怎么表示？',
+        hint: '所有数据在框架里需要一个统一的表示形式',
+        leads_to_type: 'concept',
+        leads_to_id: '2',
+        is_core: true,
+      },
+      {
+        id: 'step-allocator',
+        label: '显存分配',
+        description: '初始化 GpuAllocator，为模型权重和 KV Cache 分配 GPU 显存',
+        question: '确定了表示形式，那存储空间从哪来？',
+        hint: 'GPU 上的资源需要专门的管理器来分配',
+        leads_to_type: 'concept',
+        leads_to_id: '5',
+        is_core: true,
+      },
+      {
+        id: 'step-loader',
+        label: '权重加载',
+        description: '通过 ModelLoader 从 HuggingFace 加载模型权重到已分配的显存',
+        question: '显存准备好了，那模型参数怎么进去？',
+        hint: '模型文件在磁盘上，需要加载到设备内存中',
+        leads_to_type: 'concept',
+        leads_to_id: '11',
+        is_core: true,
+      },
+    ],
+  },
+]
+
+// ========== 概念要素定义 ==========
+
+export const mockElements: Record<string, ConceptElement[]> = {
+  '0': [
+    { name: '三类子配置', description: 'model_config / cache_config / scheduler_config', type: 'core_field', order: 1 },
+    { name: '配置时机', description: 'Engine 创建前读取，决定 Engine 行为', type: 'key_insight', order: 2 },
+    { name: '设计定位', description: '统一配置管理入口，避免全局状态分散', type: 'design_pattern', order: 3 },
+    { name: '影响范围', description: '决定 GpuAllocator / KVCacheManager / Block Table 配置', type: 'relation', order: 4 },
+  ],
+  '1': [
+    { name: '抽象接口', description: 'Device trait + device_type/allocate/deallocate', type: 'core_field', order: 1 },
+    { name: '设备类型', description: 'CUDA / ROCm / CPU 多后端支持', type: 'core_field', order: 2 },
+    { name: '设计目的', description: '统一多设备支持，解耦硬件差异', type: 'key_insight', order: 3 },
+    { name: '与 Tensor 关系', description: 'Tensor 依赖 Device 确定存储位置', type: 'relation', order: 4 },
+    { name: '边界', description: '不负责显存分配——那是 GpuAllocator 的职责', type: 'boundary', order: 5 },
+  ],
+  '2': [
+    { name: '核心属性', description: 'shape / dtype / device / data_ptr', type: 'core_field', order: 1 },
+    { name: '轻量设计', description: 'vLLM Tensor 是轻量封装，非 PyTorch 完整张量', type: 'key_insight', order: 2 },
+    { name: '存储方式', description: '通过 strides 支持非连续存储，灵活映射显存', type: 'design_pattern', order: 3 },
+  ],
+  '5': [
+    { name: '核心职责', description: '管理显存池、避免碎片化、处理 OOM', type: 'core_field', order: 1 },
+    { name: '分配策略', description: '预分配 + 按需分配结合，减少 cudaMalloc 调用', type: 'design_pattern', order: 2 },
+    { name: '失败处理', description: 'OOM 时回退到 CPU 或抛出 VllmError', type: 'key_insight', order: 3 },
+    { name: '边界', description: '只分配显存，不管理 KV Cache 块——那是 KVCacheManager 的事', type: 'boundary', order: 4 },
+  ],
+}
 
 /**
  * vLLM 知识图谱模拟数据
@@ -18,6 +108,8 @@ export const mockConcepts: Concept[] = [
     depends_on: [],
     leads_to: ['1', '2', '10'],
     related: ['7'],
+    process: { chain_id: 'inference-startup', step_index: 0, role: '提供模型/缓存/调度三方面的统一配置入口' },
+    elements: mockElements['0'],
     content: `# VllmConfig - 配置中心
 
 鸡蛋是源头，所有配置的"蛋黄"。VllmConfig 包含 model/cache/scheduler 三个配置。
@@ -50,6 +142,8 @@ config = VllmConfig(
     depends_on: ['0'],
     leads_to: ['2', '5'],
     related: ['47'],
+    process: { chain_id: 'inference-startup', step_index: 1, role: '抽象 GPU 设备接口，屏蔽 CUDA/ROCm/CPU 的硬件差异' },
+    elements: mockElements['1'],
     content: `# Device - GPU设备抽象
 
 蜡烛点亮 GPU，Device trait 是照亮系统的第一层抽象。
@@ -73,6 +167,8 @@ config = VllmConfig(
     depends_on: ['1'],
     leads_to: ['14', '25'],
     related: [],
+    process: { chain_id: 'inference-startup', step_index: 2, role: '提供统一的数据容器抽象，管理模型权重和中间结果的表示' },
+    elements: mockElements['2'],
     content: `# Tensor - 张量抽象
 
 张量像鸭子浮在水面上，漂浮在 GPU 内存上。
@@ -133,6 +229,8 @@ config = VllmConfig(
     depends_on: ['1', '4'],
     leads_to: ['9', '18', '19'],
     related: [],
+    process: { chain_id: 'inference-startup', step_index: 3, role: '管理 GPU 显存池，为模型权重和 KV Cache 分配空间' },
+    elements: mockElements['5'],
     content: `# GpuAllocator - GPU内存分配器
 
 钩子钩住 GPU 显存分配。`,
@@ -981,6 +1079,8 @@ export const mockEdges: ConceptEdge[] = [
 export function getMockGraphData() {
   return {
     concepts: mockConcepts,
-    edges: mockEdges
+    edges: mockEdges,
+    chains: mockProcessChains,
+    elements: mockElements,
   }
 }

@@ -1,10 +1,13 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { KnowledgeGraph } from './KnowledgeGraph'
 import { ConceptDetailPanel } from './ConceptDetailPanel'
+import { ProcessCanvas } from './ProcessCanvas'
 import { ExploreDialog } from './ExploreDialog'
+import { QuickExploreDialog } from './QuickExploreDialog'
 import { ManualAddDialog } from './ManualAddDialog'
 import { BatchLinkDialog } from './BatchLinkDialog'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
+import { generateGenericChain } from '../utils/processComparison'
 import type { Concept, SuggestionItem } from '../types'
 
 type RelationType = 'leads_to' | 'depends_on' | 'related'
@@ -12,15 +15,13 @@ type RelationType = 'leads_to' | 'depends_on' | 'related'
 export function KnowledgeGraphView() {
   const concepts = useKnowledgeGraphStore(s => s.concepts)
   const edges = useKnowledgeGraphStore(s => s.edges)
-  const viewMode = useKnowledgeGraphStore(s => s.viewMode)
-  const setViewMode = useKnowledgeGraphStore(s => s.setViewMode)
   const loadGraph = useKnowledgeGraphStore(s => s.loadGraph)
-  const startReview = useKnowledgeGraphStore(s => s.startReview)
   const reviewRecords = useKnowledgeGraphStore(s => s.reviewRecords)
   const createConceptWithEdges = useKnowledgeGraphStore(s => s.createConceptWithEdges)
 
   const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null)
-  const [lastReviewFeedback, setLastReviewFeedback] = useState<string | null>(null)
+  const [processMode, setProcessMode] = useState(false)
+  const [processConcept, setProcessConcept] = useState<Concept | null>(null)
   const [hoverConcept, setHoverConcept] = useState<{ concept: Concept; x: number; y: number; width: number; height: number } | null>(null)
   const [actionConcept, setActionConcept] = useState<Concept | null>(null)
   const [hideHoverTimer, setHideHoverTimer] = useState<number | null>(null)
@@ -29,6 +30,7 @@ export function KnowledgeGraphView() {
   const [batchSuggestions, setBatchSuggestions] = useState<SuggestionItem[]>([])
   const [batchLoading, setBatchLoading] = useState(false)
   const [showExploreDialog, setShowExploreDialog] = useState(false)
+  const [showQuickExploreDialog, setShowQuickExploreDialog] = useState(false)
   const graphContainerRef = useRef<HTMLDivElement>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   const selectedConceptRef = useRef<Concept | null>(null)
@@ -56,23 +58,40 @@ export function KnowledgeGraphView() {
     setHoverConcept(null)
   }
 
+  const handleEnterProcess = (concept: Concept) => {
+    setProcessConcept(concept)
+    setProcessMode(true)
+  }
+
+  // Expose for debugging
+  if (typeof window !== 'undefined') {
+    (window as any).__openProcessCanvas = (conceptId: string) => {
+      const c = concepts.find(c => c.id === conceptId)
+      if (c) handleEnterProcess(c)
+    }
+  }
+
+  const handleExitProcess = () => {
+    setProcessMode(false)
+    setProcessConcept(null)
+  }
+
+  const chains = useKnowledgeGraphStore(s => s.chains)
+
+  const processChain = useMemo(() => {
+    if (!processConcept) return null
+    if (processConcept.process) {
+      return chains.find(ch => ch.id === processConcept.process.chain_id) ?? null
+    }
+    return generateGenericChain(processConcept.id, concepts)
+  }, [processConcept, concepts, chains])
+
   const handleNavigate = (conceptId: string) => {
     const concept = concepts.find(c => c.id === conceptId)
     if (concept) {
       setSelectedConcept(concept)
       selectedConceptRef.current = concept
     }
-  }
-
-  const handleReviewScore = (quality: number) => {
-    if (!selectedConcept) return
-    startReview(selectedConcept.id, quality)
-    const msgs: Record<number, string> = {
-      2: '已记录：这题偏难，建议先回看前置基础再复习。',
-      3: '已记录：基本掌握，建议今天再做一轮巩固。',
-      5: '已记录：掌握较好，系统会适当拉长下次复习间隔。',
-    }
-    setLastReviewFeedback(msgs[quality] || '已记录')
   }
 
   const handleManualAdd = (source: Concept, titles: string[], relationType: RelationType) => {
@@ -141,37 +160,63 @@ export function KnowledgeGraphView() {
     if (preventHideRef.current) return
     cancelHideHoverActions()
     const timerId = window.setTimeout(() => {
-      if (!showManualLinkDialog && !showBatchLinkDialog) setHoverConcept(null)
+      if (!showManualLinkDialog && !showBatchLinkDialog && !showQuickExploreDialog) setHoverConcept(null)
     }, 300)
     setHideHoverTimer(timerId)
   }
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      {/* 左侧图谱 */}
-      <div ref={graphContainerRef} className="flex-1 min-w-0 relative">
-        <div className="absolute top-3 left-3 z-10 pointer-events-auto flex items-center gap-2 bg-white/90 backdrop-blur rounded-lg shadow px-1.5 py-1">
-          {[{ key: 'explore' as const, label: '探索' }, { key: 'review' as const, label: '学习' }].map(b => (
-            <button key={b.key} onClick={() => { setViewMode(b.key); setHoverConcept(null) }}
-              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${viewMode === b.key ? 'bg-blue-600 text-white border border-blue-700 shadow' : 'bg-white text-gray-600 border border-transparent hover:bg-gray-100'}`}>
-              {b.label}
-            </button>
-          ))}
-        </div>
-        <KnowledgeGraph
-          concepts={concepts} edges={edges} selectedConcept={selectedConcept}
-          focusEnabled={viewMode === 'explore'}
-          onSelectConcept={handleSelectConcept} onNavigate={handleNavigate}
-          onBackgroundDoubleTap={() => { setSelectedConcept(null); selectedConceptRef.current = null; cancelHideHoverActions(); setHoverConcept(null) }}
-          onHoverConcept={payload => { cancelHideHoverActions(); setHoverConcept(payload) }}
-          onHoverLeave={() => scheduleHideHoverActions()}
-        />
-        {hoverConcept && viewMode === 'explore' && selectedConceptRef.current && (
+      {/* 左侧图谱 / 过程画板 */}
+      <div ref={graphContainerRef} className="flex-1 min-w-0 relative flex flex-col">
+        {processMode && processConcept ? (
+          <div className="flex-1 flex flex-col">
+            <div className="shrink-0 flex items-center gap-2 px-4 py-2 border-b border-gray-200 bg-white">
+              <button
+                onClick={handleExitProcess}
+                className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                返回图谱
+              </button>
+              <span className="text-sm font-medium text-gray-700">{processConcept.title}</span>
+              <span className="text-xs text-gray-400">过程梳理画板</span>
+            </div>
+            <div className="flex-1">
+              <ProcessCanvas
+                concept={processConcept}
+                chain={processChain}
+                allConcepts={concepts}
+                onComplete={(flow) => {
+                  useKnowledgeGraphStore.getState().updateProcessState(processConcept.id, {
+                    user_flow: flow,
+                    filled: true,
+                    compared: false,
+                  })
+                }}
+                onNavigate={handleNavigate}
+              />
+            </div>
+          </div>
+        ) : (
+          <KnowledgeGraph
+            concepts={concepts} edges={edges} selectedConcept={selectedConcept}
+            focusEnabled={true}
+            onSelectConcept={handleSelectConcept} onNavigate={handleNavigate}
+            onDoubleTapConcept={(c) => { handleSelectConcept(c); handleEnterProcess(c) }}
+            onBackgroundDoubleTap={() => { setSelectedConcept(null); selectedConceptRef.current = null; cancelHideHoverActions(); setHoverConcept(null) }}
+            onHoverConcept={payload => { cancelHideHoverActions(); setHoverConcept(payload) }}
+            onHoverLeave={() => scheduleHideHoverActions()}
+          />
+        )}
+        {hoverConcept && selectedConceptRef.current && (
           <div className="absolute z-30" style={{ left: 0, top: 0, pointerEvents: 'none' }}>
             <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => { setActionConcept(hoverConcept.concept); setShowBatchLinkDialog(true); setHoverConcept(null); void generateBatchSuggestions(hoverConcept.concept) }}
               className="absolute flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg hover:shadow-xl hover:from-blue-600 hover:to-blue-800 transition-all cursor-pointer select-none font-bold"
               style={{ width: 28, height: 28, fontSize: 11, left: hoverConcept.x + Math.max(hoverConcept.width, hoverConcept.height) / 2 + 2 - 14, top: hoverConcept.y - 14, pointerEvents: 'auto' }} title="AI 生成探索">AI</button>
-            <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => { setActionConcept(hoverConcept.concept); setShowManualLinkDialog(true); setHoverConcept(null) }}
+            <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => { setActionConcept(hoverConcept.concept); setShowQuickExploreDialog(true); setHoverConcept(null) }}
               className="absolute flex items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-violet-500 text-white shadow-lg hover:shadow-xl hover:from-purple-500 hover:to-violet-600 transition-all cursor-pointer select-none font-bold"
               style={{ width: 28, height: 28, fontSize: 11, left: hoverConcept.x + (Math.max(hoverConcept.width, hoverConcept.height) / 2 + 2) * Math.cos(-35 * Math.PI / 180) - 14, top: hoverConcept.y + (Math.max(hoverConcept.width, hoverConcept.height) / 2 + 2) * Math.sin(-35 * Math.PI / 180) - 14, pointerEvents: 'auto' }} title="基于问题生成概念">?</button>
             <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => { setActionConcept(hoverConcept.concept); setShowManualLinkDialog(true); setHoverConcept(null) }}
@@ -185,11 +230,10 @@ export function KnowledgeGraphView() {
       <div className="w-[420px] xl:w-[480px] shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden">
         {selectedConcept ? (
           <ConceptDetailPanel
-            concept={selectedConcept} viewMode={viewMode} concepts={concepts} edges={edges}
-            reviewRecords={reviewRecords} lastReviewFeedback={lastReviewFeedback}
+            concept={selectedConcept} concepts={concepts} edges={edges}
+            reviewRecords={reviewRecords}
             onNavigate={handleNavigate} onDeselect={() => setSelectedConcept(null)}
-            onReviewScore={handleReviewScore}
-            onOpenExplore={() => { setActionConcept(selectedConcept); setShowExploreDialog(true) }}
+            onEnterProcess={handleEnterProcess}
           />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-400 px-8">
@@ -203,6 +247,9 @@ export function KnowledgeGraphView() {
 
       {showExploreDialog && actionConcept && (
         <ExploreDialog sourceConcept={actionConcept} onClose={() => { setShowExploreDialog(false); setHoverConcept(null) }} />
+      )}
+      {showQuickExploreDialog && actionConcept && (
+        <QuickExploreDialog sourceConcept={actionConcept} onClose={() => { setShowQuickExploreDialog(false); setHoverConcept(null) }} />
       )}
       {showManualLinkDialog && actionConcept && (
         <ManualAddDialog sourceConcept={actionConcept} onClose={() => setShowManualLinkDialog(false)} onAdd={handleManualAdd} />
