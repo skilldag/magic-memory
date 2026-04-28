@@ -1,0 +1,10 @@
+name: feat-concept-click-interaction
+title: 概念点击后的认知优先级 UI 交互优化
+description: 重构知识图谱右侧面板信息顺序，先回答“是什么/解决什么问题/命名原因/概念区别”，再进入关联推导路径，提升首次理解效率
+status: done
+dependencies: []
+artifacts:
+  - id: proposal
+    status: done
+  - id: tasks
+    status: done
