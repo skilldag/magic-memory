@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { DocumentViewer } from './DocumentViewer'
 
 import { ComparisonPanel } from './ComparisonPanel'
@@ -10,6 +10,7 @@ import {
   getReviewRecordFor,
 } from '../utils/knowledgeGraph'
 import { generateReferenceFlow, diffFlows, getGapConceptIds, generateGenericChain } from '../utils/processComparison'
+import { loadDocContent } from '../utils/docLoader'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
 import type { Concept, ConceptEdge, ReviewRecord, ProcessChain } from '../types'
 
@@ -23,7 +24,7 @@ interface ConceptDetailPanelProps {
   onEnterProcess?: (concept: Concept) => void
 }
 
-type ActionKey = 'process' | 'compare' | 'explore' | 'read' | 'questions'
+type ActionKey = 'process' | 'compare' | 'explore' | 'read'
 
 export function ConceptDetailPanel({
   concept,
@@ -34,12 +35,19 @@ export function ConceptDetailPanel({
   onDeselect,
   onEnterProcess,
 }: ConceptDetailPanelProps) {
-  const [action, setAction] = useState<ActionKey>('process')
+  const [action, setAction] = useState<ActionKey>('read')
+  const [docContent, setDocContent] = useState<string | null>(null)
   const chains = useKnowledgeGraphStore(s => s.chains)
+
+  useEffect(() => {
+    if (action !== 'read') return
+    setDocContent(null)
+    loadDocContent(concept.path).then(content => {
+      if (content) setDocContent(content)
+    })
+  }, [action, concept.id, concept.path])
   const updateProcessState = useKnowledgeGraphStore(s => s.updateProcessState)
-  const allQuestions = useKnowledgeGraphStore(s => s.questions)
-  const questions = useMemo(() => allQuestions.filter(q => q.conceptId === concept.id), [allQuestions, concept.id])
-  const addQuestion = useKnowledgeGraphStore(s => s.addQuestion)
+  // Questions feature removed
   const storeConcepts = useKnowledgeGraphStore(s => s.concepts)
   const addConcept = useKnowledgeGraphStore(s => s.addConcept)
   const addEdge = useKnowledgeGraphStore(s => s.addEdge)
@@ -84,11 +92,10 @@ export function ConceptDetailPanel({
   }, [onNavigate])
 
   const actions: { key: ActionKey; label: string; desc: string }[] = [
+    { key: 'read', label: '查阅文档', desc: '查看完整说明' },
     { key: 'process', label: '梳理过程', desc: '推导流程中的步骤' },
     { key: 'compare', label: '对照验证', desc: processState?.filled ? '查看对比结果' : '先完成梳理' },
     { key: 'explore', label: '探索关联', desc: '前置/后置/相关概念' },
-    { key: 'questions', label: '问题集', desc: questions.length > 0 ? `${questions.length} 个问题` : '暂无问题' },
-    { key: 'read', label: '查阅文档', desc: '查看完整说明' },
   ]
 
   return (
@@ -247,7 +254,7 @@ export function ConceptDetailPanel({
             <div className="prose prose-sm max-w-none">
               <DocumentViewer document={{
                 id: concept.id, title: concept.title, path: concept.path,
-                content: concept.content, level: concept.level, category: concept.category,
+                content: docContent ?? '', level: concept.level, category: concept.category,
                 tags: concept.tags, lastModified: concept.lastModified, metadata: concept.metadata,
               }} />
             </div>
