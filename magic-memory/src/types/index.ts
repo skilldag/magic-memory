@@ -93,10 +93,7 @@ export interface Concept {
     level: number
     order: number
   }
-  baseQuestions?: BaseQuestion[]
-
   // 内容
-  content: string          // Markdown内容
   path: string           // 文件路径
   
   // 元数据
@@ -158,35 +155,7 @@ export interface ProcessState {
 
 // ========== 骨架填充类型 ==========
 
-export interface BaseQuestion {
-  id: string
-  conceptId: string
-  question: string
-  targetConceptId?: string
-  hint?: string
-  order: number
-}
-
-export interface UserQuestion {
-  id: string
-  conceptId: string
-  question: string
-  context: {
-    location: 'skeleton' | 'canvas' | 'comparison'
-    stepId?: string
-  }
-  status: 'open' | 'converted_to_concept' | 'converted_to_step' | 'resolved'
-  convertedTo?: {
-    type: 'concept' | 'step'
-    targetId: string
-  }
-  createdAt: Date
-}
-
-export interface CanvasHistoryItem {
-  conceptId: string
-  view: 'skeleton' | 'canvas'
-}
+// Skeleton-related types removed: BaseQuestion, UserQuestion, CanvasHistoryItem
 
 export interface LearningPath {
   id: string
