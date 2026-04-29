@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { KnowledgeGraph } from './KnowledgeGraph'
 import { ConceptDetailPanel } from './ConceptDetailPanel'
 import { ProcessCanvas } from './ProcessCanvas'
@@ -198,7 +198,7 @@ export function KnowledgeGraphView() {
     }
   }, [docsPath])
 
-  const handleManualAdd = useCallback(() => {
+  const handleOnboardingManualAdd = useCallback(() => {
     if (!docsPath.trim()) { alert('请先输入文档目录路径'); return }
     setShowQuickExploreDialog(true)
   }, [docsPath])
@@ -235,7 +235,7 @@ export function KnowledgeGraphView() {
                     {isScanning ? '扫描中...' : '自动扫描文档建索引'}
                   </button>
                   <button
-                    onClick={handleManualAdd}
+                    onClick={handleOnboardingManualAdd}
                     className="flex-1 px-4 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:border-blue-300 hover:text-blue-600 transition-colors"
                   >
                     手动添加概念
