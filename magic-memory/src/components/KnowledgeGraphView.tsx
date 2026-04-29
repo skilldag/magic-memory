@@ -40,6 +40,7 @@ export function KnowledgeGraphView() {
   const [showQuickExploreDialog, setShowQuickExploreDialog] = useState(false)
   // Question dialog removed
   const [docsPath, setDocsPath] = useState('')
+  const [isScanning, setIsScanning] = useState(false)
   const graphContainerRef = useRef<HTMLDivElement>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   const selectedConceptRef = useRef<Concept | null>(null)
@@ -176,6 +177,32 @@ export function KnowledgeGraphView() {
 
   // Skeleton mode removed: skeletonNodes no longer used
 
+  const handleAutoScan = useCallback(async () => {
+    if (!docsPath.trim()) { alert('请先输入文档目录路径'); return }
+    setIsScanning(true)
+    try {
+      const resp = await fetch('/api/scan-docs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: docsPath.trim() }),
+      })
+      if (!resp.ok) { alert('扫描失败: ' + resp.statusText); return }
+      const data = await resp.json()
+      if (data.concepts && data.edges) {
+        useKnowledgeGraphStore.setState({ concepts: data.concepts, edges: data.edges, isLoading: false })
+      }
+    } catch (e: any) {
+      alert('扫描失败: ' + (e.message || e))
+    } finally {
+      setIsScanning(false)
+    }
+  }, [docsPath])
+
+  const handleManualAdd = useCallback(() => {
+    if (!docsPath.trim()) { alert('请先输入文档目录路径'); return }
+    setShowQuickExploreDialog(true)
+  }, [docsPath])
+
   // 检测是否显示空状态引导
   const isEmpty = concepts.length === 0 && !isLoading && !processMode
 
@@ -201,19 +228,14 @@ export function KnowledgeGraphView() {
                 />
                 <div className="flex gap-3">
                   <button
-                    onClick={() => {
-                      if (!docsPath.trim()) { alert('请先输入文档目录路径'); return }
-                      alert('自动扫描功能待接入')
-                    }}
-                    className="flex-1 px-4 py-2.5 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+                    onClick={handleAutoScan}
+                    disabled={isScanning}
+                    className="flex-1 px-4 py-2.5 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
                   >
-                    自动扫描文档建索引
+                    {isScanning ? '扫描中...' : '自动扫描文档建索引'}
                   </button>
                   <button
-                    onClick={() => {
-                      if (!docsPath.trim()) { alert('请先输入文档目录路径'); return }
-                      alert('手动添加功能待接入')
-                    }}
+                    onClick={handleManualAdd}
                     className="flex-1 px-4 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:border-blue-300 hover:text-blue-600 transition-colors"
                   >
                     手动添加概念
