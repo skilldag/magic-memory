@@ -90,6 +90,28 @@ export const mockElements: Record<string, ConceptElement[]> = {
   ],
 }
 
+// ========== 基础引导问题 ==========
+
+export const mockBaseQuestions: Record<string, import('../types').BaseQuestion[]> = {
+  '0': [
+    { id: 'bq_0_1', conceptId: '0', question: '要让模型跑推理，首先需要知道什么信息？', targetConceptId: '0', hint: '想想推理一个请求需要哪些前提配置', order: 1 },
+    { id: 'bq_0_2', conceptId: '0', question: 'VllmConfig 的配置分为哪几类？', hint: '从三个子系统角度去想', order: 2 },
+    { id: 'bq_0_3', conceptId: '0', question: '配置错误或缺失会导致什么？', hint: '初始化时最怕什么', order: 3 },
+  ],
+  '1': [
+    { id: 'bq_1_1', conceptId: '1', question: '配置好了，代码要在什么硬件上执行？', targetConceptId: '1', order: 1 },
+    { id: 'bq_1_2', conceptId: '1', question: '为什么需要 Device 抽象而不是直接用 CUDA API？', hint: '想想多硬件支持', order: 2 },
+  ],
+  '2': [
+    { id: 'bq_2_1', conceptId: '2', question: '权重和中间结果在 GPU 上以什么结构存在？', targetConceptId: '2', order: 1 },
+    { id: 'bq_2_2', conceptId: '2', question: 'vLLM 的 Tensor 和 PyTorch Tensor 有何不同？', hint: 'vLLM 有自己的封装考量', order: 2 },
+  ],
+  '5': [
+    { id: 'bq_5_1', conceptId: '5', question: '显存由谁负责分配和管理？', targetConceptId: '5', order: 1 },
+    { id: 'bq_5_2', conceptId: '5', question: '显存分配失败会怎样？', hint: 'GPU 资源有限', order: 2 },
+  ],
+}
+
 /**
  * vLLM 知识图谱模拟数据
  * 基于数字锚点记忆法的概念层级
@@ -110,6 +132,7 @@ export const mockConcepts: Concept[] = [
     related: ['7'],
     process: { chain_id: 'inference-startup', step_index: 0, role: '提供模型/缓存/调度三方面的统一配置入口' },
     elements: mockElements['0'],
+    baseQuestions: mockBaseQuestions['0'],
     content: `# VllmConfig - 配置中心
 
 鸡蛋是源头，所有配置的"蛋黄"。VllmConfig 包含 model/cache/scheduler 三个配置。
@@ -144,6 +167,7 @@ config = VllmConfig(
     related: ['47'],
     process: { chain_id: 'inference-startup', step_index: 1, role: '抽象 GPU 设备接口，屏蔽 CUDA/ROCm/CPU 的硬件差异' },
     elements: mockElements['1'],
+    baseQuestions: mockBaseQuestions['1'],
     content: `# Device - GPU设备抽象
 
 蜡烛点亮 GPU，Device trait 是照亮系统的第一层抽象。
@@ -169,6 +193,7 @@ config = VllmConfig(
     related: [],
     process: { chain_id: 'inference-startup', step_index: 2, role: '提供统一的数据容器抽象，管理模型权重和中间结果的表示' },
     elements: mockElements['2'],
+    baseQuestions: mockBaseQuestions['2'],
     content: `# Tensor - 张量抽象
 
 张量像鸭子浮在水面上，漂浮在 GPU 内存上。
@@ -231,6 +256,7 @@ config = VllmConfig(
     related: [],
     process: { chain_id: 'inference-startup', step_index: 3, role: '管理 GPU 显存池，为模型权重和 KV Cache 分配空间' },
     elements: mockElements['5'],
+    baseQuestions: mockBaseQuestions['5'],
     content: `# GpuAllocator - GPU内存分配器
 
 钩子钩住 GPU 显存分配。`,
