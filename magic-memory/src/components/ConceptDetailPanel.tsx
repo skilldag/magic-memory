@@ -56,8 +56,32 @@ export function ConceptDetailPanel({
   const addEdge = useKnowledgeGraphStore(s => s.addEdge)
 
   const handleRequestLLM = useCallback(async () => {
-    // TODO: 接入 LLM API 生成文档内容并写入 concept.path
-    alert('LLM 生成功能待接入')
+    try {
+      const resp = await fetch('/api/generate-doc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          concept: { title: concept.title, problem: concept.problem, gap_anticipate: concept.gap_anticipate }
+        }),
+      })
+      if (!resp.ok) { alert('生成失败: ' + resp.statusText); return }
+      const data = await resp.json()
+      if (data.content) {
+        // 写入文档
+        const writeResp = await fetch('/api/write-doc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: concept.path, content: data.content }),
+        })
+        if (writeResp.ok) {
+          // 重新加载文档
+          const content = await loadDocContent(concept.path)
+          if (content) setDocContent(content)
+        }
+      }
+    } catch (e: any) {
+      alert('生成失败: ' + (e.message || e))
+    }
   }, [concept])
 
   const processState = reviewRecords.get(concept.id)?.process_state
