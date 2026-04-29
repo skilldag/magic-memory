@@ -264,6 +264,7 @@ export function KnowledgeGraph({
     
     return () => {
       cy.destroy()
+      cyRef.current = null
     }
   }, [concepts.length])
 
