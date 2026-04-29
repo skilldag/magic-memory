@@ -7,7 +7,7 @@ import { QuickExploreDialog } from './QuickExploreDialog'
 import { ManualAddDialog } from './ManualAddDialog'
 import { BatchLinkDialog } from './BatchLinkDialog'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
-import { generateGenericChain } from '../utils/processComparison'
+import { generateGenericChain, generateSkeletonNodes } from '../utils/processComparison'
 import type { Concept, SuggestionItem } from '../types'
 
 type RelationType = 'leads_to' | 'depends_on' | 'related'
@@ -18,6 +18,14 @@ export function KnowledgeGraphView() {
   const loadGraph = useKnowledgeGraphStore(s => s.loadGraph)
   const reviewRecords = useKnowledgeGraphStore(s => s.reviewRecords)
   const createConceptWithEdges = useKnowledgeGraphStore(s => s.createConceptWithEdges)
+  const questions = useKnowledgeGraphStore(s => s.questions)
+  const canvasHistory = useKnowledgeGraphStore(s => s.canvasHistory)
+  const skeletonCompleted = useKnowledgeGraphStore(s => s.skeletonCompleted)
+  const conceptPanelMode = useKnowledgeGraphStore(s => s.conceptPanelMode)
+  const setConceptPanelMode = useKnowledgeGraphStore(s => s.setConceptPanelMode)
+  const markSkeletonCompleted = useKnowledgeGraphStore(s => s.markSkeletonCompleted)
+  const pushHistory = useKnowledgeGraphStore(s => s.pushHistory)
+  const addQuestion = useKnowledgeGraphStore(s => s.addQuestion)
 
   const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null)
   const [processMode, setProcessMode] = useState(false)
@@ -31,6 +39,7 @@ export function KnowledgeGraphView() {
   const [batchLoading, setBatchLoading] = useState(false)
   const [showExploreDialog, setShowExploreDialog] = useState(false)
   const [showQuickExploreDialog, setShowQuickExploreDialog] = useState(false)
+  const [showQuestionDialog, setShowQuestionDialog] = useState(false)
   const graphContainerRef = useRef<HTMLDivElement>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   const selectedConceptRef = useRef<Concept | null>(null)
@@ -61,6 +70,8 @@ export function KnowledgeGraphView() {
   const handleEnterProcess = (concept: Concept) => {
     setProcessConcept(concept)
     setProcessMode(true)
+    const isSkeleton = !skeletonCompleted.includes(concept.id) && conceptPanelMode
+    pushHistory({ conceptId: concept.id, view: isSkeleton ? 'skeleton' : 'canvas' })
   }
 
   // Expose for debugging
@@ -165,24 +176,42 @@ export function KnowledgeGraphView() {
     setHideHoverTimer(timerId)
   }
 
+  const shouldShowSkeleton = processConcept !== null && !skeletonCompleted.includes(processConcept.id) && conceptPanelMode
+  const skeletonNodes = shouldShowSkeleton && processChain && processConcept
+    ? generateSkeletonNodes(processConcept, processChain, concepts)
+    : undefined
+
   return (
     <div className="flex h-full w-full overflow-hidden">
       {/* 左侧图谱 / 过程画板 */}
       <div ref={graphContainerRef} className="flex-1 min-w-0 relative flex flex-col">
         {processMode && processConcept ? (
           <div className="flex-1 flex flex-col">
-            <div className="shrink-0 flex items-center gap-2 px-4 py-2 border-b border-gray-200 bg-white">
-              <button
-                onClick={handleExitProcess}
-                className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                返回图谱
-              </button>
-              <span className="text-sm font-medium text-gray-700">{processConcept.title}</span>
-              <span className="text-xs text-gray-400">过程梳理画板</span>
+            {/* 面包屑导航 */}
+            <div className="shrink-0 flex items-center gap-1 px-4 py-1.5 border-b border-gray-100 bg-gray-50 text-xs text-gray-500">
+              <button onClick={() => { setProcessMode(false); setProcessConcept(null) }}
+                className="hover:text-blue-600 transition-colors">图谱</button>
+              {canvasHistory.slice(0, -1).map((h, i) => (
+                <span key={i} className="flex items-center gap-1">
+                  <span className="text-gray-300 mx-1">›</span>
+                  <button onClick={() => {
+                    const c = concepts.find(c2 => c2.id === h.conceptId)
+                    if (c) { setProcessConcept(c); setSelectedConcept(c) }
+                  }} className="hover:text-blue-600 transition-colors">
+                    {concepts.find(c2 => c2.id === h.conceptId)?.title ?? h.conceptId}
+                    <span className="text-gray-400 ml-0.5">{h.view === 'skeleton' ? '[填充]' : '[画板]'}</span>
+                  </button>
+                </span>
+              ))}
+              {processConcept && (
+                <span className="flex items-center gap-1">
+                  <span className="text-gray-300 mx-1">›</span>
+                  <span className="text-gray-700 font-medium">
+                    {processConcept.title}
+                    <span className="text-gray-400 ml-0.5">{shouldShowSkeleton ? '[填充]' : '[画板]'}</span>
+                  </span>
+                </span>
+              )}
             </div>
             <div className="flex-1">
               <ProcessCanvas
@@ -197,6 +226,18 @@ export function KnowledgeGraphView() {
                   })
                 }}
                 onNavigate={handleNavigate}
+                skeletonMode={shouldShowSkeleton}
+                skeletonNodes={skeletonNodes}
+                onSkeletonSubmit={(results) => {
+                  markSkeletonCompleted(processConcept.id)
+                  const filledIds = results.map(r => r.filledConceptId).filter(Boolean) as string[]
+                  useKnowledgeGraphStore.getState().updateProcessState(processConcept.id, {
+                    user_flow: filledIds,
+                    filled: true,
+                    compared: true,
+                  })
+                }}
+                onOpenQuestion={() => setShowQuestionDialog(true)}
               />
             </div>
           </div>
@@ -245,6 +286,41 @@ export function KnowledgeGraphView() {
         )}
       </div>
 
+      {showQuestionDialog && processConcept && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowQuestionDialog(false)}>
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">关于「{processConcept.title}」的疑问</h3>
+            <textarea autoFocus
+              className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none h-24 outline-none focus:border-blue-400"
+              placeholder="输入你的问题..."
+              id="question-input"
+            />
+            <div className="flex items-center justify-end gap-2 mt-3">
+              <button onClick={() => setShowQuestionDialog(false)}
+                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                取消
+              </button>
+              <button onClick={() => {
+                const input = document.getElementById('question-input') as HTMLTextAreaElement
+                if (input?.value?.trim()) {
+                  addQuestion({
+                    conceptId: processConcept.id,
+                    question: input.value.trim(),
+                    context: { location: 'skeleton' },
+                    status: 'open',
+                  })
+                  input.value = ''
+                  setShowQuestionDialog(false)
+                }
+              }}
+                className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                提交问题
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">问题会沉淀到问题集，可在右侧面板中查看和管理</p>
+          </div>
+        </div>
+      )}
       {showExploreDialog && actionConcept && (
         <ExploreDialog sourceConcept={actionConcept} onClose={() => { setShowExploreDialog(false); setHoverConcept(null) }} />
       )}
