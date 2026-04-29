@@ -37,13 +37,16 @@ export function ConceptDetailPanel({
 }: ConceptDetailPanelProps) {
   const [action, setAction] = useState<ActionKey>('read')
   const [docContent, setDocContent] = useState<string | null>(null)
+  const [docLoading, setDocLoading] = useState(false)
   const chains = useKnowledgeGraphStore(s => s.chains)
 
   useEffect(() => {
     if (action !== 'read') return
     setDocContent(null)
+    setDocLoading(true)
     loadDocContent(concept.path).then(content => {
       if (content) setDocContent(content)
+      setDocLoading(false)
     })
   }, [action, concept.id, concept.path])
   const updateProcessState = useKnowledgeGraphStore(s => s.updateProcessState)
@@ -51,6 +54,11 @@ export function ConceptDetailPanel({
   const storeConcepts = useKnowledgeGraphStore(s => s.concepts)
   const addConcept = useKnowledgeGraphStore(s => s.addConcept)
   const addEdge = useKnowledgeGraphStore(s => s.addEdge)
+
+  const handleRequestLLM = useCallback(async () => {
+    // TODO: 接入 LLM API 生成文档内容并写入 concept.path
+    alert('LLM 生成功能待接入')
+  }, [concept])
 
   const processState = reviewRecords.get(concept.id)?.process_state
 
@@ -251,13 +259,28 @@ export function ConceptDetailPanel({
 
         {action === 'read' && (
           <div className="px-5 py-4">
-            <div className="prose prose-sm max-w-none">
-              <DocumentViewer document={{
-                id: concept.id, title: concept.title, path: concept.path,
-                content: docContent ?? '', level: concept.level, category: concept.category,
-                tags: concept.tags, lastModified: concept.lastModified, metadata: concept.metadata,
-              }} />
-            </div>
+            {docContent === null && !docLoading ? (
+              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                <svg className="w-12 h-12 mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <p className="text-sm mb-4">还没有对应的文档内容</p>
+                <button
+                  onClick={handleRequestLLM}
+                  className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  请求 LLM 生成
+                </button>
+              </div>
+            ) : (
+              <div className="prose prose-sm max-w-none">
+                <DocumentViewer document={{
+                  id: concept.id, title: concept.title, path: concept.path,
+                  content: docContent ?? '', level: concept.level, category: concept.category,
+                  tags: concept.tags, lastModified: concept.lastModified, metadata: concept.metadata,
+                }} />
+              </div>
+            )}
           </div>
         )}
 
