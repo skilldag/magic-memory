@@ -263,12 +263,17 @@ loadGraph: async () => {
         reviewRecords: Array.from(state.reviewRecords.entries()),
         annotations: state.annotations,
       }),
-      merge: (persisted: any, current) => ({
-        ...current,
-        concepts: persisted?.concepts ?? current.concepts,
-        edges: persisted?.edges ?? current.edges,
-        reviewRecords: new Map(persisted?.reviewRecords || [])
-      })
+      merge: (persisted: any, current) => {
+        // Zustand v5 将 partialize 数据包在 { state: {...}, version: N } 中
+        const p = persisted?.state ?? persisted
+        return {
+          ...current,
+          concepts: p?.concepts ?? current.concepts,
+          edges: p?.edges ?? current.edges,
+          reviewRecords: new Map(p?.reviewRecords || []),
+          annotations: p?.annotations ?? [],
+        }
+      }
     }
   )
 )
