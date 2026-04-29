@@ -9,6 +9,7 @@ import { BatchLinkDialog } from './BatchLinkDialog'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
 import { generateGenericChain } from '../utils/processComparison'
 import type { Concept, SuggestionItem } from '../types'
+import { parseFrontmatter } from '../utils/conceptParser'
 
 type RelationType = 'leads_to' | 'depends_on' | 'related'
 
@@ -39,7 +40,8 @@ export function KnowledgeGraphView() {
   const [showExploreDialog, setShowExploreDialog] = useState(false)
   const [showQuickExploreDialog, setShowQuickExploreDialog] = useState(false)
   // Question dialog removed
-  const [docsPath, setDocsPath] = useState('')
+  const [folderHandle, setFolderHandle] = useState<FileSystemDirectoryHandle | null>(null)
+  const [folderName, setFolderName] = useState('')
   const [isScanning, setIsScanning] = useState(false)
   const graphContainerRef = useRef<HTMLDivElement>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
@@ -177,31 +179,93 @@ export function KnowledgeGraphView() {
 
   // Skeleton mode removed: skeletonNodes no longer used
 
+  const handleBrowseFolder = useCallback(async () => {
+    try {
+      const handle = await (window as any).showDirectoryPicker()
+      setFolderHandle(handle)
+      setFolderName(handle.name)
+    } catch (e: any) {
+      if (e.name !== 'AbortError') {
+        alert('选择文件夹失败: ' + (e.message || e))
+      }
+    }
+  }, [])
+
+  // 递归读取目录下所有 .md 文件内容
+  async function readMdFiles(dirHandle: FileSystemDirectoryHandle, pathPrefix = ''): Promise<{ path: string; content: string }[]> {
+    const results: { path: string; content: string }[] = []
+    for await (const [name, entry] of (dirHandle as any).entries()) {
+      const entryPath = pathPrefix ? `${pathPrefix}/${name}` : name
+      if (entry.kind === 'directory' && !name.startsWith('.')) {
+        results.push(...await readMdFiles(entry, entryPath))
+      } else if (entry.kind === 'file' && name.endsWith('.md')) {
+        try {
+          const file = await (entry as FileSystemFileHandle).getFile()
+          const content = await file.text()
+          if (content.trim()) {
+            results.push({ path: entryPath, content })
+          }
+        } catch { /* skip unreadable */ }
+      }
+    }
+    return results
+  }
+
   const handleAutoScan = useCallback(async () => {
-    if (!docsPath.trim()) { alert('请先输入文档目录路径'); return }
+    if (!folderHandle) { alert('请先选择文档目录'); return }
     setIsScanning(true)
     try {
-      const resp = await fetch('/api/scan-docs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: docsPath.trim() }),
-      })
-      if (!resp.ok) { alert('扫描失败: ' + resp.statusText); return }
-      const data = await resp.json()
-      if (data.concepts && data.edges) {
-        useKnowledgeGraphStore.setState({ concepts: data.concepts, edges: data.edges, isLoading: false })
+      // 在浏览器中读取所有 .md 文件
+      const files = await readMdFiles(folderHandle)
+      // 解析 frontmatter 建索引
+      const concepts: any[] = []
+      for (const file of files) {
+        const meta = parseFrontmatter(file.content)
+        if (!meta || Object.keys(meta).length === 0) continue
+        const id = meta.id || file.path.replace('.md', '').replace(/\//g, '-')
+        concepts.push({
+          id,
+          title: meta.title || file.path.replace('.md', ''),
+          path: file.path,
+          level: meta.level ?? 1,
+          category: meta.category || '',
+          problem: meta.problem || '',
+          gap_anticipate: meta.gap_anticipate || '',
+          depends_on: meta.depends_on || [],
+          leads_to: meta.leads_to || [],
+          related: meta.related || [],
+          alias: meta.alias,
+          tags: meta.tags || [],
+        })
+      }
+      // 推导边
+      const ids = new Set(concepts.map(c => c.id))
+      const edges: any[] = []
+      const edgeSet = new Set<string>()
+      for (const c of concepts) {
+        for (const t of c.leads_to) {
+          if (ids.has(t)) {
+            const eid = `${c.id}-leads-${t}`
+            if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'leads_to' }) }
+          }
+        }
+      }
+      if (concepts.length > 0) {
+        useKnowledgeGraphStore.setState({ concepts, edges, isLoading: false })
+      } else {
+        alert('所选目录中没有找到带 frontmatter 的 .md 文件')
       }
     } catch (e: any) {
       alert('扫描失败: ' + (e.message || e))
     } finally {
       setIsScanning(false)
     }
-  }, [docsPath])
+  }, [folderHandle])
 
   const handleOnboardingManualAdd = useCallback(() => {
-    if (!docsPath.trim()) { alert('请先输入文档目录路径'); return }
+    if (!folderHandle) { alert('请先选择文档目录'); return }
     setShowQuickExploreDialog(true)
-  }, [docsPath])
+  }, [folderHandle])
 
   // 检测是否显示空状态引导
   const isEmpty = concepts.length === 0 && !isLoading && !processMode
@@ -218,29 +282,30 @@ export function KnowledgeGraphView() {
               </svg>
               <h2 className="text-lg font-medium text-gray-700">还没有知识图谱索引</h2>
               <p className="text-sm text-gray-400">设置文档目录路径，选择索引生成方式</p>
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  value={docsPath}
-                  onChange={e => setDocsPath(e.target.value)}
-                  placeholder="输入文档目录路径，如 /Users/xxx/docs"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                />
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleAutoScan}
-                    disabled={isScanning}
-                    className="flex-1 px-4 py-2.5 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
-                  >
-                    {isScanning ? '扫描中...' : '自动扫描文档建索引'}
-                  </button>
-                  <button
-                    onClick={handleOnboardingManualAdd}
-                    className="flex-1 px-4 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:border-blue-300 hover:text-blue-600 transition-colors"
-                  >
-                    手动添加概念
-                  </button>
-                </div>
+              <div className="space-y-4">
+                <button
+                  onClick={handleBrowseFolder}
+                  className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors"
+                >
+                  {folderName ? `📂 ${folderName}` : '点击选择文档目录'}
+                </button>
+                {folderName && (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAutoScan}
+                      disabled={isScanning}
+                      className="flex-1 px-4 py-2.5 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
+                    >
+                      {isScanning ? '扫描中...' : '自动扫描建索引'}
+                    </button>
+                    <button
+                      onClick={handleOnboardingManualAdd}
+                      className="flex-1 px-4 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:border-blue-300 hover:text-blue-600 transition-colors"
+                    >
+                      手动添加概念
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

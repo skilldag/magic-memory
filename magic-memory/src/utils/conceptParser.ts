@@ -11,7 +11,7 @@ interface ParsedFrontmatter {
   related?: string[]
 }
 
-function parseFrontmatter(content: string): { meta: ParsedFrontmatter; body: string } {
+export function parseFrontmatter(content: string): { meta: ParsedFrontmatter; body: string } {
   const fmRegex = /^---\n([\s\S]*?)\n---/
   const match = content.match(fmRegex)
   
