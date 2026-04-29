@@ -176,7 +176,14 @@ export function KnowledgeGraph({
           }
         }
       ],
-      layout: {
+      minZoom: 0.2,
+      maxZoom: 4,
+      wheelSensitivity: 0.15
+    })
+
+    // 首次布局单独执行，try-catch 防止 crash
+    try {
+      const initLayout = cy.layout({
         name: 'fcose',
         animate: true,
         animationDuration: 500,
@@ -186,11 +193,11 @@ export function KnowledgeGraph({
         nestingFactor: 0.5,
         tile: true,
         padding: 50
-      },
-      minZoom: 0.2,
-      maxZoom: 4,
-      wheelSensitivity: 0.15
-    })
+      })
+      initLayout.run()
+    } catch (e) {
+      console.warn('[KnowledgeGraph] initial layout skipped:', e)
+    }
 
     cy.on('zoom', () => {
       setZoomLevel(cy.zoom())
