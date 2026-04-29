@@ -364,6 +364,63 @@ const server = serve({
       })
     }
 
+    // POST /api/generate-doc — LLM 生成文档正文
+    if (url.pathname === '/api/generate-doc' && req.method === 'POST') {
+      try {
+        const body = await req.json()
+        const { concept } = body
+        if (!concept) return new Response(JSON.stringify({ error: 'concept required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+        
+        const prompt = `你是一个技术文档撰写助手。请根据以下概念信息生成一份中文 Markdown 文档。
+
+概念名称: ${concept.title || ''}
+核心问题: ${concept.problem || ''}
+认知缺口: ${concept.gap_anticipate || ''}
+
+文档要求：
+1. 以"# 标题"开头
+2. 包含"## 问题"章节，解释这个概念要解决什么问题
+3. 包含"## 核心设计"章节，描述核心设计思路
+4. 包含"## 使用示例"章节，给出代码或伪代码示例
+
+只输出 Markdown 内容，不要额外说明。`
+
+        const apiKey = process.env.DEEPSEEK_API_KEY || ''
+        const baseUrl = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1'
+        const resp = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [{ role: 'system', content: '你是一个技术文档撰写助手。' }, { role: 'user', content: prompt }],
+            max_tokens: 2000,
+          }),
+        })
+        const data = await resp.json() as any
+        const content = data?.choices?.[0]?.message?.content || ''
+        return new Response(JSON.stringify({ content }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
+    }
+
+    // POST /api/write-doc — 写入 .md 文件
+    if (url.pathname === '/api/write-doc' && req.method === 'POST') {
+      try {
+        const body = await req.json()
+        const { path: filePath, content } = body
+        if (!filePath || content === undefined) return new Response(JSON.stringify({ error: 'path and content required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+        await Bun.write(filePath, content)
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
+    }
+
     return new Response('Not found', { status: 404 })
   },
 })
