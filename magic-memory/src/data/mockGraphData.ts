@@ -133,23 +133,6 @@ export const mockConcepts: Concept[] = [
     process: { chain_id: 'inference-startup', step_index: 0, role: '提供模型/缓存/调度三方面的统一配置入口' },
     elements: mockElements['0'],
     baseQuestions: mockBaseQuestions['0'],
-    content: `# VllmConfig - 配置中心
-
-鸡蛋是源头，所有配置的"蛋黄"。VllmConfig 包含 model/cache/scheduler 三个配置。
-
-## 核心功能
-- 模型配置：模型路径、参数、量化设置
-- 缓存配置：KV Cache 大小、分配策略
-- 调度配置：批处理策略、并发限制
-
-## 使用示例
-\`\`\`python
-config = VllmConfig(
-    model="meta-llama/Llama-2-7b",
-    tensor_parallel_size=2,
-    gpu_memory_utilization=0.9
-)
-\`\`\``,
     path: './docs/level-1/00-egg.md',
     tags: ['config', 'foundation'],
     lastModified: new Date('2024-01-15')
@@ -168,14 +151,6 @@ config = VllmConfig(
     process: { chain_id: 'inference-startup', step_index: 1, role: '抽象 GPU 设备接口，屏蔽 CUDA/ROCm/CPU 的硬件差异' },
     elements: mockElements['1'],
     baseQuestions: mockBaseQuestions['1'],
-    content: `# Device - GPU设备抽象
-
-蜡烛点亮 GPU，Device trait 是照亮系统的第一层抽象。
-
-## 设计思想
-- 抽象 GPU 操作接口
-- 支持多设备类型（CUDA, ROCm, CPU）
-- 提供统一的内存管理 API`,
     path: './docs/level-1/01-candle.md',
     tags: ['device', 'gpu', 'foundation'],
     lastModified: new Date('2024-01-15')
@@ -194,15 +169,6 @@ config = VllmConfig(
     process: { chain_id: 'inference-startup', step_index: 2, role: '提供统一的数据容器抽象，管理模型权重和中间结果的表示' },
     elements: mockElements['2'],
     baseQuestions: mockBaseQuestions['2'],
-    content: `# Tensor - 张量抽象
-
-张量像鸭子浮在水面上，漂浮在 GPU 内存上。
-
-## 核心属性
-- shape: 维度
-- dtype: 数据类型
-- device: 设备位置
-- data_ptr: 内存指针`,
     path: './docs/level-1/02-duck.md',
     tags: ['tensor', 'data', 'foundation'],
     lastModified: new Date('2024-01-15')
@@ -218,9 +184,6 @@ config = VllmConfig(
     depends_on: [],
     leads_to: [],
     related: [],
-    content: `# Logger/Tracing - 日志追踪
-
-日志被耳朵监听，记录系统状态。`,
     path: './docs/level-1/03-ear.md',
     tags: ['logging', 'observability'],
     lastModified: new Date('2024-01-15')
@@ -236,9 +199,6 @@ config = VllmConfig(
     depends_on: [],
     leads_to: ['5', '6', '7', '8'],
     related: [],
-    content: `# vllm-core - 核心库
-
-帆船承载 vLLM 核心库一切。`,
     path: './docs/level-1/04-boat.md',
     tags: ['core', 'foundation'],
     lastModified: new Date('2024-01-15')
@@ -257,9 +217,6 @@ config = VllmConfig(
     process: { chain_id: 'inference-startup', step_index: 3, role: '管理 GPU 显存池，为模型权重和 KV Cache 分配空间' },
     elements: mockElements['5'],
     baseQuestions: mockBaseQuestions['5'],
-    content: `# GpuAllocator - GPU内存分配器
-
-钩子钩住 GPU 显存分配。`,
     path: './docs/level-1/05-hook.md',
     tags: ['memory', 'allocator', 'gpu'],
     lastModified: new Date('2024-01-15')
@@ -275,9 +232,6 @@ config = VllmConfig(
     depends_on: ['4'],
     leads_to: [],
     related: [],
-    content: `# Error Handling - 错误处理
-
-勺子舀出错误 VllmError。`,
     path: './docs/level-1/06-spoon.md',
     tags: ['error', 'exception'],
     lastModified: new Date('2024-01-15')
@@ -293,9 +247,6 @@ config = VllmConfig(
     depends_on: ['3', '4'],
     leads_to: ['40'],
     related: ['0'],
-    content: `# Init - 初始化系统
-
-初始化需要支撑，像拐杖。init_logger 支撑整个系统。`,
     path: './docs/level-1/07-crutch.md',
     tags: ['init', 'startup'],
     lastModified: new Date('2024-01-15')
@@ -311,9 +262,6 @@ config = VllmConfig(
     depends_on: ['4'],
     leads_to: ['9'],
     related: [],
-    content: `# Foundation Layer - 基础层
-
-基础层像葫芦装所有底层功能。`,
     path: './docs/level-1/08-gourd.md',
     tags: ['foundation', '底层'],
     lastModified: new Date('2024-01-15')
@@ -329,9 +277,6 @@ config = VllmConfig(
     depends_on: ['5', '8'],
     leads_to: ['16', '17', '18', '19'],
     related: ['26'],
-    content: `# KV Cache - 键值缓存
-
-气球膨胀如缓存增长。KV Cache 是 Transformer 模型的核心缓存。`,
     path: './docs/level-1/09-balloon.md',
     tags: ['cache', 'kv', 'foundation'],
     lastModified: new Date('2024-01-15')
@@ -349,9 +294,6 @@ config = VllmConfig(
     depends_on: ['0'],
     leads_to: ['11', '12'],
     related: [],
-    content: `# ModelRegistry - 模型注册
-
-模型注册如棒球规则有限制（10个字符内命名）。`,
     path: './docs/level-2/10-baseball.md',
     tags: ['model', 'registry'],
     lastModified: new Date('2024-01-16')
@@ -367,9 +309,6 @@ config = VllmConfig(
     depends_on: ['10'],
     leads_to: ['12', '29'],
     related: [],
-    content: `# ModelLoader - 模型加载器
-
-筷子夹取权重，11=夹取。`,
     path: './docs/level-2/11-chopsticks.md',
     tags: ['model', 'loader'],
     lastModified: new Date('2024-01-16')
@@ -385,9 +324,6 @@ config = VllmConfig(
     depends_on: ['10', '11'],
     leads_to: ['13', '14'],
     related: [],
-    content: `# Model - 模型主体
-
-模型如婴儿被加载到 Model Runner 上。`,
     path: './docs/level-2/12-highchair.md',
     tags: ['model', 'inference'],
     lastModified: new Date('2024-01-16')
@@ -403,9 +339,6 @@ config = VllmConfig(
     depends_on: ['12'],
     leads_to: ['14', '24'],
     related: [],
-    content: `# ModelRunner - 模型运行器
-
-ModelRunner 如雨伞保护前向传播。`,
     path: './docs/level-2/13-umbrella.md',
     tags: ['model', 'runner'],
     lastModified: new Date('2024-01-16')
@@ -421,9 +354,6 @@ ModelRunner 如雨伞保护前向传播。`,
     depends_on: ['2', '12'],
     leads_to: ['15'],
     related: [],
-    content: `# Embedding - 词嵌入
-
-玫瑰芳香嵌入向量。`,
     path: './docs/level-2/14-rose.md',
     tags: ['embedding', 'nlp'],
     lastModified: new Date('2024-01-16')
@@ -439,9 +369,6 @@ ModelRunner 如雨伞保护前向传播。`,
     depends_on: ['14'],
     leads_to: ['16'],
     related: [],
-    content: `# Transformer Layers - 层叠
-
-鹦鹉学舌对应多层 Transformer。`,
     path: './docs/level-2/15-parrot.md',
     tags: ['transformer', 'layers'],
     lastModified: new Date('2024-01-16')
@@ -457,9 +384,6 @@ ModelRunner 如雨伞保护前向传播。`,
     depends_on: ['9', '15'],
     leads_to: ['17'],
     related: ['19'],
-    content: `# PagedAttention - 分页注意力
-
-石榴多籽 = 多分页，KV 分页管理是 vLLM 的核心技术。`,
     path: './docs/level-2/16-pomegranate.md',
     tags: ['attention', 'paging', '核心技术'],
     lastModified: new Date('2024-01-16')
@@ -475,9 +399,6 @@ ModelRunner 如雨伞保护前向传播。`,
     depends_on: ['16'],
     leads_to: ['18'],
     related: [],
-    content: `# Block Table - 块表映射
-
-Block Table 如显微镜看物理块映射。`,
     path: './docs/level-2/17-microscope.md',
     tags: ['block', 'paging', 'mmu'],
     lastModified: new Date('2024-01-16')
@@ -493,9 +414,6 @@ Block Table 如显微镜看物理块映射。`,
     depends_on: ['9', '17'],
     leads_to: ['19'],
     related: [],
-    content: `# CacheBlock - 缓存块
-
-CacheBlock 如钞票管理显存资源。`,
     path: './docs/level-2/18-money.md',
     tags: ['cache', 'block'],
     lastModified: new Date('2024-01-16')
@@ -511,9 +429,6 @@ CacheBlock 如钞票管理显存资源。`,
     depends_on: ['9', '16', '18'],
     leads_to: ['20'],
     related: [],
-    content: `# KVCacheManager - 缓存管理器
-
-KVCacheManager 如药剂师分配缓存。`,
     path: './docs/level-2/19-medicine.md',
     tags: ['cache', 'manager'],
     lastModified: new Date('2024-01-16')
@@ -529,9 +444,6 @@ KVCacheManager 如药剂师分配缓存。`,
     depends_on: ['19'],
     leads_to: ['21', '22'],
     related: [],
-    content: `# Sampler - 采样器
-
-Sampler 如点燃决定下一个 token。`,
     path: './docs/level-2/20-cigarette.md',
     tags: ['sampling', 'decoding'],
     lastModified: new Date('2024-01-16')
@@ -547,9 +459,6 @@ Sampler 如点燃决定下一个 token。`,
     depends_on: ['20'],
     leads_to: ['22'],
     related: [],
-    content: `# Sampling Params - 采样参数
-
-temperature/top_k/top_p 如鳄鱼参数凶猛。`,
     path: './docs/level-2/21-crocodile.md',
     tags: ['sampling', 'params'],
     lastModified: new Date('2024-01-16')
@@ -565,9 +474,6 @@ temperature/top_k/top_p 如鳄鱼参数凶猛。`,
     depends_on: ['21'],
     leads_to: ['23'],
     related: [],
-    content: `# Logits - 对数几率
-
-Logits 如双胞胎成对出现。`,
     path: './docs/level-2/22-twins.md',
     tags: ['logits', 'output'],
     lastModified: new Date('2024-01-16')
@@ -583,9 +489,6 @@ Logits 如双胞胎成对出现。`,
     depends_on: ['22'],
     leads_to: ['24'],
     related: [],
-    content: `# Token - 词元
-
-一个 Token 如耳塞塞住信息。`,
     path: './docs/level-2/23-earplugs.md',
     tags: ['token', 'vocabulary'],
     lastModified: new Date('2024-01-16')
@@ -601,9 +504,6 @@ Logits 如双胞胎成对出现。`,
     depends_on: ['13', '23'],
     leads_to: ['25'],
     related: [],
-    content: `# Decode Step - 解码步骤
-
-解码如闹钟每步滴答产生 token。`,
     path: './docs/level-2/24-alarm.md',
     tags: ['decode', 'generation'],
     lastModified: new Date('2024-01-16')
@@ -619,9 +519,6 @@ Logits 如双胞胎成对出现。`,
     depends_on: ['2', '24'],
     leads_to: ['26', '27'],
     related: [],
-    content: `# Forward Pass - 前向传播
-
-前向传播如二胡弦动。`,
     path: './docs/level-2/25-erhu.md',
     tags: ['forward', 'inference'],
     lastModified: new Date('2024-01-16')
@@ -637,9 +534,6 @@ Logits 如双胞胎成对出现。`,
     depends_on: ['9', '25'],
     leads_to: ['27', '28'],
     related: [],
-    content: `# GPU Memory Pool - 显存池
-
-GPU 内存如河流流动。`,
     path: './docs/level-2/26-river.md',
     tags: ['memory', 'gpu', 'pool'],
     lastModified: new Date('2024-01-16')
@@ -655,9 +549,6 @@ GPU 内存如河流流动。`,
     depends_on: ['25', '26'],
     leads_to: ['28'],
     related: [],
-    content: `# FlashAttention - 快速注意力
-
-FlashAttention 如耳机快速聆听处理。`,
     path: './docs/level-2/27-headphones.md',
     tags: ['attention', 'performance', 'optimization'],
     lastModified: new Date('2024-01-16')
@@ -673,9 +564,6 @@ FlashAttention 如耳机快速聆听处理。`,
     depends_on: ['26', '27'],
     leads_to: ['29'],
     related: [],
-    content: `# Quantization - 量化
-
-量化如恶霸暴力压缩精度。`,
     path: './docs/level-2/28-bully.md',
     tags: ['quantization', 'performance', 'model-compression'],
     lastModified: new Date('2024-01-16')
@@ -691,9 +579,6 @@ FlashAttention 如耳机快速聆听处理。`,
     depends_on: ['11', '28'],
     leads_to: ['30'],
     related: [],
-    content: `# Weights Loading - 权重加载
-
-load_hf_model 如二舅帮忙加载。`,
     path: './docs/level-2/29-uncle.md',
     tags: ['weights', 'loading'],
     lastModified: new Date('2024-01-16')
@@ -711,9 +596,6 @@ load_hf_model 如二舅帮忙加载。`,
     depends_on: ['29'],
     leads_to: ['31', '32', '33'],
     related: [],
-    content: `# Speculative Decoding - 投机解码
-
-推测解码如三菱标志三分支。`,
     path: './docs/level-3/30-mitsubishi.md',
     tags: ['speculative', 'decoding', 'optimization'],
     lastModified: new Date('2024-01-17')
@@ -729,9 +611,6 @@ load_hf_model 如二舅帮忙加载。`,
     depends_on: ['30'],
     leads_to: ['32'],
     related: [],
-    content: `# Draft Token - 起草 token
-
-Draft token 如山药生长。`,
     path: './docs/level-3/31-yam.md',
     tags: ['speculative', 'draft'],
     lastModified: new Date('2024-01-17')
@@ -747,9 +626,6 @@ Draft token 如山药生长。`,
     depends_on: ['30', '31'],
     leads_to: ['33'],
     related: [],
-    content: `# Verifier - 验证器
-
-验证器扇出正确 token。`,
     path: './docs/level-3/32-fan.md',
     tags: ['speculative', 'verify'],
     lastModified: new Date('2024-01-17')
@@ -765,9 +641,6 @@ Draft token 如山药生长。`,
     depends_on: ['30'],
     leads_to: ['34'],
     related: [],
-    content: `# N-gram Proposer - N元提议
-
-N-gram 如星空群星。`,
     path: './docs/level-3/33-stars.md',
     tags: ['speculative', 'ngram'],
     lastModified: new Date('2024-01-17')
@@ -783,9 +656,6 @@ N-gram 如星空群星。`,
     depends_on: ['33'],
     leads_to: ['35'],
     related: [],
-    content: `# Continuous Batching - 连续批处理
-
-批处理如蔬菜条条有序。`,
     path: './docs/level-3/34-vegetable.md',
     tags: ['batching', 'scheduling', 'performance'],
     lastModified: new Date('2024-01-17')
@@ -801,9 +671,6 @@ N-gram 如星空群星。`,
     depends_on: ['34'],
     leads_to: ['36', '37', '38'],
     related: [],
-    content: `# Scheduler - 调度器
-
-调度器如珊瑚礁分支多。`,
     path: './docs/level-3/35-coral.md',
     tags: ['scheduler', 'scheduling'],
     lastModified: new Date('2024-01-17')
@@ -819,9 +686,6 @@ N-gram 如星空群星。`,
     depends_on: ['35'],
     leads_to: ['37'],
     related: [],
-    content: `# Prefill - 预填充
-
-Prefill 如鹿冲锋快速。`,
     path: './docs/level-3/36-deer.md',
     tags: ['prefill', 'scheduling'],
     lastModified: new Date('2024-01-17')
@@ -837,9 +701,6 @@ Prefill 如鹿冲锋快速。`,
     depends_on: ['35', '36'],
     leads_to: ['38'],
     related: [],
-    content: `# Decode - 解码
-
-Decode 如野鸡慢走解码。`,
     path: './docs/level-3/37-pheasant.md',
     tags: ['decode', 'scheduling'],
     lastModified: new Date('2024-01-17')
@@ -855,9 +716,6 @@ Decode 如野鸡慢走解码。`,
     depends_on: ['35'],
     leads_to: ['39', '48'],
     related: [],
-    content: `# Prefix Caching - 前缀缓存
-
-女性记前缀能力强。`,
     path: './docs/level-3/38-woman.md',
     tags: ['caching', 'prefix', 'optimization'],
     lastModified: new Date('2024-01-17')
@@ -873,9 +731,6 @@ Decode 如野鸡慢走解码。`,
     depends_on: ['38'],
     leads_to: ['40'],
     related: [],
-    content: `# Request Queue - 请求队列
-
-请求队列如剑林排列。`,
     path: './docs/level-3/39-sword.md',
     tags: ['queue', 'scheduling'],
     lastModified: new Date('2024-01-17')
@@ -891,9 +746,6 @@ Decode 如野鸡慢走解码。`,
     depends_on: ['7', '39'],
     leads_to: ['41', '42'],
     related: [],
-    content: `# vllm-engine - 引擎
-
-Engine 司令指挥全流程。`,
     path: './docs/level-3/40-commander.md',
     tags: ['engine', 'core'],
     lastModified: new Date('2024-01-17')
@@ -909,9 +761,6 @@ Engine 司令指挥全流程。`,
     depends_on: ['40'],
     leads_to: ['42', '43'],
     related: [],
-    content: `# Engine API - 引擎 API
-
-API 如蜥蜴爬行接口层。`,
     path: './docs/level-3/41-lizard.md',
     tags: ['api', 'interface'],
     lastModified: new Date('2024-01-17')
@@ -927,9 +776,6 @@ API 如蜥蜴爬行接口层。`,
     depends_on: ['40', '41'],
     leads_to: ['43', '44', '45'],
     related: [],
-    content: `# vllm-serving - 服务层
-
-Serving 如玉米棒包万物。`,
     path: './docs/level-3/42-corn.md',
     tags: ['serving', 'server'],
     lastModified: new Date('2024-01-17')
@@ -945,9 +791,6 @@ Serving 如玉米棒包万物。`,
     depends_on: ['41', '42'],
     leads_to: ['44'],
     related: [],
-    content: `# OpenAI API - OpenAI 协议
-
-OpenAI 兼容如石山稳固。`,
     path: './docs/level-3/43-rock.md',
     tags: ['openai', 'api', 'compatibility'],
     lastModified: new Date('2024-01-17')
@@ -963,9 +806,6 @@ OpenAI 兼容如石山稳固。`,
     depends_on: ['42'],
     leads_to: ['45'],
     related: [],
-    content: `# gRPC - gRPC 协议
-
-gRPC 如眼镜蛇快速。`,
     path: './docs/level-3/44-cobra.md',
     tags: ['grpc', 'protocol'],
     lastModified: new Date('2024-01-17')
@@ -981,9 +821,6 @@ gRPC 如眼镜蛇快速。`,
     depends_on: ['42', '44'],
     leads_to: ['46'],
     related: [],
-    content: `# WebSocket - WebSocket
-
-WS 实时推流如师傅传功。`,
     path: './docs/level-3/45-master.md',
     tags: ['websocket', 'streaming'],
     lastModified: new Date('2024-01-17')
@@ -999,9 +836,6 @@ WS 实时推流如师傅传功。`,
     depends_on: ['45'],
     leads_to: ['47'],
     related: [],
-    content: `# Multi-Lora - 多 Lora
-
-多 Lora 如石榴多籽。`,
     path: './docs/level-3/46-pomegranate.md',
     tags: ['lora', 'finetuning', 'multi-tenant'],
     lastModified: new Date('2024-01-17')
@@ -1017,9 +851,6 @@ WS 实时推流如师傅传功。`,
     depends_on: ['1', '46'],
     leads_to: ['48'],
     related: [],
-    content: `# GPU Driver - GPU 驱动
-
-驱动如司机驾驶 GPU。`,
     path: './docs/level-3/47-driver.md',
     tags: ['gpu', 'driver', 'cuda'],
     lastModified: new Date('2024-01-17')
@@ -1035,9 +866,6 @@ WS 实时推流如师傅传功。`,
     depends_on: ['38', '47'],
     leads_to: ['49'],
     related: [],
-    content: `# Prefix Lookup - 前缀查找
-
-前缀查找如丝瓜络过滤。`,
     path: './docs/level-3/48-loofah.md',
     tags: ['prefix', 'lookup', 'optimization'],
     lastModified: new Date('2024-01-17')
@@ -1053,9 +881,6 @@ WS 实时推流如师傅传功。`,
     depends_on: ['48'],
     leads_to: ['50'],
     related: [],
-    content: `# Cache Eviction - 缓存驱逐
-
-缓存驱逐如湿狗甩水。`,
     path: './docs/level-3/49-wetdog.md',
     tags: ['cache', 'eviction', 'optimization'],
     lastModified: new Date('2024-01-17')
@@ -1071,9 +896,6 @@ WS 实时推流如师傅传功。`,
     depends_on: ['49'],
     leads_to: [],
     related: [],
-    content: `# Distributed - 分布式
-
-分布式如五菱装更多节点。`,
     path: './docs/level-3/50-minivan.md',
     tags: ['distributed', 'multi-gpu', 'infrastructure'],
     lastModified: new Date('2024-01-17')
