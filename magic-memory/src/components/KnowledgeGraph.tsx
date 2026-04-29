@@ -312,19 +312,23 @@ export function KnowledgeGraph({
       }
     })
 
-    // 运行增量布局
-    const layout = cy.layout({
-      name: 'fcose',
-      animate: true,
-      animationDuration: 300,
-      nodeRepulsion: 5000,
-      idealEdgeLength: 80,
-      gravity: 0.3,
-      nestingFactor: 0.5,
-      tile: true,
-      padding: 50
-    })
-    layout.run()
+    // 运行增量布局（try-catch 防止与首次渲染布局冲突）
+    try {
+      const layout = cy.layout({
+        name: 'fcose',
+        animate: true,
+        animationDuration: 300,
+        nodeRepulsion: 5000,
+        idealEdgeLength: 80,
+        gravity: 0.3,
+        nestingFactor: 0.5,
+        tile: true,
+        padding: 50
+      })
+      layout.run()
+    } catch (e) {
+      console.warn('[KnowledgeGraph] incremental layout skipped:', e)
+    }
   }, [concepts, edges])
 
   useEffect(() => {
@@ -366,8 +370,11 @@ export function KnowledgeGraph({
     }
 
     const selectedNode = cy.getElementById(selectedConcept.id)
-    const neighborhood = selectedNode.closedNeighborhood()
-    const relatedNodeIds = new Set(neighborhood.nodes().map(n => n.id()))
+    // 只取子概念（leads_to / depends_on），排除平行关联（related）
+    const connectedEdges = selectedNode.connectedEdges()
+    const relevantEdges = connectedEdges.filter(e => e.data('edgeType') !== 'related')
+    const neighborNodes = relevantEdges.connectedNodes()
+    const relatedNodeIds = new Set([selectedConcept.id, ...neighborNodes.map(n => n.id())])
 
     cy.nodes().forEach(n => {
       const isSelected = n.id() === selectedConcept.id
@@ -395,7 +402,7 @@ export function KnowledgeGraph({
       })
     })
 
-    cy.fit(neighborhood, 60)
+    cy.fit(neighborNodes.union(selectedNode), 60)
     wasFocusedRef.current = isFocusedNow
   }, [selectedConcept, focusEnabled])
 
