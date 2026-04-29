@@ -55,20 +55,15 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
 loadGraph: async () => {
     set({ isLoading: true, error: null })
     try {
-      // 如果已经有持久化数据（来自 localStorage），不覆盖
+      // 有持久化数据则加载，没有则显示空图谱（由 KnowledgeGraphView 引导）
       const currentState = get()
       if (currentState.concepts.length > 0 && currentState.edges.length > 0) {
         set({ isLoading: false })
         return
       }
-      const data = getMockGraphData()
+      // 无持久化数据：延迟后显示空状态（引导 UI 接管）
       await new Promise(resolve => setTimeout(resolve, 300))
-      set({
-        concepts: data.concepts,
-        edges: data.edges,
-        chains: data.chains ?? [],
-        isLoading: false
-      })
+      set({ isLoading: false })
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Unknown error',
