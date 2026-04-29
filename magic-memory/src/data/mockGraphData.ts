@@ -133,7 +133,7 @@ export const mockConcepts: Concept[] = [
     process: { chain_id: 'inference-startup', step_index: 0, role: '提供模型/缓存/调度三方面的统一配置入口' },
     elements: mockElements['0'],
     baseQuestions: mockBaseQuestions['0'],
-    path: './docs/level-1/00-egg.md',
+    path: './docs/Foundation/00-vllm-config.md',
     tags: ['config', 'foundation'],
     lastModified: new Date('2024-01-15')
   },
@@ -151,7 +151,7 @@ export const mockConcepts: Concept[] = [
     process: { chain_id: 'inference-startup', step_index: 1, role: '抽象 GPU 设备接口，屏蔽 CUDA/ROCm/CPU 的硬件差异' },
     elements: mockElements['1'],
     baseQuestions: mockBaseQuestions['1'],
-    path: './docs/level-1/01-candle.md',
+    path: './docs/Foundation/01-device.md',
     tags: ['device', 'gpu', 'foundation'],
     lastModified: new Date('2024-01-15')
   },
@@ -169,7 +169,7 @@ export const mockConcepts: Concept[] = [
     process: { chain_id: 'inference-startup', step_index: 2, role: '提供统一的数据容器抽象，管理模型权重和中间结果的表示' },
     elements: mockElements['2'],
     baseQuestions: mockBaseQuestions['2'],
-    path: './docs/level-1/02-duck.md',
+    path: './docs/Foundation/02-tensor.md',
     tags: ['tensor', 'data', 'foundation'],
     lastModified: new Date('2024-01-15')
   },
@@ -184,7 +184,7 @@ export const mockConcepts: Concept[] = [
     depends_on: [],
     leads_to: [],
     related: [],
-    path: './docs/level-1/03-ear.md',
+    path: './docs/Foundation/03-logger.md',
     tags: ['logging', 'observability'],
     lastModified: new Date('2024-01-15')
   },
@@ -199,7 +199,7 @@ export const mockConcepts: Concept[] = [
     depends_on: [],
     leads_to: ['5', '6', '7', '8'],
     related: [],
-    path: './docs/level-1/04-boat.md',
+    path: './docs/Foundation/04-vllm-core.md',
     tags: ['core', 'foundation'],
     lastModified: new Date('2024-01-15')
   },
@@ -217,7 +217,7 @@ export const mockConcepts: Concept[] = [
     process: { chain_id: 'inference-startup', step_index: 3, role: '管理 GPU 显存池，为模型权重和 KV Cache 分配空间' },
     elements: mockElements['5'],
     baseQuestions: mockBaseQuestions['5'],
-    path: './docs/level-1/05-hook.md',
+    path: './docs/Foundation/05-gpu-allocator.md',
     tags: ['memory', 'allocator', 'gpu'],
     lastModified: new Date('2024-01-15')
   },
@@ -232,7 +232,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['4'],
     leads_to: [],
     related: [],
-    path: './docs/level-1/06-spoon.md',
+    path: './docs/Foundation/06-error-handling.md',
     tags: ['error', 'exception'],
     lastModified: new Date('2024-01-15')
   },
@@ -247,7 +247,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['3', '4'],
     leads_to: ['40'],
     related: ['0'],
-    path: './docs/level-1/07-crutch.md',
+    path: './docs/Foundation/07-init.md',
     tags: ['init', 'startup'],
     lastModified: new Date('2024-01-15')
   },
@@ -262,7 +262,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['4'],
     leads_to: ['9'],
     related: [],
-    path: './docs/level-1/08-gourd.md',
+    path: './docs/Foundation/08-foundation-layer.md',
     tags: ['foundation', '底层'],
     lastModified: new Date('2024-01-15')
   },
@@ -277,7 +277,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['5', '8'],
     leads_to: ['16', '17', '18', '19'],
     related: ['26'],
-    path: './docs/level-1/09-balloon.md',
+    path: './docs/Foundation/09-kv-cache.md',
     tags: ['cache', 'kv', 'foundation'],
     lastModified: new Date('2024-01-15')
   },
@@ -294,7 +294,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['0'],
     leads_to: ['11', '12'],
     related: [],
-    path: './docs/level-2/10-baseball.md',
+    path: './docs/Model/10-model-registry.md',
     tags: ['model', 'registry'],
     lastModified: new Date('2024-01-16')
   },
@@ -309,7 +309,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['10'],
     leads_to: ['12', '29'],
     related: [],
-    path: './docs/level-2/11-chopsticks.md',
+    path: './docs/Model/11-model-loader.md',
     tags: ['model', 'loader'],
     lastModified: new Date('2024-01-16')
   },
@@ -324,7 +324,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['10', '11'],
     leads_to: ['13', '14'],
     related: [],
-    path: './docs/level-2/12-highchair.md',
+    path: './docs/Model/12-model.md',
     tags: ['model', 'inference'],
     lastModified: new Date('2024-01-16')
   },
@@ -339,7 +339,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['12'],
     leads_to: ['14', '24'],
     related: [],
-    path: './docs/level-2/13-umbrella.md',
+    path: './docs/Model/13-model-runner.md',
     tags: ['model', 'runner'],
     lastModified: new Date('2024-01-16')
   },
@@ -354,7 +354,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['2', '12'],
     leads_to: ['15'],
     related: [],
-    path: './docs/level-2/14-rose.md',
+    path: './docs/Model/14-embedding.md',
     tags: ['embedding', 'nlp'],
     lastModified: new Date('2024-01-16')
   },
@@ -369,7 +369,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['14'],
     leads_to: ['16'],
     related: [],
-    path: './docs/level-2/15-parrot.md',
+    path: './docs/Model/15-transformer-layers.md',
     tags: ['transformer', 'layers'],
     lastModified: new Date('2024-01-16')
   },
@@ -384,7 +384,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['9', '15'],
     leads_to: ['17'],
     related: ['19'],
-    path: './docs/level-2/16-pomegranate.md',
+    path: './docs/Model/attention/16-paged-attention.md',
     tags: ['attention', 'paging', '核心技术'],
     lastModified: new Date('2024-01-16')
   },
@@ -399,7 +399,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['16'],
     leads_to: ['18'],
     related: [],
-    path: './docs/level-2/17-microscope.md',
+    path: './docs/Model/attention/17-block-table.md',
     tags: ['block', 'paging', 'mmu'],
     lastModified: new Date('2024-01-16')
   },
@@ -414,7 +414,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['9', '17'],
     leads_to: ['19'],
     related: [],
-    path: './docs/level-2/18-money.md',
+    path: './docs/Model/attention/18-cache-block.md',
     tags: ['cache', 'block'],
     lastModified: new Date('2024-01-16')
   },
@@ -429,7 +429,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['9', '16', '18'],
     leads_to: ['20'],
     related: [],
-    path: './docs/level-2/19-medicine.md',
+    path: './docs/Model/attention/19-kv-cache-manager.md',
     tags: ['cache', 'manager'],
     lastModified: new Date('2024-01-16')
   },
@@ -444,7 +444,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['19'],
     leads_to: ['21', '22'],
     related: [],
-    path: './docs/level-2/20-cigarette.md',
+    path: './docs/Model/20-sampler.md',
     tags: ['sampling', 'decoding'],
     lastModified: new Date('2024-01-16')
   },
@@ -459,7 +459,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['20'],
     leads_to: ['22'],
     related: [],
-    path: './docs/level-2/21-crocodile.md',
+    path: './docs/Model/21-sampling-params.md',
     tags: ['sampling', 'params'],
     lastModified: new Date('2024-01-16')
   },
@@ -474,7 +474,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['21'],
     leads_to: ['23'],
     related: [],
-    path: './docs/level-2/22-twins.md',
+    path: './docs/Model/22-logits.md',
     tags: ['logits', 'output'],
     lastModified: new Date('2024-01-16')
   },
@@ -489,7 +489,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['22'],
     leads_to: ['24'],
     related: [],
-    path: './docs/level-2/23-earplugs.md',
+    path: './docs/Model/23-token.md',
     tags: ['token', 'vocabulary'],
     lastModified: new Date('2024-01-16')
   },
@@ -504,7 +504,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['13', '23'],
     leads_to: ['25'],
     related: [],
-    path: './docs/level-2/24-alarm.md',
+    path: './docs/Model/24-decode-step.md',
     tags: ['decode', 'generation'],
     lastModified: new Date('2024-01-16')
   },
@@ -519,7 +519,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['2', '24'],
     leads_to: ['26', '27'],
     related: [],
-    path: './docs/level-2/25-erhu.md',
+    path: './docs/Model/25-forward-pass.md',
     tags: ['forward', 'inference'],
     lastModified: new Date('2024-01-16')
   },
@@ -534,7 +534,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['9', '25'],
     leads_to: ['27', '28'],
     related: [],
-    path: './docs/level-2/26-river.md',
+    path: './docs/Performance/26-gpu-memory-pool.md',
     tags: ['memory', 'gpu', 'pool'],
     lastModified: new Date('2024-01-16')
   },
@@ -549,7 +549,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['25', '26'],
     leads_to: ['28'],
     related: [],
-    path: './docs/level-2/27-headphones.md',
+    path: './docs/Performance/27-flash-attention.md',
     tags: ['attention', 'performance', 'optimization'],
     lastModified: new Date('2024-01-16')
   },
@@ -564,7 +564,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['26', '27'],
     leads_to: ['29'],
     related: [],
-    path: './docs/level-2/28-bully.md',
+    path: './docs/Performance/28-quantization.md',
     tags: ['quantization', 'performance', 'model-compression'],
     lastModified: new Date('2024-01-16')
   },
@@ -579,7 +579,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['11', '28'],
     leads_to: ['30'],
     related: [],
-    path: './docs/level-2/29-uncle.md',
+    path: './docs/Model/29-weights-loading.md',
     tags: ['weights', 'loading'],
     lastModified: new Date('2024-01-16')
   },
@@ -596,7 +596,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['29'],
     leads_to: ['31', '32', '33'],
     related: [],
-    path: './docs/level-3/30-mitsubishi.md',
+    path: './docs/Advanced/30-speculative-decoding.md',
     tags: ['speculative', 'decoding', 'optimization'],
     lastModified: new Date('2024-01-17')
   },
@@ -611,7 +611,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['30'],
     leads_to: ['32'],
     related: [],
-    path: './docs/level-3/31-yam.md',
+    path: './docs/Advanced/31-draft-token.md',
     tags: ['speculative', 'draft'],
     lastModified: new Date('2024-01-17')
   },
@@ -626,7 +626,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['30', '31'],
     leads_to: ['33'],
     related: [],
-    path: './docs/level-3/32-fan.md',
+    path: './docs/Advanced/32-verifier.md',
     tags: ['speculative', 'verify'],
     lastModified: new Date('2024-01-17')
   },
@@ -641,7 +641,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['30'],
     leads_to: ['34'],
     related: [],
-    path: './docs/level-3/33-stars.md',
+    path: './docs/Advanced/33-n-gram-proposer.md',
     tags: ['speculative', 'ngram'],
     lastModified: new Date('2024-01-17')
   },
@@ -656,7 +656,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['33'],
     leads_to: ['35'],
     related: [],
-    path: './docs/level-3/34-vegetable.md',
+    path: './docs/Scheduling/34-continuous-batching.md',
     tags: ['batching', 'scheduling', 'performance'],
     lastModified: new Date('2024-01-17')
   },
@@ -671,7 +671,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['34'],
     leads_to: ['36', '37', '38'],
     related: [],
-    path: './docs/level-3/35-coral.md',
+    path: './docs/Scheduling/35-scheduler.md',
     tags: ['scheduler', 'scheduling'],
     lastModified: new Date('2024-01-17')
   },
@@ -686,7 +686,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['35'],
     leads_to: ['37'],
     related: [],
-    path: './docs/level-3/36-deer.md',
+    path: './docs/Scheduling/36-prefill.md',
     tags: ['prefill', 'scheduling'],
     lastModified: new Date('2024-01-17')
   },
@@ -701,7 +701,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['35', '36'],
     leads_to: ['38'],
     related: [],
-    path: './docs/level-3/37-pheasant.md',
+    path: './docs/Scheduling/37-decode.md',
     tags: ['decode', 'scheduling'],
     lastModified: new Date('2024-01-17')
   },
@@ -716,7 +716,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['35'],
     leads_to: ['39', '48'],
     related: [],
-    path: './docs/level-3/38-woman.md',
+    path: './docs/Optimization/38-prefix-caching.md',
     tags: ['caching', 'prefix', 'optimization'],
     lastModified: new Date('2024-01-17')
   },
@@ -731,7 +731,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['38'],
     leads_to: ['40'],
     related: [],
-    path: './docs/level-3/39-sword.md',
+    path: './docs/Scheduling/39-request-queue.md',
     tags: ['queue', 'scheduling'],
     lastModified: new Date('2024-01-17')
   },
@@ -746,7 +746,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['7', '39'],
     leads_to: ['41', '42'],
     related: [],
-    path: './docs/level-3/40-commander.md',
+    path: './docs/Serving/40-vllm-engine.md',
     tags: ['engine', 'core'],
     lastModified: new Date('2024-01-17')
   },
@@ -761,7 +761,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['40'],
     leads_to: ['42', '43'],
     related: [],
-    path: './docs/level-3/41-lizard.md',
+    path: './docs/Serving/41-engine-api.md',
     tags: ['api', 'interface'],
     lastModified: new Date('2024-01-17')
   },
@@ -776,7 +776,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['40', '41'],
     leads_to: ['43', '44', '45'],
     related: [],
-    path: './docs/level-3/42-corn.md',
+    path: './docs/Serving/42-vllm-serving.md',
     tags: ['serving', 'server'],
     lastModified: new Date('2024-01-17')
   },
@@ -791,7 +791,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['41', '42'],
     leads_to: ['44'],
     related: [],
-    path: './docs/level-3/43-rock.md',
+    path: './docs/Serving/43-openai-api.md',
     tags: ['openai', 'api', 'compatibility'],
     lastModified: new Date('2024-01-17')
   },
@@ -806,7 +806,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['42'],
     leads_to: ['45'],
     related: [],
-    path: './docs/level-3/44-cobra.md',
+    path: './docs/Serving/44-grpc.md',
     tags: ['grpc', 'protocol'],
     lastModified: new Date('2024-01-17')
   },
@@ -821,7 +821,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['42', '44'],
     leads_to: ['46'],
     related: [],
-    path: './docs/level-3/45-master.md',
+    path: './docs/Serving/45-websocket.md',
     tags: ['websocket', 'streaming'],
     lastModified: new Date('2024-01-17')
   },
@@ -836,7 +836,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['45'],
     leads_to: ['47'],
     related: [],
-    path: './docs/level-3/46-pomegranate.md',
+    path: './docs/Advanced/46-multi-lora.md',
     tags: ['lora', 'finetuning', 'multi-tenant'],
     lastModified: new Date('2024-01-17')
   },
@@ -851,7 +851,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['1', '46'],
     leads_to: ['48'],
     related: [],
-    path: './docs/level-3/47-driver.md',
+    path: './docs/Infrastructure/47-gpu-driver.md',
     tags: ['gpu', 'driver', 'cuda'],
     lastModified: new Date('2024-01-17')
   },
@@ -866,7 +866,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['38', '47'],
     leads_to: ['49'],
     related: [],
-    path: './docs/level-3/48-loofah.md',
+    path: './docs/Optimization/48-prefix-lookup.md',
     tags: ['prefix', 'lookup', 'optimization'],
     lastModified: new Date('2024-01-17')
   },
@@ -881,7 +881,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['48'],
     leads_to: ['50'],
     related: [],
-    path: './docs/level-3/49-wetdog.md',
+    path: './docs/Optimization/49-cache-eviction.md',
     tags: ['cache', 'eviction', 'optimization'],
     lastModified: new Date('2024-01-17')
   },
@@ -896,7 +896,7 @@ export const mockConcepts: Concept[] = [
     depends_on: ['49'],
     leads_to: [],
     related: [],
-    path: './docs/level-3/50-minivan.md',
+    path: './docs/Infrastructure/50-distributed.md',
     tags: ['distributed', 'multi-gpu', 'infrastructure'],
     lastModified: new Date('2024-01-17')
   }
