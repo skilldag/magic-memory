@@ -155,3 +155,35 @@ export function calculateNextReview(
   
   return { interval: newInterval, easeFactor: newEaseFactor }
 }
+
+/**
+ * 将 LLM 返回的标题列表匹配到已有概念的 ID
+ * 支持精确匹配、别名匹配、模糊匹配
+ */
+export function matchTitlesToIds(
+  titles: string[],
+  concepts: { id: string; title: string; alias?: string[] }[]
+): string[] {
+  const ids: string[] = []
+  for (const title of titles) {
+    const t = title.trim()
+    if (!t) continue
+    // 精确匹配
+    let found = concepts.find(c => c.title === t || (c.alias && c.alias.includes(t)))
+    if (found) { ids.push(found.id); continue }
+    // 包含匹配
+    found = concepts.find(c => c.title.includes(t) || t.includes(c.title))
+    if (found) { ids.push(found.id); continue }
+    // 别名包含匹配
+    found = concepts.find(c => c.alias && c.alias.some(a => a.includes(t) || t.includes(a)))
+    if (found) { ids.push(found.id); continue }
+    // 归一化匹配（去空格、特殊字符）
+    const norm = t.replace(/[\s\-_]/g, '').toLowerCase()
+    found = concepts.find(c =>
+      c.title.replace(/[\s\-_]/g, '').toLowerCase() === norm ||
+      (c.alias && c.alias.some(a => a.replace(/[\s\-_]/g, '').toLowerCase() === norm))
+    )
+    if (found) { ids.push(found.id); continue }
+  }
+  return ids
+}
