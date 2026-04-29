@@ -251,6 +251,7 @@ export function KnowledgeGraph({
 
     
     cyRef.current = cy
+    ;(window as any).__cy = cy
     setIsReady(true)
     
     return () => {
