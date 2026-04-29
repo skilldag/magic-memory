@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain, ProcessState } from '../types'
+import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain, ProcessState, UserQuestion, CanvasHistoryItem } from '../types'
 import { getMockGraphData } from '../data/mockGraphData'
 
 interface KnowledgeGraphStore {
@@ -13,6 +13,12 @@ interface KnowledgeGraphStore {
   isLoading: boolean
   error: string | null
   viewMode: 'explore' | 'review'
+  
+  // 骨架填充
+  questions: UserQuestion[]
+  canvasHistory: CanvasHistoryItem[]
+  skeletonCompleted: string[]
+  conceptPanelMode: boolean
   
   loadGraph: () => Promise<void>
   selectConcept: (concept: Concept) => void
@@ -31,6 +37,13 @@ interface KnowledgeGraphStore {
     metadataStatus?: 'ai-generated' | 'draft'
   }) => Concept
   updateProcessState: (conceptId: string, state: Partial<ProcessState>) => void
+
+  // 骨架填充 actions
+  addQuestion: (q: Omit<UserQuestion, 'id' | 'createdAt'>) => void
+  setConceptPanelMode: (mode: boolean) => void
+  markSkeletonCompleted: (conceptId: string) => void
+  pushHistory: (item: CanvasHistoryItem) => void
+  popHistory: () => CanvasHistoryItem | undefined
 }
 
 export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
@@ -45,6 +58,10 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
       isLoading: false,
       error: null,
       viewMode: 'explore',
+      questions: [],
+      canvasHistory: [],
+      skeletonCompleted: [],
+      conceptPanelMode: true,
       
 loadGraph: async () => {
     set({ isLoading: true, error: null })
@@ -205,6 +222,37 @@ loadGraph: async () => {
         return concept
       },
 
+      addQuestion: (q) => {
+        const question: UserQuestion = {
+          ...q,
+          id: `q_${Date.now()}`,
+          createdAt: new Date(),
+        }
+        set(state => ({ questions: [...state.questions, question] }))
+      },
+
+      setConceptPanelMode: (mode) => {
+        set({ conceptPanelMode: mode })
+      },
+
+      markSkeletonCompleted: (conceptId) => {
+        set(state => ({
+          skeletonCompleted: [...state.skeletonCompleted, conceptId]
+        }))
+      },
+
+      pushHistory: (item) => {
+        set(state => ({ canvasHistory: [...state.canvasHistory, item] }))
+      },
+
+      popHistory: () => {
+        const { canvasHistory } = get()
+        if (canvasHistory.length === 0) return undefined
+        const popped = canvasHistory[canvasHistory.length - 1]
+        set({ canvasHistory: canvasHistory.slice(0, -1) })
+        return popped
+      },
+
       updateProcessState: (conceptId, state) => {
         const { reviewRecords } = get()
         const existing = reviewRecords.get(conceptId)
@@ -240,7 +288,9 @@ loadGraph: async () => {
       name: 'knowledge-graph-storage',
       partialize: (state) => ({
         reviewRecords: Array.from(state.reviewRecords.entries()),
-        annotations: state.annotations
+        annotations: state.annotations,
+        questions: state.questions,
+        skeletonCompleted: state.skeletonCompleted,
       }),
       merge: (persisted: any, current) => ({
         ...current,
