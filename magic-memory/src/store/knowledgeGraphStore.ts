@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain, ProcessState } from '../types'
-import { getMockGraphData } from '../data/mockGraphData'
 
 interface KnowledgeGraphStore {
   concepts: Concept[]
