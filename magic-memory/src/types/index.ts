@@ -93,7 +93,6 @@ export interface Concept {
     level: number
     order: number
   }
-  // 内容
   path: string           // 文件路径
   
   // 元数据
