@@ -19,6 +19,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import type { Concept, ProcessChain } from '../types'
+import type { SkeletonNodeDef } from '../utils/processComparison'
 
 // ========== 自定义节点组件 ==========
 
@@ -160,6 +161,14 @@ interface ProcessCanvasProps {
   allConcepts: Concept[]
   onComplete: (userFlow: string[]) => void
   onNavigate: (conceptId: string) => void
+  /** 首次进入时启用骨架填充模式 */
+  skeletonMode?: boolean
+  /** 骨架模式的引导节点 */
+  skeletonNodes?: SkeletonNodeDef[]
+  /** 提交骨架填充结果 */
+  onSkeletonSubmit?: (results: { gapId: string; filledConceptId: string | null }[]) => void
+  /** 打开提问 */
+  onOpenQuestion?: () => void
 }
 
 const NODE_W = 160
@@ -251,6 +260,34 @@ export function ProcessCanvas({
   const [submitted, setSubmitted] = useState(false)
   const [toolMode, setToolMode] = useState<ToolMode>('box')
   const lastPaneClickRef = useRef(0)
+
+  // 骨架填充状态
+  const [skeletonFills, setSkeletonFills] = useState<Map<string, string | null>>(new Map())
+  const [skeletonResults, setSkeletonResults] = useState<{ gapId: string; correct: boolean; filledLabel: string | null }[] | null>(null)
+
+  // 骨架拖拽
+  useEffect(() => {
+    const handleDrop = (e: DragEvent) => {
+      const target = (e.target as HTMLElement).closest('[data-gap-id]')
+      if (!target) return
+      const gapId = target.getAttribute('data-gap-id')
+      const conceptId = e.dataTransfer?.getData('text/plain')
+      if (!gapId || !conceptId) return
+      e.preventDefault()
+      setSkeletonFills(prev => { const m = new Map(prev); m.set(gapId, conceptId); return m })
+      setSkeletonResults(null)
+    }
+    const handleDragOver = (e: DragEvent) => {
+      const target = (e.target as HTMLElement).closest('[data-gap-id]')
+      if (target) e.preventDefault()
+    }
+    document.addEventListener('drop', handleDrop)
+    document.addEventListener('dragover', handleDragOver)
+    return () => {
+      document.removeEventListener('drop', handleDrop)
+      document.removeEventListener('dragover', handleDragOver)
+    }
+  }, [])
 
   function CombinedControls({ toolMode, setToolMode: onToolChange }: { toolMode: ToolMode; setToolMode: (m: ToolMode) => void }) {
     const { zoomIn, zoomOut, fitView } = useReactFlow()
@@ -373,6 +410,164 @@ export function ProcessCanvas({
     setNodes(nds => nds.filter(n => n.id !== nodeId))
     setEdges(eds => eds.filter(e => e.source !== nodeId && e.target !== nodeId))
   }, [setNodes, setEdges])
+
+  // ========== 骨架填充模式 ==========
+
+  if (skeletonMode && skeletonNodes) {
+    const gapNodes = skeletonNodes.filter(n => n.type === 'gap')
+    const filledCount = gapNodes.filter(g => skeletonFills.get(g.id) != null).length
+
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="max-w-3xl mx-auto space-y-4">
+            {/* 进度条 */}
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
+              <span>填充进度</span>
+              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 rounded-full transition-all"
+                  style={{ width: `${gapNodes.length > 0 ? (filledCount / gapNodes.length) * 100 : 0}%` }}
+                />
+              </div>
+              <span>{filledCount}/{gapNodes.length}</span>
+            </div>
+
+            {/* 步骤卡片 */}
+            <div className="space-y-3">
+              {skeletonNodes.map((node) => {
+                const filledId = skeletonFills.get(node.id)
+                const filledConcept = filledId ? allConcepts.find(c => c.id === filledId) : null
+                const res = skeletonResults?.find(r => r.gapId === node.id)
+
+                if (node.type === 'current') {
+                  return (
+                    <div key={node.id} className="p-4 rounded-lg border-2 border-blue-300 bg-blue-50">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">📍</span>
+                        <div>
+                          <div className="text-sm font-semibold text-blue-900">{node.label}</div>
+                          <div className="text-xs text-blue-600">当前概念：{node.question}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
+
+                return (
+                  <div key={node.id} data-gap-id={node.id} className={`p-4 rounded-lg border-2 transition-colors ${
+                    res
+                      ? res.correct ? 'border-emerald-300 bg-emerald-50' : 'border-red-300 bg-red-50'
+                      : filledId
+                      ? 'border-blue-300 bg-blue-50'
+                      : 'border-amber-200 bg-amber-50/50 border-dashed'
+                  }`}>
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="w-5 h-5 rounded-full bg-gray-200 text-xs flex items-center justify-center text-gray-600 font-medium">
+                            {skeletonNodes.indexOf(node) + 1}
+                          </span>
+                          <span className="text-xs font-medium text-gray-500">{node.label}</span>
+                        </div>
+                        <div className="text-sm text-gray-700 ml-7">
+                          <span className="italic">{node.question}</span>
+                        </div>
+                        {node.hint && (
+                          <div className="text-xs text-gray-400 ml-7 mt-1">💡 {node.hint}</div>
+                        )}
+                        <div className="ml-7 mt-2">
+                          {filledConcept ? (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white border border-blue-200 text-sm text-blue-700">
+                              <span>✓</span>
+                              <span>{filledConcept.title}</span>
+                              <button onClick={() => {
+                                setSkeletonFills(prev => { const m = new Map(prev); m.delete(node.id); return m })
+                                setSkeletonResults(null)
+                              }} className="text-gray-400 hover:text-red-500 ml-1">✕</button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-amber-500">从下方拖拽概念到此处</span>
+                          )}
+                        </div>
+                      </div>
+                      {res && (
+                        <div className={`shrink-0 text-lg ${res.correct ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {res.correct ? '✓' : '✗'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* 候选概念区 */}
+        <div className="shrink-0 px-6 py-3 border-t border-gray-200 bg-gray-50">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-xs text-gray-500 mb-2">拖动概念到空缺节点：</div>
+            <div className="flex flex-wrap gap-2">
+              {allConcepts
+                .filter(c => c.id !== concept.id && !skeletonFills.has(`gap_step-${c.id}`) && !Array.from(skeletonFills.values()).includes(c.id))
+                .slice(0, 15)
+                .map(c => (
+                  <button key={c.id}
+                    draggable
+                    onDragStart={(e) => e.dataTransfer.setData('text/plain', c.id)}
+                    className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50 cursor-grab active:cursor-grabbing transition-colors"
+                  >
+                    {c.title}
+                  </button>
+                ))}
+              <button onClick={onOpenQuestion}
+                className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-dashed border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"
+              >
+                💬 提问
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 底部操作栏 */}
+        <div className="shrink-0 flex items-center gap-2 px-6 py-3 border-t border-gray-100 bg-white">
+          <div className="flex-1" />
+          {!skeletonResults && (
+            <button onClick={() => {
+              const results = gapNodes.map(g => ({
+                gapId: g.id,
+                correct: skeletonFills.get(g.id) === g.correctConceptId,
+                filledLabel: allConcepts.find(c => c.id === skeletonFills.get(g.id))?.title ?? null,
+              }))
+              setSkeletonResults(results)
+              onSkeletonSubmit?.(gapNodes.map(g => ({
+                gapId: g.id,
+                filledConceptId: skeletonFills.get(g.id) ?? null,
+              })))
+            }} disabled={filledCount === 0}
+              className="px-4 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            >
+              提交验证
+            </button>
+          )}
+          {skeletonResults && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">
+                正确 {skeletonResults.filter(r => r.correct).length}/{gapNodes.length}
+              </span>
+              <button onClick={() => { setSkeletonFills(new Map()); setSkeletonResults(null) }}
+                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                重新填充
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // ========== 自由画板模式 ==========
 
   if (!chain) {
     return (
