@@ -278,7 +278,7 @@ export function KnowledgeGraphView() {
         related: matchTitlesToIds(c.related, concepts),
       }))
 
-      // 推导边
+      // 推导边（处理全部三种关系类型）
       const ids = new Set(built.map(c => c.id))
       const edges: any[] = []
       const edgeSet = new Set<string>()
@@ -287,6 +287,18 @@ export function KnowledgeGraphView() {
           if (ids.has(t)) {
             const eid = `${c.id}-leads-${t}`
             if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'leads_to' }) }
+          }
+        }
+        for (const t of c.depends_on) {
+          if (ids.has(t)) {
+            const eid = `${c.id}-depends-${t}`
+            if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'depends_on' }) }
+          }
+        }
+        for (const t of c.related) {
+          if (ids.has(t)) {
+            const eid = `${c.id}-related-${t}`
+            if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'related' }) }
           }
         }
       }

@@ -93,6 +93,7 @@ export interface Concept {
     level: number
     order: number
   }
+  content?: string       // 文档正文（Markdown）
   path: string           // 文件路径
   
   // 元数据

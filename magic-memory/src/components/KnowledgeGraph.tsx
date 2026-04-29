@@ -186,14 +186,17 @@ export function KnowledgeGraph({
     try {
       const initLayout = cy.layout({
         name: 'fcose',
+        quality: 'proof',
         animate: true,
-        animationDuration: 500,
-        nodeRepulsion: 5000,
-        idealEdgeLength: 80,
-        gravity: 0.3,
+        animationDuration: 800,
+        nodeRepulsion: 25000,
+        idealEdgeLength: 160,
+        gravity: 0.08,
+        gravityRange: 3.0,
         nestingFactor: 0.5,
+        numIter: 2000,
         tile: true,
-        padding: 50
+        padding: 80
       })
       initLayout.run()
     } catch (e) {
@@ -328,14 +331,17 @@ export function KnowledgeGraph({
     try {
       const layout = cy.layout({
         name: 'fcose',
+        quality: 'proof',
         animate: true,
-        animationDuration: 300,
-        nodeRepulsion: 5000,
-        idealEdgeLength: 80,
-        gravity: 0.3,
+        animationDuration: 800,
+        nodeRepulsion: 25000,
+        idealEdgeLength: 160,
+        gravity: 0.08,
+        gravityRange: 3.0,
         nestingFactor: 0.5,
+        numIter: 2000,
         tile: true,
-        padding: 50
+        padding: 80
       })
       layout.run()
     } catch (e) {

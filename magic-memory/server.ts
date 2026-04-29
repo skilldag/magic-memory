@@ -1,6 +1,7 @@
 import { serve } from 'bun'
 import { readdir, readFile, stat } from 'fs/promises'
 import { join, relative } from 'path'
+import { clusterPipeline } from './scripts/cluster'
 import type { Document, Annotation, Concept, ConceptEdge } from './src/types'
 
 const PORT = 3001
@@ -18,8 +19,12 @@ async function loadDocuments() {
     documents.forEach(doc => {
       concepts.push(buildConceptFromDocument(doc))
     })
+    // 从 frontmatter 关系字段推导边
     conceptEdges.push(...buildEdges())
-    console.log(`Built knowledge graph: ${concepts.length} concepts, ${conceptEdges.length} edges`)
+    // 从 docs/概念关联图.md 推导边（包含完整的数据流和依赖关系）
+    const graphEdges = await buildEdgesFromConceptGraph()
+    conceptEdges.push(...graphEdges)
+    console.log(`Built knowledge graph: ${concepts.length} concepts, ${conceptEdges.length} edges (${graphEdges.length} from 概念关联图)`)
   } catch (error) {
     console.error('Failed to load documents:', error)
   }
@@ -175,6 +180,68 @@ function buildConceptFromDocument(doc: Document): Concept {
   }
 }
 
+/** 从文件名提取概念编号（如 "00-vllm-config.md" → 0, "40-vllm-engine.md" → 40） */
+function extractConceptNumber(filename: string): number | null {
+  const m = filename.match(/^(\d+)/)
+  return m ? parseInt(m[1], 10) : null
+}
+
+/** 解析 docs/概念关联图.md，提取所有概念关系边 */
+async function buildEdgesFromConceptGraph(): Promise<ConceptEdge[]> {
+  const graphFilePath = join(DOCS_DIR, '概念关联图.md')
+  let content: string
+  try {
+    content = await readFile(graphFilePath, 'utf-8')
+  } catch { return [] }
+
+  // 构建 编号 → 文档 ID 映射
+  const numToId = new Map<number, string>()
+  for (const doc of documents) {
+    const filename = doc.path.split('/').pop() || ''
+    const num = extractConceptNumber(filename)
+    if (num !== null) numToId.set(num, doc.id)
+  }
+
+  const edges: ConceptEdge[] = []
+  const edgeSet = new Set<string>()
+
+  // 按 ## 章节拆分
+  const sections = content.split(/^## /m)
+
+  for (const section of sections) {
+    // 判断章节类型
+    const isDataFlow = /一、数据流关联|数据流/.test(section)
+    const isDependency = /二、依赖关系|依赖/.test(section)
+    if (!isDataFlow && !isDependency) continue
+
+    const edgeType: ConceptEdge['type'] = isDataFlow ? 'leads_to' : 'depends_on'
+
+    // 按顺序提取所有 数字(Concept) 引用，相邻引用之间创建边
+    // 这样能正确处理多行链（如 35(Scheduler)\n    → 34(...)）
+    const refRegex = /(\d+)\([^)]+\)/g
+    let refMatch: RegExpExecArray | null
+    const numbers: number[] = []
+    while ((refMatch = refRegex.exec(section)) !== null) {
+      numbers.push(parseInt(refMatch[1], 10))
+    }
+    for (let i = 0; i < numbers.length - 1; i++) {
+      const srcNum = numbers[i]
+      const tgtNum = numbers[i + 1]
+      const sourceId = numToId.get(srcNum)
+      const targetId = numToId.get(tgtNum)
+      if (!sourceId || !targetId) continue
+
+      const eid = `${sourceId}-graph-${targetId}`
+      if (!edgeSet.has(eid)) {
+        edgeSet.add(eid)
+        edges.push({ id: eid, source: sourceId, target: targetId, type: edgeType })
+      }
+    }
+  }
+
+  return edges
+}
+
 function buildEdges(): ConceptEdge[] {
   const edges: ConceptEdge[] = []
   const conceptMap = new Map(concepts.map(c => [c.id, c]))
@@ -277,6 +344,18 @@ const server = serve({
               if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'leads_to' }) }
             }
           }
+          for (const t of c.depends_on) {
+            if (ids.has(t)) {
+              const eid = `${c.id}-depends-${t}`
+              if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'depends_on' }) }
+            }
+          }
+          for (const t of c.related) {
+            if (ids.has(t)) {
+              const eid = `${c.id}-related-${t}`
+              if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'related' }) }
+            }
+          }
         }
         return new Response(JSON.stringify({ concepts: result, edges }), {
           headers: { 'Content-Type': 'application/json' },
@@ -334,7 +413,11 @@ const server = serve({
     }
 
     if (url.pathname === '/api/graph') {
-      return new Response(JSON.stringify({ concepts, edges: conceptEdges }), {
+      // 只返回有边连接的概念，过滤掉孤立的方法论/自测/vllm-tree 重复文档
+      const edgeConceptIds = new Set<string>()
+      conceptEdges.forEach(e => { edgeConceptIds.add(e.source); edgeConceptIds.add(e.target) })
+      const graphConcepts = concepts.filter(c => edgeConceptIds.has(c.id))
+      return new Response(JSON.stringify({ concepts: graphConcepts, edges: conceptEdges }), {
         headers: { 'Content-Type': 'application/json' },
       })
     }
@@ -465,6 +548,25 @@ ${content.slice(0, 3000)}
         })
       } catch (error) {
         return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
+    }
+
+    // GET /api/cluster — 对选中文档运行聚类
+    if (url.pathname === '/api/cluster' && req.method === 'GET') {
+      try {
+        const docsPath = url.searchParams.get('path') || DOCS_DIR
+        const resParam = url.searchParams.get('resolution')
+        const resolution = resParam ? parseFloat(resParam) : 0.5
+
+        const result = clusterPipeline(docsPath, null, resolution)
+        return new Response(JSON.stringify(result), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        })
       }
     }
 

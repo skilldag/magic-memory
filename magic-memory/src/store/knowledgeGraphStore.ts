@@ -54,16 +54,33 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
 loadGraph: async () => {
     set({ isLoading: true, error: null })
     try {
-      // 有持久化数据则加载，没有则显示空图谱（由 KnowledgeGraphView 引导）
+      // 优先从服务端获取最新数据
+      const resp = await fetch('/api/graph')
+      if (resp.ok) {
+        const data = await resp.json()
+        const serverConcepts: Concept[] = data.concepts ?? []
+        const serverEdges: ConceptEdge[] = data.edges ?? []
+        if (serverConcepts.length > 0) {
+          set({ concepts: serverConcepts, edges: serverEdges, isLoading: false })
+          return
+        }
+      }
+      // 服务端无数据，回退到 localStorage 缓存的持久化数据
       const currentState = get()
       if (currentState.concepts.length > 0 && currentState.edges.length > 0) {
         set({ isLoading: false })
         return
       }
-      // 无持久化数据：延迟后显示空状态（引导 UI 接管）
+      // 完全无数据：延迟后显示空状态（引导 UI 接管）
       await new Promise(resolve => setTimeout(resolve, 300))
       set({ isLoading: false })
     } catch (error) {
+      // 网络错误时，回退到持久化缓存
+      const currentState = get()
+      if (currentState.concepts.length > 0) {
+        set({ isLoading: false })
+        return
+      }
       set({
         error: error instanceof Error ? error.message : 'Unknown error',
         isLoading: false

@@ -42,13 +42,19 @@ export function ConceptDetailPanel({
 
   useEffect(() => {
     if (action !== 'read') return
+    // 优先使用 API 返回的 content（已在概念数据中），避免额外 HTTP 请求
+    if (concept.content) {
+      setDocContent(concept.content)
+      setDocLoading(false)
+      return
+    }
     setDocContent(null)
     setDocLoading(true)
     loadDocContent(concept.path).then(content => {
       if (content) setDocContent(content)
       setDocLoading(false)
     })
-  }, [action, concept.id, concept.path])
+  }, [action, concept.id, concept.path, concept.content])
   const updateProcessState = useKnowledgeGraphStore(s => s.updateProcessState)
   // Questions feature removed
   const storeConcepts = useKnowledgeGraphStore(s => s.concepts)
