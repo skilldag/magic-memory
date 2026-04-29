@@ -1,17 +1,17 @@
-.PHONY: run dev server explore stop clean
+.PHONY: run dev server explore clean
 
-# 启动所有服务（前端 + 后端 + AI 探索）
+# 启动所有服务（前端 + 后端 + AI 探索，后台进程需手动 kill）
 run:
 	@echo "🚀 启动所有服务..."
 	@echo "📦 检查依赖..."
 	@if [ ! -d "node_modules" ]; then npm install; fi
-	@trap 'kill 0; exit' INT TERM; \
-	bun run server.ts & \
-	bun run server/explore.ts & \
-	sleep 2 && \
+	@bun run server.ts &
+	@bun run server/explore.ts &
+	@sleep 2 && \
 	echo "✅ 前端: http://localhost:3000" && \
 	echo "✅ 后端: http://localhost:3001" && \
 	echo "✅ AI:   http://localhost:4321" && \
+	echo "按 Ctrl+C 停止前端（后台进程需手动 kill）" && \
 	npm run dev
 
 # 只启动前端开发服务器
