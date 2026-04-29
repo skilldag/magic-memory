@@ -319,7 +319,6 @@ export function ConceptDetailPanel({
                         depends_on: [q.conceptId],
                         leads_to: [],
                         related: [],
-                        content: `# ${q.question}\n\n> 来自用户提问\n\n## 问题\n${q.question}\n\n## 来源\n在「${concept.title}」的推导过程中提出。`,
                         path: `./docs/user/question-${q.id}.md`,
                         tags: ['user-generated'],
                       })
