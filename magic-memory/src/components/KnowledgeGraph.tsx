@@ -46,6 +46,7 @@ export function KnowledgeGraph({
   const edgesRef = useRef(edges)
   conceptsRef.current = concepts
   edgesRef.current = edges
+  const initialLayoutDoneRef = useRef(false)
   const [isReady, setIsReady] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(1)
 
@@ -259,6 +260,7 @@ export function KnowledgeGraph({
     
     cyRef.current = cy
     setIsReady(true)
+    initialLayoutDoneRef.current = true
     
     return () => {
       cy.destroy()
@@ -269,6 +271,8 @@ export function KnowledgeGraph({
   useEffect(() => {
     const cy = cyRef.current
     if (!cy) return
+    // 首次加载时布局由初始化 effect 负责，跳过增量布局避免 race condition
+    if (!initialLayoutDoneRef.current) return
 
     const currentIds = new Set(cy.nodes().map(n => n.id()))
     const targetIds = new Set(concepts.map(c => c.id))
