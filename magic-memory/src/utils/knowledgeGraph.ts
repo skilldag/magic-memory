@@ -26,15 +26,21 @@ export function getDependencyChain(conceptId: string, concepts: Concept[]) {
 }
 
 export function getWhatIsSummary(concept: Concept) {
-  const plain = concept.content
-    .replace(/```[\s\S]*?```/g, '')
-    .replace(/^#+\s+/gm, '')
-    .replace(/[*_`>#-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  const parts: string[] = []
 
-  if (!plain) return ''
-  return plain.length > 120 ? `${plain.slice(0, 120)}...` : plain
+  if (concept.problem) {
+    parts.push(concept.problem)
+  }
+  if (concept.gap_anticipate) {
+    parts.push(concept.gap_anticipate)
+  }
+  if (concept.elements && concept.elements.length > 0) {
+    parts.push(concept.elements.map(e => e.description).join('；'))
+  }
+
+  const summary = parts.join(' ').trim()
+  if (!summary) return ''
+  return summary.length > 120 ? `${summary.slice(0, 120)}...` : summary
 }
 
 export function getRelationReason(current: Concept, other: Concept, edgeType: string) {
