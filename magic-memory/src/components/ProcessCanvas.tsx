@@ -198,6 +198,10 @@ export function ProcessCanvas({
   allConcepts,
   onComplete,
   onNavigate,
+  skeletonMode = false,
+  skeletonNodes,
+  onSkeletonSubmit,
+  onOpenQuestion,
 }: ProcessCanvasProps) {
   const setNodesRef = useRef<(nds: Node[] | ((nds: Node[]) => Node[])) => void>(() => {})
 
