@@ -55,6 +55,12 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
 loadGraph: async () => {
     set({ isLoading: true, error: null })
     try {
+      // 如果已经有持久化数据（来自 localStorage），不覆盖
+      const currentState = get()
+      if (currentState.concepts.length > 0 && currentState.edges.length > 0) {
+        set({ isLoading: false })
+        return
+      }
       const data = getMockGraphData()
       await new Promise(resolve => setTimeout(resolve, 300))
       set({
@@ -252,11 +258,15 @@ loadGraph: async () => {
     {
       name: 'knowledge-graph-storage',
       partialize: (state) => ({
+        concepts: state.concepts,
+        edges: state.edges,
         reviewRecords: Array.from(state.reviewRecords.entries()),
         annotations: state.annotations,
       }),
       merge: (persisted: any, current) => ({
         ...current,
+        concepts: persisted?.concepts ?? current.concepts,
+        edges: persisted?.edges ?? current.edges,
         reviewRecords: new Map(persisted?.reviewRecords || [])
       })
     }

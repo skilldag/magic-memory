@@ -154,20 +154,17 @@ export function ExploreDialog({ sourceConcept, onClose }: ExploreDialogProps) {
         title: aiData.title,
         problem: aiData.problem,
         gap_anticipate: aiData.gap_anticipate,
-        content: aiData.content,
         relationType,
         metadataStatus: 'ai-generated',
       })
     } else {
       const finalTitle = title.trim() || userQuestion.slice(0, 40)
       const finalProblem = problem.trim() || `从「${sourceConcept.title}」引出的问题`
-      const finalContent = content.trim() || `# ${finalTitle}\n\n## 问题\n${finalProblem}\n\n## 预期认知缺口\n${gapAnticipate || '待探索'}\n\n---\n*从「${sourceConcept.title}」探索生成*`
 
       createConceptWithEdges(sourceConcept, {
         title: finalTitle,
         problem: finalProblem,
         gap_anticipate: gapAnticipate.trim() || undefined,
-        content: finalContent,
         relationType,
         metadataStatus: 'draft',
       })
