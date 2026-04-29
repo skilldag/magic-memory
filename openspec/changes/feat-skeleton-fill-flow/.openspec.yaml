@@ -1,0 +1,12 @@
+name: feat-skeleton-fill-flow
+title: 骨架填充流程 — 首次接触的认知构建
+description: 首次进入概念画板时，展示预置骨架流程（空缺节点+引导问题），用户拖拽候选概念填充，提交后验证。配套提问机制，问题可沉淀为问题集或转化为新概念/新步骤。
+status: pending
+dependencies: []
+artifacts:
+  - id: proposal
+    status: done
+  - id: design
+    status: done
+  - id: tasks
+    status: done

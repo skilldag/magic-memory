@@ -1,0 +1,12 @@
+name: feat-hover-popover-add-concept
+title: 图谱节点悬停浮层 — 概念添加快捷入口
+description: 探索模式下，鼠标悬停到 Cytoscape 概念节点时，在节点旁弹出浮层，支持 AI 生成探索和手动添加概念两种方式
+status: done
+dependencies: []
+artifacts:
+  - id: proposal
+    status: done
+  - id: design
+    status: done
+  - id: tasks
+    status: done

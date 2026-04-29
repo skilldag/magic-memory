@@ -1,0 +1,12 @@
+name: feat-ai-explore-agent
+title: AI 驱动的知识图谱概念探索
+description: 用户在前端 ExploreDialog 提交问题，调 LLM API 直接生成结构化概念数据，自动加入图谱
+status: done
+dependencies: []
+artifacts:
+  - id: proposal
+    status: done
+  - id: design
+    status: done
+  - id: tasks
+    status: done

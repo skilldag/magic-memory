@@ -1,0 +1,12 @@
+name: refactor-kg-code-cleanup
+title: 知识图谱代码重构 — 清晰化与简洁化
+description: KnowledgeGraphView (1019行) 组件拆分 + 提取纯函数 + ExploreDialog 去重 + 样式常量分离
+status: done
+dependencies: []
+artifacts:
+  - id: proposal
+    status: done
+  - id: design
+    status: done
+  - id: tasks
+    status: done

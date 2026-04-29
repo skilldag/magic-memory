@@ -1,0 +1,10 @@
+name: feat-process-driven-learning
+title: 问题驱动推导学习流程
+description: 用"过程梳理→发现矛盾→推导方案→比对概念"替代文档阅读+自评模式，被 feat-skeleton-fill-flow 取代
+status: done
+dependencies: []
+artifacts:
+  - id: proposal
+    status: done
+  - id: tasks
+    status: done
