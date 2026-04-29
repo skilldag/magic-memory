@@ -186,7 +186,16 @@
 ### 3.3 问题集数据
 
 ```typescript
-interface ConceptQuestion {
+interface BaseQuestion {
+  id: string
+  conceptId: string
+  question: string
+  targetConceptId?: string     // 指向的正确答案
+  hint?: string
+  order: number
+}
+
+interface UserQuestion {
   id: string
   conceptId: string
   question: string
@@ -199,8 +208,8 @@ interface ConceptQuestion {
     type: 'concept' | 'step'
     targetId: string
   }
+  createdAt: Date
 }
-```
 
 ---
 

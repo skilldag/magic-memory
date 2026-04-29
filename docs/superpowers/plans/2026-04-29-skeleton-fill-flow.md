@@ -14,7 +14,7 @@
 
 | File | Action | Responsibility |
 |------|--------|---------------|
-| `src/types/index.ts` | Modify | Add `BaseQuestion`, `ConceptQuestion`, `hierarchy` to `Concept` |
+| `src/types/index.ts` | Modify | Add `BaseQuestion`, `UserQuestion`, `hierarchy` to `Concept` |
 | `src/data/mockGraphData.ts` | Modify | Add `baseQuestions` to mock concepts |
 | `src/utils/processComparison.ts` | Modify | Add `generateSkeletonNodes()` |
 | `src/store/knowledgeGraphStore.ts` | Modify | Add `questions`, `canvasHistory`, `setConceptPanelMode` |
@@ -29,7 +29,7 @@
 **Files:**
 - Modify: `src/types/index.ts`
 
-Add `BaseQuestion`, `ConceptQuestion`, `ConceptQuestionContext`, extend `Concept` with `hierarchy` and `baseQuestions`.
+Add `BaseQuestion`, `UserQuestion`, `UserQuestionContext`, extend `Concept` with `hierarchy` and `baseQuestions`.
 
 - [ ] **Step 1: Add new interfaces and extend Concept**
 
@@ -47,7 +47,7 @@ export interface BaseQuestion {
   order: number
 }
 
-export interface ConceptQuestion {
+export interface UserQuestion {
   id: string
   conceptId: string
   question: string
@@ -89,7 +89,7 @@ Expected: No type errors.
 
 ```bash
 git add src/types/index.ts
-git commit -m "feat: add BaseQuestion, ConceptQuestion, hierarchy types for skeleton fill flow"
+git commit -m "feat: add BaseQuestion, UserQuestion, hierarchy types for skeleton fill flow"
 ```
 
 ---
@@ -278,12 +278,12 @@ Add to the `KnowledgeGraphStore` interface (after existing fields around line 15
 ```typescript
   // 骨架填充模式
   conceptPanelMode: boolean       // true = first-entry skeleton mode
-  questions: ConceptQuestion[]
+  questions: UserQuestion[]
   canvasHistory: CanvasHistoryItem[]
   skeletonCompleted: Set<string>  // concept IDs that completed skeleton
 
   setConceptPanelMode: (mode: boolean) => void
-  addQuestion: (q: Omit<ConceptQuestion, 'id' | 'createdAt'>) => void
+  addQuestion: (q: Omit<UserQuestion, 'id' | 'createdAt'>) => void
   markSkeletonCompleted: (conceptId: string) => void
   pushHistory: (item: CanvasHistoryItem) => void
   popHistory: () => CanvasHistoryItem | undefined
@@ -308,7 +308,7 @@ setConceptPanelMode: (mode) => {
 },
 
 addQuestion: (q) => {
-  const question: ConceptQuestion = {
+  const question: UserQuestion = {
     ...q,
     id: `q_${Date.now()}`,
     createdAt: new Date(),
@@ -341,10 +341,10 @@ popHistory: () => {
 
 - [ ] **Step 3: Add imports**
 
-Make sure `ConceptQuestion` and `CanvasHistoryItem` are imported:
+Make sure `UserQuestion` and `CanvasHistoryItem` are imported:
 
 ```typescript
-import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain, ProcessState, ConceptQuestion, CanvasHistoryItem } from '../types'
+import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain, ProcessState, UserQuestion, CanvasHistoryItem } from '../types'
 ```
 
 - [ ] **Step 4: Verify types compile**
