@@ -23,7 +23,7 @@ interface ConceptDetailPanelProps {
   onEnterProcess?: (concept: Concept) => void
 }
 
-type ActionKey = 'process' | 'compare' | 'explore' | 'read'
+type ActionKey = 'process' | 'compare' | 'explore' | 'read' | 'questions'
 
 export function ConceptDetailPanel({
   concept,
@@ -37,6 +37,11 @@ export function ConceptDetailPanel({
   const [action, setAction] = useState<ActionKey>('process')
   const chains = useKnowledgeGraphStore(s => s.chains)
   const updateProcessState = useKnowledgeGraphStore(s => s.updateProcessState)
+  const questions = useKnowledgeGraphStore(s => s.questions.filter(q => q.conceptId === concept.id))
+  const addQuestion = useKnowledgeGraphStore(s => s.addQuestion)
+  const storeConcepts = useKnowledgeGraphStore(s => s.concepts)
+  const addConcept = useKnowledgeGraphStore(s => s.addConcept)
+  const addEdge = useKnowledgeGraphStore(s => s.addEdge)
 
   const processState = reviewRecords.get(concept.id)?.process_state
 
@@ -81,6 +86,7 @@ export function ConceptDetailPanel({
     { key: 'process', label: '梳理过程', desc: '推导流程中的步骤' },
     { key: 'compare', label: '对照验证', desc: processState?.filled ? '查看对比结果' : '先完成梳理' },
     { key: 'explore', label: '探索关联', desc: '前置/后置/相关概念' },
+    { key: 'questions', label: '问题集', desc: questions.length > 0 ? `${questions.length} 个问题` : '暂无问题' },
     { key: 'read', label: '查阅文档', desc: '查看完整说明' },
   ]
 
@@ -243,6 +249,83 @@ export function ConceptDetailPanel({
                 content: concept.content, level: concept.level, category: concept.category,
                 tags: concept.tags, lastModified: concept.lastModified, metadata: concept.metadata,
               }} />
+            </div>
+          </div>
+        )}
+
+        {action === 'questions' && (
+          <div className="px-5 py-4 space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">问题集</h3>
+              <span className="text-xs text-gray-400">({questions.length})</span>
+            </div>
+            {questions.length === 0 && (
+              <p className="text-xs text-gray-400 text-center py-8">暂无问题。在过程画板中点击 💬 提问</p>
+            )}
+            {questions.map(q => (
+              <div key={q.id} className="p-3 rounded-lg border border-gray-200 bg-white">
+                <p className="text-sm text-gray-800">{q.question}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className={`px-1.5 py-0.5 text-[10px] rounded ${
+                    q.status === 'open' ? 'bg-amber-100 text-amber-700' :
+                    q.status === 'converted_to_concept' ? 'bg-green-100 text-green-700' :
+                    q.status === 'converted_to_step' ? 'bg-blue-100 text-blue-700' :
+                    'bg-gray-100 text-gray-600'
+                  }`}>
+                    {q.status === 'open' ? '待处理' : q.status === 'converted_to_concept' ? '已转为概念' : q.status === 'converted_to_step' ? '已转为步骤' : '已解决'}
+                  </span>
+                  <span className="text-[10px] text-gray-400">{new Date(q.createdAt).toLocaleDateString()}</span>
+                </div>
+                {q.status === 'open' && (
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100">
+                    <button onClick={() => {
+                      const newConcept = addConcept({
+                        title: q.question.slice(0, 30).replace(/[?？]/g, ''),
+                        alias: [],
+                        level: concept.level,
+                        category: concept.category,
+                        problem: q.question,
+                        depends_on: [q.conceptId],
+                        leads_to: [],
+                        related: [],
+                        content: `# ${q.question}\n\n> 来自用户提问\n\n## 问题\n${q.question}\n\n## 来源\n在「${concept.title}」的推导过程中提出。`,
+                        path: `./docs/user/question-${q.id}.md`,
+                        tags: ['user-generated'],
+                      })
+                      addEdge(q.conceptId, newConcept.id, 'leads_to')
+                      useKnowledgeGraphStore.setState(state => ({
+                        questions: state.questions.map(x =>
+                          x.id === q.id ? { ...x, status: 'converted_to_concept' as const, convertedTo: { type: 'concept' as const, targetId: newConcept.id } } : x
+                        )
+                      }))
+                    }}
+                      className="text-xs text-blue-600 hover:text-blue-800 transition-colors">
+                      转为新概念
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+            <div className="pt-2 border-t border-gray-100">
+              <textarea className="w-full border border-gray-200 rounded-lg p-2.5 text-sm resize-none h-16 outline-none focus:border-blue-400"
+                placeholder="提出新的问题..."
+                id="panel-question-input"
+              />
+              <button onClick={() => {
+                const input = document.getElementById('panel-question-input') as HTMLTextAreaElement
+                if (input?.value?.trim()) {
+                  addQuestion({
+                    conceptId: concept.id,
+                    question: input.value.trim(),
+                    context: { location: 'canvas' },
+                    status: 'open',
+                  })
+                  input.value = ''
+                }
+              }}
+                className="mt-2 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                提问
+              </button>
             </div>
           </div>
         )}
