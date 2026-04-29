@@ -31,7 +31,11 @@ export function parseFrontmatter(content: string): { meta: ParsedFrontmatter; bo
     let value = line.slice(colonIdx + 1).trim()
     
     if (value.startsWith('[') && value.endsWith(']')) {
-      meta[key as keyof ParsedFrontmatter] = JSON.parse(value)
+      try {
+        meta[key as keyof ParsedFrontmatter] = JSON.parse(value)
+      } catch {
+        meta[key as keyof ParsedFrontmatter] = value.slice(1, -1).split(',').map(s => s.trim().replace(/^['"]|['"]$/g, ''))
+      }
     } else if (!isNaN(Number(value))) {
       meta[key as keyof ParsedFrontmatter] = Number(value) as any
     } else {

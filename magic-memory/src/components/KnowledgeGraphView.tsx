@@ -9,7 +9,7 @@ import { BatchLinkDialog } from './BatchLinkDialog'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
 import { generateGenericChain } from '../utils/processComparison'
 import type { Concept, SuggestionItem } from '../types'
-import { parseFrontmatter } from '../utils/conceptParser'
+import { parseFrontmatter, matchTitlesToIds } from '../utils/conceptParser'
 
 type RelationType = 'leads_to' | 'depends_on' | 'related'
 
@@ -215,34 +215,74 @@ export function KnowledgeGraphView() {
     if (!folderHandle) { alert('请先选择文档目录'); return }
     setIsScanning(true)
     try {
-      // 在浏览器中读取所有 .md 文件
       const files = await readMdFiles(folderHandle)
-      // 解析 frontmatter 建索引
       const concepts: any[] = []
+      
       for (const file of files) {
-        const meta = parseFrontmatter(file.content)
-        if (!meta || Object.keys(meta).length === 0) continue
-        const id = meta.id || file.path.replace('.md', '').replace(/\//g, '-')
-        concepts.push({
-          id,
-          title: meta.title || file.path.replace('.md', ''),
-          path: file.path,
-          level: meta.level ?? 1,
-          category: meta.category || '',
-          problem: meta.problem || '',
-          gap_anticipate: meta.gap_anticipate || '',
-          depends_on: meta.depends_on || [],
-          leads_to: meta.leads_to || [],
-          related: meta.related || [],
-          alias: meta.alias,
-          tags: meta.tags || [],
-        })
+        const parsed = parseFrontmatter(file.content)
+        const hasFm = parsed.meta && Object.keys(parsed.meta).length > 0
+        
+        if (hasFm) {
+          // 有 frontmatter → 直接提取
+          const meta = parsed.meta as any
+          concepts.push({
+            id: meta.id || file.path.replace('.md', '').replace(/\//g, '-'),
+            title: meta.title || file.path.replace('.md', ''),
+            path: file.path,
+            level: meta.level ?? 1,
+            category: meta.category || '',
+            problem: meta.problem || '',
+            gap_anticipate: meta.gap_anticipate || '',
+            depends_on: meta.depends_on || [],
+            leads_to: meta.leads_to || [],
+            related: meta.related || [],
+            alias: meta.alias,
+            tags: meta.tags || [],
+          })
+        } else {
+          // 无 frontmatter → 调 LLM 推断
+          try {
+            const resp = await fetch('/api/infer-frontmatter', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ filename: file.path, content: file.content.slice(0, 3000) }),
+            })
+            if (!resp.ok) continue
+            const llmResult = await resp.json()
+            if (!llmResult.title) continue
+            
+            concepts.push({
+              id: llmResult.id || file.path.replace('.md', '').replace(/\//g, '-'),
+              title: llmResult.title,
+              path: file.path,
+              level: llmResult.level ?? 1,
+              category: llmResult.category || '',
+              problem: llmResult.problem || '',
+              gap_anticipate: llmResult.gap_anticipate || '',
+              depends_on: llmResult.depends_on_titles || [],
+              leads_to: llmResult.leads_to_titles || [],
+              related: llmResult.related_titles || [],
+              alias: llmResult.alias,
+              elements: llmResult.elements || [],
+              tags: llmResult.tags || [],
+            })
+          } catch { /* skip LLM failures */ }
+        }
       }
+
+      // 用 matchTitlesToIds 将标题引用转为 ID
+      const built = concepts.map(c => ({
+        ...c,
+        depends_on: matchTitlesToIds(c.depends_on, concepts),
+        leads_to: matchTitlesToIds(c.leads_to, concepts),
+        related: matchTitlesToIds(c.related, concepts),
+      }))
+
       // 推导边
-      const ids = new Set(concepts.map(c => c.id))
+      const ids = new Set(built.map(c => c.id))
       const edges: any[] = []
       const edgeSet = new Set<string>()
-      for (const c of concepts) {
+      for (const c of built) {
         for (const t of c.leads_to) {
           if (ids.has(t)) {
             const eid = `${c.id}-leads-${t}`
@@ -250,10 +290,11 @@ export function KnowledgeGraphView() {
           }
         }
       }
-      if (concepts.length > 0) {
-        useKnowledgeGraphStore.setState({ concepts, edges, isLoading: false })
+      
+      if (built.length > 0) {
+        useKnowledgeGraphStore.setState({ concepts: built, edges, isLoading: false })
       } else {
-        alert('所选目录中没有找到带 frontmatter 的 .md 文件')
+        alert('所选目录中没有找到可识别的概念文档')
       }
     } catch (e: any) {
       alert('扫描失败: ' + (e.message || e))

@@ -364,6 +364,68 @@ const server = serve({
       })
     }
 
+    // POST /api/infer-frontmatter — LLM 从 .md 内容推断概念元数据
+    if (url.pathname === '/api/infer-frontmatter' && req.method === 'POST') {
+      try {
+        const body = await req.json()
+        const { filename, content } = body
+        if (!content) return new Response(JSON.stringify({ error: 'content required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+
+        const prompt = `你是一个知识图谱概念分析助手。请阅读以下 Markdown 文档，提取出该文档描述的核心概念信息。
+
+文档文件名: ${filename || 'unknown'}
+
+文档内容:
+${content.slice(0, 3000)}
+
+请返回 JSON（不要其他文字）：
+{
+  "id": "唯一英文ID",
+  "title": "概念完整名称",
+  "alias": ["别名1", "别名2"],
+  "level": 1|2|3,
+  "category": "所属分类",
+  "problem": "该概念要解决的核心问题",
+  "gap_anticipate": "学习时常见的认知缺口",
+  "depends_on_titles": ["前置概念标题"],
+  "leads_to_titles": ["引出概念标题"],
+  "related_titles": [],
+  "elements": [
+    { "name": "要素名", "description": "简要描述", "type": "core_field|design_pattern|key_insight|boundary", "order": 1 }
+  ]
+}
+
+注意：
+- depends_on_titles / leads_to_titles 是用概念标题而非ID
+- elements 列出该概念的核心组成部分（3-5个）
+- category 从以下选: Foundation, Model, Performance, Scheduling, Serving, Advanced, Optimization, Infrastructure`
+        
+        const apiKey = process.env.DEEPSEEK_API_KEY || ''
+        const baseUrl = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1'
+        const resp = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [
+              { role: 'system', content: '你是一个知识图谱概念分析助手。只输出 JSON，不要额外文字。' },
+              { role: 'user', content: prompt }
+            ],
+            max_tokens: 2000,
+            response_format: { type: 'json_object' },
+          }),
+        })
+        const data = await resp.json() as any
+        const raw = data?.choices?.[0]?.message?.content || '{}'
+        const result = JSON.parse(raw)
+        return new Response(JSON.stringify(result), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
+    }
+
     // POST /api/generate-doc — LLM 生成文档正文
     if (url.pathname === '/api/generate-doc' && req.method === 'POST') {
       try {
