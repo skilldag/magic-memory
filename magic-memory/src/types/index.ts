@@ -87,6 +87,14 @@ export interface Concept {
   }
   elements?: ConceptElement[]
 
+  // 层级
+  hierarchy?: {
+    parentId: string | null
+    level: number
+    order: number
+  }
+  baseQuestions?: BaseQuestion[]
+
   // 内容
   content: string          // Markdown内容
   path: string           // 文件路径
@@ -146,6 +154,38 @@ export interface ProcessState {
   gaps: string[]
   filled: boolean
   compared: boolean
+}
+
+// ========== 骨架填充类型 ==========
+
+export interface BaseQuestion {
+  id: string
+  conceptId: string
+  question: string
+  targetConceptId?: string
+  hint?: string
+  order: number
+}
+
+export interface UserQuestion {
+  id: string
+  conceptId: string
+  question: string
+  context: {
+    location: 'skeleton' | 'canvas' | 'comparison'
+    stepId?: string
+  }
+  status: 'open' | 'converted_to_concept' | 'converted_to_step' | 'resolved'
+  convertedTo?: {
+    type: 'concept' | 'step'
+    targetId: string
+  }
+  createdAt: Date
+}
+
+export interface CanvasHistoryItem {
+  conceptId: string
+  view: 'skeleton' | 'canvas'
 }
 
 export interface LearningPath {
