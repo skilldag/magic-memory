@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain, ProcessState, UserQuestion, CanvasHistoryItem } from '../types'
+import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain, ProcessState } from '../types'
 import { getMockGraphData } from '../data/mockGraphData'
 
 interface KnowledgeGraphStore {
@@ -14,10 +14,7 @@ interface KnowledgeGraphStore {
   error: string | null
   viewMode: 'explore' | 'review'
   
-  // 骨架填充
-  questions: UserQuestion[]
-  canvasHistory: CanvasHistoryItem[]
-  skeletonCompleted: string[]
+  // Skeletons and question history features removed
   conceptPanelMode: boolean
   
   loadGraph: () => Promise<void>
@@ -32,18 +29,13 @@ interface KnowledgeGraphStore {
     title: string
     problem?: string
     gap_anticipate?: string
-    content?: string
     relationType: 'leads_to' | 'depends_on' | 'related'
     metadataStatus?: 'ai-generated' | 'draft'
   }) => Concept
   updateProcessState: (conceptId: string, state: Partial<ProcessState>) => void
 
-  // 骨架填充 actions
-  addQuestion: (q: Omit<UserQuestion, 'id' | 'createdAt'>) => void
   setConceptPanelMode: (mode: boolean) => void
-  markSkeletonCompleted: (conceptId: string) => void
-  pushHistory: (item: CanvasHistoryItem) => void
-  popHistory: () => CanvasHistoryItem | undefined
+  // history-related actions removed
 }
 
 export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
@@ -58,9 +50,6 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
       isLoading: false,
       error: null,
       viewMode: 'explore',
-      questions: [],
-      canvasHistory: [],
-      skeletonCompleted: [],
       conceptPanelMode: true,
       
 loadGraph: async () => {
@@ -197,8 +186,7 @@ loadGraph: async () => {
           depends_on: input.relationType === 'depends_on' ? [source.id] : [],
           leads_to: input.relationType === 'leads_to' ? [source.id] : [],
           related: input.relationType === 'related' ? [source.id] : [],
-          content: input.content || `# ${input.title}\n\n## 问题\n${input.problem || `与「${source.title}」关联`}\n\n## 来源\n通过探索模式关联添加。`,
-          path: `./docs/user/${input.title.toLowerCase().replace(/\s+/g, '-')}.md`,
+          path: `./docs/user/${Date.now()}-${input.title.toLowerCase().replace(/\s+/g, '-')}.md`,
           tags: [source.category.toLowerCase()],
           lastModified: new Date(),
           metadata: { status: input.metadataStatus || 'draft' },
@@ -222,36 +210,13 @@ loadGraph: async () => {
         return concept
       },
 
-      addQuestion: (q) => {
-        const question: UserQuestion = {
-          ...q,
-          id: `q_${Date.now()}`,
-          createdAt: new Date(),
-        }
-        set(state => ({ questions: [...state.questions, question] }))
-      },
+      // addQuestion removed
 
       setConceptPanelMode: (mode) => {
         set({ conceptPanelMode: mode })
       },
 
-      markSkeletonCompleted: (conceptId) => {
-        set(state => ({
-          skeletonCompleted: [...state.skeletonCompleted, conceptId]
-        }))
-      },
-
-      pushHistory: (item) => {
-        set(state => ({ canvasHistory: [...state.canvasHistory, item] }))
-      },
-
-      popHistory: () => {
-        const { canvasHistory } = get()
-        if (canvasHistory.length === 0) return undefined
-        const popped = canvasHistory[canvasHistory.length - 1]
-        set({ canvasHistory: canvasHistory.slice(0, -1) })
-        return popped
-      },
+      // skeleton/history related actions removed
 
       updateProcessState: (conceptId, state) => {
         const { reviewRecords } = get()
@@ -289,8 +254,6 @@ loadGraph: async () => {
       partialize: (state) => ({
         reviewRecords: Array.from(state.reviewRecords.entries()),
         annotations: state.annotations,
-        questions: state.questions,
-        skeletonCompleted: state.skeletonCompleted,
       }),
       merge: (persisted: any, current) => ({
         ...current,
