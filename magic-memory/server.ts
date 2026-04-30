@@ -577,6 +577,14 @@ ${content.slice(0, 3000)}
         const { path: filePath, content } = body
         if (!filePath || content === undefined) return new Response(JSON.stringify({ error: 'path and content required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
         await Bun.write(filePath, content)
+        // 同步更新服务端内存中的 documents 和 concepts，确保刷新后 /api/graph 返回最新内容
+        const doc = documents.find(d => d.path === filePath)
+        if (doc) {
+          const fmMatch = doc.content.match(/^---[\s\S]*?---\n/)
+          doc.content = fmMatch ? fmMatch[0] + content : content
+          const c = concepts.find(c => c.id === doc.id)
+          if (c) c.content = content
+        }
         return new Response(JSON.stringify({ success: true }), {
           headers: { 'Content-Type': 'application/json' },
         })

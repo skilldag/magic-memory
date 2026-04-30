@@ -27,7 +27,11 @@ export function KnowledgeGraphView() {
   const conceptPanelMode = useKnowledgeGraphStore(s => s.conceptPanelMode)
   const setConceptPanelMode = useKnowledgeGraphStore(s => s.setConceptPanelMode)
 
-  const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null)
+  const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null)
+  const selectedConcept = useMemo(() =>
+    selectedConceptId ? concepts.find(c => c.id === selectedConceptId) ?? null : null,
+    [selectedConceptId, concepts]
+  )
   const [processMode, setProcessMode] = useState(false)
   const [processConcept, setProcessConcept] = useState<Concept | null>(null)
   const [hoverConcept, setHoverConcept] = useState<{ concept: Concept; x: number; y: number; width: number; height: number } | null>(null)
@@ -47,6 +51,11 @@ export function KnowledgeGraphView() {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   const selectedConceptRef = useRef<Concept | null>(null)
   const preventHideRef = useRef(false)
+  const [rightPanelWidth, setRightPanelWidth] = useState(420)
+  const isResizing = useRef(false)
+  const startXRef = useRef(0)
+  const startWidthRef = useRef(0)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { loadGraph() }, [loadGraph])
 
@@ -63,9 +72,40 @@ export function KnowledgeGraphView() {
     return () => ro.disconnect()
   }, [])
 
+  // 拖拽分割线
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing.current || !containerRef.current) return
+      const containerRect = containerRef.current.getBoundingClientRect()
+      const maxWidth = Math.min(containerRect.width * 0.6, 720)
+      const newWidth = Math.max(300, Math.min(maxWidth, startWidthRef.current + (startXRef.current - e.clientX)))
+      setRightPanelWidth(newWidth)
+    }
+    const handleMouseUp = () => {
+      isResizing.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [])
+
+  const handleDividerMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    isResizing.current = true
+    startXRef.current = e.clientX
+    startWidthRef.current = rightPanelWidth
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }
+
   const handleSelectConcept = (concept: Concept) => {
     selectedConceptRef.current = concept
-    setSelectedConcept(concept)
+    setSelectedConceptId(concept.id)
     cancelHideHoverActions()
     setHoverConcept(null)
   }
@@ -101,7 +141,7 @@ export function KnowledgeGraphView() {
   const handleNavigate = (conceptId: string) => {
     const concept = concepts.find(c => c.id === conceptId)
     if (concept) {
-      setSelectedConcept(concept)
+      setSelectedConceptId(concept.id)
       selectedConceptRef.current = concept
     }
   }
@@ -324,7 +364,7 @@ export function KnowledgeGraphView() {
   const isEmpty = concepts.length === 0 && !isLoading && !processMode
 
   return (
-    <div className="flex h-full w-full overflow-hidden">
+    <div ref={containerRef} className="flex h-full w-full overflow-hidden">
       {/* 左侧图谱 / 过程画板 */}
       <div ref={graphContainerRef} className="flex-1 min-w-0 relative flex flex-col">
         {isEmpty ? (
@@ -396,7 +436,7 @@ export function KnowledgeGraphView() {
             focusEnabled={true}
             onSelectConcept={handleSelectConcept} onNavigate={handleNavigate}
             onDoubleTapConcept={(c) => { handleSelectConcept(c); handleEnterProcess(c) }}
-            onBackgroundDoubleTap={() => { setSelectedConcept(null); selectedConceptRef.current = null; cancelHideHoverActions(); setHoverConcept(null) }}
+            onBackgroundDoubleTap={() => { setSelectedConceptId(null); selectedConceptRef.current = null; cancelHideHoverActions(); setHoverConcept(null) }}
             onHoverConcept={payload => { cancelHideHoverActions(); setHoverConcept(payload) }}
             onHoverLeave={() => scheduleHideHoverActions()}
           />
@@ -416,13 +456,19 @@ export function KnowledgeGraphView() {
         )}
       </div>
 
+      {/* 可拖拽分割线 */}
+      <div
+        className="w-1 shrink-0 cursor-col-resize bg-transparent hover:bg-blue-300 active:bg-blue-400 transition-colors relative z-10"
+        onMouseDown={handleDividerMouseDown}
+      />
+
       {/* 右侧面板 */}
-      <div className="w-[420px] xl:w-[480px] shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden">
+      <div className="shrink-0 bg-white flex flex-col overflow-hidden border-l border-gray-200" style={{ width: rightPanelWidth }}>
         {selectedConcept ? (
           <ConceptDetailPanel
             concept={selectedConcept} concepts={concepts} edges={edges}
             reviewRecords={reviewRecords}
-            onNavigate={handleNavigate} onDeselect={() => setSelectedConcept(null)}
+            onNavigate={handleNavigate} onDeselect={() => setSelectedConceptId(null)}
             onEnterProcess={handleEnterProcess}
           />
         ) : (

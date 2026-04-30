@@ -10,7 +10,7 @@ import {
   getReviewRecordFor,
 } from '../utils/knowledgeGraph'
 import { generateReferenceFlow, diffFlows, getGapConceptIds, generateGenericChain } from '../utils/processComparison'
-import { loadDocContent } from '../utils/docLoader'
+import { loadDocContent, clearDocCache } from '../utils/docLoader'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
 import type { Concept, ConceptEdge, ReviewRecord, ProcessChain } from '../types'
 
@@ -24,7 +24,7 @@ interface ConceptDetailPanelProps {
   onEnterProcess?: (concept: Concept) => void
 }
 
-type ActionKey = 'process' | 'compare' | 'explore' | 'read'
+type ActionKey = 'import' | 'compare' | 'explore' | 'read'
 
 export function ConceptDetailPanel({
   concept,
@@ -39,10 +39,10 @@ export function ConceptDetailPanel({
   const [docContent, setDocContent] = useState<string | null>(null)
   const [docLoading, setDocLoading] = useState(false)
   const chains = useKnowledgeGraphStore(s => s.chains)
+  const updateConceptContent = useKnowledgeGraphStore(s => s.updateConceptContent)
 
   useEffect(() => {
     if (action !== 'read') return
-    // 优先使用 API 返回的 content（已在概念数据中），避免额外 HTTP 请求
     if (concept.content) {
       setDocContent(concept.content)
       setDocLoading(false)
@@ -90,6 +90,35 @@ export function ConceptDetailPanel({
     }
   }, [concept])
 
+  const [importContent, setImportContent] = useState('')
+  const [importLoading, setImportLoading] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
+
+  const handleImport = useCallback(async () => {
+    if (!importContent.trim()) return
+    setImportLoading(true)
+    setImportError(null)
+    try {
+      const resp = await fetch('/api/write-doc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: concept.path, content: importContent }),
+      })
+      if (!resp.ok) {
+        setImportError('导入失败: ' + resp.statusText)
+        return
+      }
+      clearDocCache(concept.path)
+      updateConceptContent(concept.id, importContent)
+      setImportContent('')
+      setAction('read')
+    } catch (e: any) {
+      setImportError('导入失败: ' + (e.message || e))
+    } finally {
+      setImportLoading(false)
+    }
+  }, [concept.id, concept.path, importContent])
+
   const processState = reviewRecords.get(concept.id)?.process_state
 
   const chain = useMemo(() => {
@@ -131,7 +160,7 @@ export function ConceptDetailPanel({
 
   const actions: { key: ActionKey; label: string; desc: string }[] = [
     { key: 'read', label: '查阅文档', desc: '查看完整说明' },
-    { key: 'process', label: '梳理过程', desc: '推导流程中的步骤' },
+    { key: 'import', label: '导入文档', desc: '从剪贴板粘贴导入文档内容' },
     { key: 'compare', label: '对照验证', desc: processState?.filled ? '查看对比结果' : '先完成梳理' },
     { key: 'explore', label: '探索关联', desc: '前置/后置/相关概念' },
   ]
@@ -197,12 +226,29 @@ export function ConceptDetailPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {action === 'process' && (
-          <div className="px-5 py-8 text-center">
-            <div className="p-6 rounded-lg border border-gray-200 bg-gray-50 inline-block max-w-xs">
-              <div className="text-2xl mb-2">🖱️</div>
-              <p className="text-sm text-gray-600 font-medium">双击图谱中的概念节点</p>
-              <p className="text-xs text-gray-400 mt-1">在全屏画板中梳理推导流程</p>
+        {action === 'import' && (
+          <div className="px-5 py-4">
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">对 LLM 使用下面的 prompt，然后将生成的内容粘贴到下方输入框中：</p>
+              <div className="p-3 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-700 whitespace-pre-wrap font-mono leading-relaxed select-all cursor-text">
+{`以 Unix man page 的严谨技术风格和 markdown 的文本格式，用"问题→解决该问题的子概念和解决过程→引出下一问题"的层层推导方式，解释 ${concept.title} 的核心原理。主体用树状缩进和简洁公式，语言精炼专业。`}
+              </div>
+              <textarea
+                className="w-full h-48 p-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                placeholder="在此粘贴 LLM 返回的文档内容..."
+                value={importContent}
+                onChange={e => setImportContent(e.target.value)}
+              />
+              <button
+                onClick={handleImport}
+                disabled={!importContent.trim() || importLoading}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {importLoading ? '导入中...' : '导入'}
+              </button>
+              {importError && (
+                <p className="text-sm text-red-500">{importError}</p>
+              )}
             </div>
           </div>
         )}

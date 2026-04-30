@@ -34,6 +34,7 @@ interface KnowledgeGraphStore {
   updateProcessState: (conceptId: string, state: Partial<ProcessState>) => void
 
   setConceptPanelMode: (mode: boolean) => void
+  updateConceptContent: (conceptId: string, content: string) => void
   // history-related actions removed
 }
 
@@ -90,6 +91,17 @@ loadGraph: async () => {
       
       selectConcept: (concept) => {
         set({ selectedConcept: concept })
+      },
+
+      updateConceptContent: (conceptId, content) => {
+        set(state => ({
+          concepts: state.concepts.map(c =>
+            c.id === conceptId ? { ...c, content } : c
+          ),
+          selectedConcept: state.selectedConcept?.id === conceptId
+            ? { ...state.selectedConcept, content }
+            : state.selectedConcept,
+        }))
       },
       
       getRelated: (conceptId) => {
