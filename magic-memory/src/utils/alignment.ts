@@ -63,7 +63,18 @@ export interface GraphAlignmentResult {
 
 const STOP = new Set('的了一是在不也有大这中人上为所如把被让给对从到要和会可以但因为所以如果虽然然而而且或者之后前能没很又再才')
 
-function extractTerms(text: string): string[] {
+/** 去掉 markdown 工件（代码块、ASCII图、emoji、链接等） */
+function scrub(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[.*?\]\(.*?\)/g, ' ')
+    .replace(/\[.*?\]\(.*?\)/g, ' ')
+    .replace(/[─│┌┐└┘├┤┬┴┼▼▲→←▸▪●○■□➤📍💡❓❗➡️✨🔍📉📌🧠⚡]+/g, ' ')
+    .replace(/^[│├└┌┤▸▪\s─┐┘┬┴┼▼▲◀▶]+$/gm, '')
+}
+
+function extractTerms(raw: string): string[] {
+  const text = scrub(raw)
   const candidates = new Map<string, number>()
 
   // 1. 中文标点分隔短语
@@ -299,6 +310,14 @@ export function buildConceptGraphFromText(
     for (const item of items) itemToGroup.set(item, gid)
   }
 
+  // 移除明显不是概念的组（章节标题、疑问句、碎片）
+  const nonConcept = (s: string) =>
+    /^(为什么|什么|怎么|如何|是否)/.test(s) ||
+    /(驱动|理解|衍生|概念)$/.test(s) && !conceptCandidates.has(s.toLowerCase())
+  const filteredGroups = nodeGroups.filter(ng =>
+    ng.isKnownConcept || !nonConcept(ng.label)
+  )
+
   // 社区间边
   const edgeMap = new Map<string, number>()
   for (const items of sentenceItems) {
@@ -320,7 +339,7 @@ export function buildConceptGraphFromText(
     edges.push({ sourceId: s, targetId: t, weight: w })
   }
 
-  return { nodeGroups, edges }
+  return { nodeGroups: filteredGroups, edges }
 }
 
 // ========== 社区距离过滤 ==========
@@ -483,6 +502,247 @@ export function alignGraphs(
       matchedEdgeCount: 0, missingEdgeCount: 0, extraEdgeCount: 0,
     },
   }
+}
+
+// ========== StructuralRank: 位置加权标签 + 社区发现 ==========
+
+/**
+ * StructuralRank: 社区发现分组 + 位置加权选标签
+ *
+ * 从对比实验中得到的洞察：
+ * - 位置加权能准确识别真正的概念（出现在标题/冒号前/列表项）
+ * - 社区发现能把相关术语分到一组
+ * - 组合：社区分组 + 组内选位置加权最高的术语 = 干净的知识点
+ */
+export function structuralExtract(
+  text: string,
+  allConcepts: Concept[]
+): TextGraph {
+  // 1. 先用现有管线建社区
+  const base = buildConceptGraphFromText(text, allConcepts)
+
+  // 2. 算位置加权得分
+  const pw = positionWeighted(text, allConcepts)
+  const pwMap = new Map(pw.map(t => [t.term.toLowerCase(), t.score]))
+
+  // 3. 每个社区：选标签（KG概念 > 位置加权高分 > 原标题）
+  const nodeGroups = base.nodeGroups.map(ng => {
+    // 先检查社区中是否有 KG 概念
+    const kgMatch = ng.terms.map(t => {
+      const c = allConcepts.find(c => c.id === t || c.title.toLowerCase() === t.toLowerCase())
+      return c ? { term: t, concept: c } : null
+    }).find(Boolean)
+    if (kgMatch) {
+      return { ...ng, label: kgMatch.concept.title, isKnownConcept: true, conceptId: kgMatch.concept.id }
+    }
+
+    // 没有 KG 概念时，用位置加权最高的术语
+    let bestLabel = ng.label
+    let bestScore = pwMap.get(ng.label.toLowerCase()) ?? 0
+    for (const t of ng.terms) {
+      const s = pwMap.get(t.toLowerCase()) ?? 0
+      if (s > bestScore) { bestScore = s; bestLabel = t }
+    }
+
+    return { ...ng, label: bestLabel }
+  })
+
+  return { nodeGroups, edges: base.edges }
+}
+
+// ========== Method 2: TextRank (PageRank on term graph) ==========
+
+export interface RankedTerm {
+  term: string
+  score: number
+}
+
+/**
+ * TextRank: 基于 PageRank 的图排序关键词提取
+ * 节点 = 候选术语 (KG概念 + 中文短语 + 英文术语)
+ * 边 = 滑窗共现 (window=5)
+ */
+export function textrank(
+  text: string,
+  allConcepts: Concept[]
+): RankedTerm[] {
+  const terms = extractTerms(text)
+  if (terms.length < 2) return []
+
+  // 给每个术语分配序号
+  const termIdx = new Map<string, number>()
+  terms.forEach((t, i) => termIdx.set(t, i))
+  const n = terms.length
+
+  // 将文本切分为 term 序列（顺序出现）
+  const lower = text.toLowerCase()
+  const sorted = [...terms].sort((a, b) => b.length - a.length)
+
+  // 扫描文本，按出现顺序记录术语
+  const sequence: string[] = []
+  let pos = 0
+  while (pos < lower.length) {
+    let matched = false
+    for (const t of sorted) {
+      if (lower.startsWith(t, pos)) {
+        sequence.push(t)
+        pos += t.length
+        matched = true
+        break
+      }
+    }
+    if (!matched) pos++
+  }
+
+  if (sequence.length < 2) return []
+
+  // 建共现图（滑窗 5）
+  const graph = new Map<number, Set<number>>()
+  for (let i = 0; i < n; i++) graph.set(i, new Set())
+
+  for (let i = 0; i < sequence.length; i++) {
+    for (let j = i + 1; j < Math.min(i + 5, sequence.length); j++) {
+      if (sequence[i] !== sequence[j]) {
+        const a = termIdx.get(sequence[i])!
+        const b = termIdx.get(sequence[j])!
+        graph.get(a)!.add(b)
+        graph.get(b)!.add(a)
+      }
+    }
+  }
+
+  // PageRank 迭代
+  const d = 0.85
+  let scores = new Array(n).fill(1 / n)
+
+  for (let iter = 0; iter < 30; iter++) {
+    const newScores = new Array(n).fill(0)
+    for (let i = 0; i < n; i++) {
+      const neighbors = graph.get(i)!
+      if (neighbors.size === 0) {
+        newScores[i] = (1 - d) * scores[i]
+      } else {
+        let sum = 0
+        for (const j of neighbors) {
+          sum += scores[j] / graph.get(j)!.size
+        }
+        newScores[i] = (1 - d) + d * sum
+      }
+    }
+    scores = newScores
+  }
+
+  // 返回排序结果
+  return terms
+    .map((term, i) => ({ term, score: scores[i] }))
+    .sort((a, b) => b.score - a.score)
+}
+
+// ========== Method 3: Position-weighted Scoring ==========
+
+/**
+ * 基于文档位置的术语加权：
+ * - 标题行 × 3
+ * - 冒号前概念 × 2.5
+ * - 列表项 × 2
+ * - 正文 × 1
+ */
+export function positionWeighted(
+  raw: string,
+  allConcepts: Concept[]
+): RankedTerm[] {
+  const text = scrub(raw)
+  const terms = extractTerms(raw)
+  const scores = new Map<string, number>()
+
+  for (const t of terms) scores.set(t, 1)
+
+  // 标题行加权
+  for (const line of text.split('\n')) {
+    const clean = line.replace(/^[\s#\-*]+/, '').trim()
+    if (clean.length >= 2) {
+      for (const t of terms) {
+        if (clean.toLowerCase().includes(t.toLowerCase()) && clean.length <= 30) {
+          // 是标题行本身
+          const isHeading = /^##?\s/.test(line) || /^[\s#\-*]+$/.test(line)
+          if (isHeading || clean === t) {
+            scores.set(t, (scores.get(t) ?? 1) + 3)
+          }
+          // 冒号前
+          if (line.includes('：') || line.includes(':')) {
+            const beforeColon = line.split(/[：:]/)[0]
+            if (beforeColon.toLowerCase().includes(t.toLowerCase())) {
+              scores.set(t, (scores.get(t) ?? 1) + 2.5)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 列表项加权
+  for (const line of text.split('\n')) {
+    if (/^[\s\-*+]/.test(line) || /^\d+[.、]/.test(line)) {
+      for (const t of terms) {
+        if (line.toLowerCase().includes(t.toLowerCase())) {
+          scores.set(t, (scores.get(t) ?? 1) + 2)
+        }
+      }
+    }
+  }
+
+  return [...scores.entries()]
+    .map(([term, score]) => ({ term, score }))
+    .sort((a, b) => b.score - a.score)
+}
+
+// ========== Method 4: Fusion Strategy ==========
+
+/**
+ * 融合策略：TextRank + 位置加权 + 社区发现
+ * 1. TextRank 排序候选术语
+ * 2. 位置加权调整得分
+ * 3. 社区发现合并同义/相关项
+ * 4. 每组选最高分术语为标签
+ */
+export function fusionExtract(
+  text: string,
+  allConcepts: Concept[]
+): TextGraph {
+  const tr = textrank(text, allConcepts)
+  const pw = positionWeighted(text, allConcepts)
+
+  // 融合得分：TextRank * 0.5 + 位置加权 * 0.3 + 社区拓扑 * 0.2
+  const trMap = new Map(tr.map(t => [t.term, t.score]))
+  const pwMap = new Map(pw.map(t => [t.term, t.score]))
+
+  const maxTr = tr.length > 0 ? tr[0].score : 1
+  const maxPw = pw.length > 0 ? pw[0].score : 1
+
+  const allTerms = new Set([...trMap.keys(), ...pwMap.keys()])
+  const fusionScores = new Map<string, number>()
+  for (const t of allTerms) {
+    const trScore = (trMap.get(t) ?? 0) / maxTr
+    const pwScore = (pwMap.get(t) ?? 1) / maxPw
+    fusionScores.set(t, trScore * 0.5 + pwScore * 0.3)
+  }
+
+  // 复用社区发现来分组
+  const baseGraph = buildConceptGraphFromText(text, allConcepts)
+
+  // 用融合得分替换社区标签选择
+  const nodeGroups = baseGraph.nodeGroups.map(ng => {
+    // 在社区的 terms 中找融合得分最高的作为新标签
+    let bestTerm = ng.label
+    let bestScore = fusionScores.get(ng.label.toLowerCase()) ?? 0
+    for (const t of ng.terms) {
+      const s = fusionScores.get(t.toLowerCase()) ?? 0
+      if (s > bestScore) { bestScore = s; bestTerm = t }
+    }
+    return { ...ng, label: bestTerm }
+  })
+
+  return { nodeGroups, edges: baseGraph.edges }
 }
 
 export function compareTexts(
