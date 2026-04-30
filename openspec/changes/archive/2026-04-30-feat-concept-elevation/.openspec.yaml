@@ -1,0 +1,10 @@
+name: feat-concept-elevation
+title: 概念提升功能
+description: 在知识图谱视图中，选中文字后点击"概念提升"按钮，将选中词添加到知识图谱作为新概念，并建立从当前概念到新概念的 leads_to 关系
+status: pending
+dependencies: []
+artifacts:
+  - id: proposal
+    status: done
+  - id: tasks
+    status: pending

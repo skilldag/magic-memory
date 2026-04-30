@@ -20,6 +20,7 @@ export function KnowledgeGraphView() {
   const isLoading = useKnowledgeGraphStore(s => s.isLoading)
   const reviewRecords = useKnowledgeGraphStore(s => s.reviewRecords)
   const createConceptWithEdges = useKnowledgeGraphStore(s => s.createConceptWithEdges)
+  const selectConcept = useKnowledgeGraphStore(s => s.selectConcept)
   // Skeleton and questions features removed
   // const questions = useKnowledgeGraphStore(s => s.questions)
   // const canvasHistory = useKnowledgeGraphStore(s => s.canvasHistory)
@@ -27,11 +28,12 @@ export function KnowledgeGraphView() {
   const conceptPanelMode = useKnowledgeGraphStore(s => s.conceptPanelMode)
   const setConceptPanelMode = useKnowledgeGraphStore(s => s.setConceptPanelMode)
 
+  const storeSelectedConcept = useKnowledgeGraphStore(s => s.selectedConcept)
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null)
-  const selectedConcept = useMemo(() =>
-    selectedConceptId ? concepts.find(c => c.id === selectedConceptId) ?? null : null,
-    [selectedConceptId, concepts]
-  )
+  const selectedConcept = useMemo(() => {
+    if (storeSelectedConcept) return storeSelectedConcept
+    return selectedConceptId ? concepts.find(c => c.id === selectedConceptId) ?? null : null
+  }, [storeSelectedConcept, selectedConceptId, concepts])
   const [processMode, setProcessMode] = useState(false)
   const [processConcept, setProcessConcept] = useState<Concept | null>(null)
   const [hoverConcept, setHoverConcept] = useState<{ concept: Concept; x: number; y: number; width: number; height: number } | null>(null)
@@ -106,6 +108,7 @@ export function KnowledgeGraphView() {
   const handleSelectConcept = (concept: Concept) => {
     selectedConceptRef.current = concept
     setSelectedConceptId(concept.id)
+    selectConcept(concept)
     cancelHideHoverActions()
     setHoverConcept(null)
   }
