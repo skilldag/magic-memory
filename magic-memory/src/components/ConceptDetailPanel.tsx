@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react'
 import { DocumentViewer } from './DocumentViewer'
 
 import { ComparisonPanel } from './ComparisonPanel'
+import { AlignmentPanel } from './AlignmentPanel'
 import { DependencyChainSVG } from './DependencyChainSVG'
 import {
   getRelatedConcepts,
@@ -24,7 +25,7 @@ interface ConceptDetailPanelProps {
   onEnterProcess?: (concept: Concept) => void
 }
 
-type ActionKey = 'import' | 'compare' | 'explore' | 'read'
+type ActionKey = 'import' | 'compare' | 'explore' | 'read' | 'align'
 
 export function ConceptDetailPanel({
   concept,
@@ -161,6 +162,7 @@ export function ConceptDetailPanel({
   const actions: { key: ActionKey; label: string; desc: string }[] = [
     { key: 'read', label: '查阅文档', desc: '查看完整说明' },
     { key: 'import', label: '导入文档', desc: '从剪贴板粘贴导入文档内容' },
+    { key: 'align', label: '语义对齐', desc: '用自由文本对齐图谱，诊断知识缺口' },
     { key: 'compare', label: '对照验证', desc: processState?.filled ? '查看对比结果' : '先完成梳理' },
     { key: 'explore', label: '探索关联', desc: '前置/后置/相关概念' },
   ]
@@ -251,6 +253,14 @@ export function ConceptDetailPanel({
               )}
             </div>
           </div>
+        )}
+
+        {action === 'align' && (
+          <AlignmentPanel
+            concept={concept}
+            allConcepts={concepts}
+            onNavigate={onNavigate}
+          />
         )}
 
         {action === 'compare' && (
