@@ -71,7 +71,7 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
 
   const handleAlign = useCallback(() => {
     if (!userText.trim() || !originalContent) return
-    const r = compareTexts(userText, originalContent, allConcepts)
+    const r = compareTexts(userText, originalContent, allConcepts, concept.id)
     setResult(r)
     setHasAligned(true)
   }, [userText, originalContent, allConcepts])

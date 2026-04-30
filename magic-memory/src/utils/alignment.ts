@@ -323,6 +323,76 @@ export function buildConceptGraphFromText(
   return { nodeGroups, edges }
 }
 
+// ========== 社区距离过滤 ==========
+
+/**
+ * BFS 计算社区间距，过滤距离核心概念过远的社区
+ */
+export function filterFarGroups(
+  graph: TextGraph,
+  coreId: string,
+  allConcepts: Concept[]
+): TextGraph {
+  if (!coreId || graph.nodeGroups.length <= 1) return graph
+
+  // 构建社区邻接表
+  const adj = new Map<string, Set<string>>()
+  for (const e of graph.edges) {
+    if (!adj.has(e.sourceId)) adj.set(e.sourceId, new Set())
+    if (!adj.has(e.targetId)) adj.set(e.targetId, new Set())
+    adj.get(e.sourceId)!.add(e.targetId)
+    adj.get(e.targetId)!.add(e.sourceId)
+  }
+
+  // 找核心社区：包含 coreId 或 coreId 对应概念名的社区
+  const coreIdLower = coreId.toLowerCase()
+  const coreConcept = allConcepts.find(c => c.id === coreId)
+  const coreNames = new Set([coreIdLower])
+  if (coreConcept) {
+    coreNames.add(coreConcept.title.toLowerCase())
+    if (coreConcept.alias) {
+      for (const a of coreConcept.alias) coreNames.add(a.toLowerCase())
+    }
+  }
+
+  let coreGroup = graph.nodeGroups[0].id
+  outer: for (const ng of graph.nodeGroups) {
+    for (const t of ng.terms) {
+      if (coreNames.has(t.toLowerCase())) { coreGroup = ng.id; break outer }
+    }
+    if (coreNames.has(ng.label.toLowerCase())) { coreGroup = ng.id; break outer }
+  }
+
+  // 没有社区间边时，不过滤（所有社区视为同层级）
+  if (adj.size === 0) return graph
+
+  // BFS 算距离
+  const dist = new Map<string, number>()
+  const queue = [coreGroup]
+  dist.set(coreGroup, 0)
+  for (const cur of queue) {
+    const d = dist.get(cur)!
+    const neighbors = adj.get(cur)
+    if (neighbors) {
+      for (const n of neighbors) {
+        if (!dist.has(n)) {
+          dist.set(n, d + 1)
+          if (d + 1 < 3) queue.push(n)
+        }
+      }
+    }
+  }
+
+  // 过滤：只保留距离 <= 2 的社区
+  const keepIds = new Set([...dist.keys()].filter(id => (dist.get(id) ?? 99) <= 2))
+  if (keepIds.size === 0) keepIds.add(coreGroup)
+
+  return {
+    nodeGroups: graph.nodeGroups.filter(ng => keepIds.has(ng.id)),
+    edges: graph.edges.filter(e => keepIds.has(e.sourceId) && keepIds.has(e.targetId)),
+  }
+}
+
 // ========== Graph Alignment ==========
 
 function charJaccard(a: string, b: string): number {
@@ -418,10 +488,13 @@ export function alignGraphs(
 export function compareTexts(
   userText: string,
   originalContent: string,
-  allConcepts: Concept[]
+  allConcepts: Concept[],
+  subjectConceptId?: string
 ): GraphAlignmentResult {
-  return alignGraphs(
-    buildConceptGraphFromText(userText, allConcepts),
-    buildConceptGraphFromText(originalContent, allConcepts)
-  )
+  const userGraph = buildConceptGraphFromText(userText, allConcepts)
+  let originalGraph = buildConceptGraphFromText(originalContent, allConcepts)
+  if (subjectConceptId) {
+    originalGraph = filterFarGroups(originalGraph, subjectConceptId, allConcepts)
+  }
+  return alignGraphs(userGraph, originalGraph)
 }
