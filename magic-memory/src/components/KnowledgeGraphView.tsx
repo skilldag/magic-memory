@@ -439,7 +439,7 @@ export function KnowledgeGraphView() {
             focusEnabled={true}
             onSelectConcept={handleSelectConcept} onNavigate={handleNavigate}
             onDoubleTapConcept={(c) => { handleSelectConcept(c); handleEnterProcess(c) }}
-            onBackgroundDoubleTap={() => { setSelectedConceptId(null); selectedConceptRef.current = null; cancelHideHoverActions(); setHoverConcept(null) }}
+            onBackgroundDoubleTap={() => { setSelectedConceptId(null); selectedConceptRef.current = null; cancelHideHoverActions(); setHoverConcept(null); useKnowledgeGraphStore.setState({ selectedConcept: null }) }}
             onHoverConcept={payload => { cancelHideHoverActions(); setHoverConcept(payload) }}
             onHoverLeave={() => scheduleHideHoverActions()}
           />
@@ -471,7 +471,7 @@ export function KnowledgeGraphView() {
           <ConceptDetailPanel
             concept={selectedConcept} concepts={concepts} edges={edges}
             reviewRecords={reviewRecords}
-            onNavigate={handleNavigate} onDeselect={() => setSelectedConceptId(null)}
+            onNavigate={handleNavigate} onDeselect={() => { setSelectedConceptId(null); useKnowledgeGraphStore.setState({ selectedConcept: null }) }}
             onEnterProcess={handleEnterProcess}
           />
         ) : (
