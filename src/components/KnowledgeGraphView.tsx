@@ -105,11 +105,7 @@ useEffect(() => {
     const handleMouseMove = (ev: MouseEvent) => {
       const containerRect = container.getBoundingClientRect()
       const delta = startX - ev.clientX
-      const maxWidth = Math.min(containerRect.width * 0.85, 960)
-      const rawWidth = startWidth + delta
-      const newWidth = Math.max(300, Math.min(maxWidth, rawWidth))
-      console.log('[drag] startX=%d evX=%d delta=%d startW=%d containerW=%d maxW=%d rawW=%d newW=%d',
-        startX, ev.clientX, delta, startWidth, containerRect.width, maxWidth, rawWidth, newWidth)
+      const newWidth = Math.max(200, startWidth + delta)
       setRightPanelWidth(newWidth)
     }
 
