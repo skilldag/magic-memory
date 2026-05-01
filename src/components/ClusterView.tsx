@@ -1,7 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { SummaryPanel } from './SummaryPanel'
+import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
+import Graph from 'graphology'
+import louvain from 'graphology-communities-louvain'
+import type { Concept as StoreConcept, ConceptEdge } from '../types'
 
-interface Concept {
+interface ClusterConcept {
   id: string
   title: string
   number: number | null
@@ -14,15 +18,20 @@ interface Community {
   size: number
   numRange: string
   cohesion: number
-  members: Concept[]
+  members: ClusterConcept[]
 }
 
 interface ClusterResult {
   totalConcepts: number
   totalEdges: number
   totalCommunities: number
-  concepts: Concept[]
+  concepts: ClusterConcept[]
   communities: Community[]
+}
+
+function extractNumber(id: string): number | null {
+  const m = id.match(/(\d+)/)
+  return m ? parseInt(m[1], 10) : null
 }
 
 const COMMUNITY_COLORS = [
@@ -44,37 +53,80 @@ function getBarColor(cohesion: number): string {
   return 'bg-gray-400'
 }
 
+function runLouvain(concepts: StoreConcept[], edges: ConceptEdge[], resolution: number): ClusterResult {
+  const graph = new Graph()
+
+  for (const c of concepts) {
+    graph.addNode(c.id, { title: c.title, category: c.category, path: c.path })
+  }
+  for (const e of edges) {
+    if (graph.hasNode(e.source) && graph.hasNode(e.target)) {
+      if (!graph.hasEdge(e.source, e.target)) {
+        graph.addEdge(e.source, e.target)
+      }
+    }
+  }
+
+  const communities = louvain(graph, { resolution })
+
+  const communityMap = new Map<string, StoreConcept[]>()
+  for (const c of concepts) {
+    const commId = communities[c.id]
+    const commName = commId !== undefined ? String(commId) : 'isolated'
+    if (!communityMap.has(commName)) communityMap.set(commName, [])
+    communityMap.get(commName)!.push(c)
+  }
+
+  const commEntries = Array.from(communityMap.entries())
+    .map(([name, members]) => {
+      const memberConcepts: ClusterConcept[] = members.map(c => ({
+        id: c.id,
+        title: c.title,
+        number: extractNumber(c.id),
+        category: c.category,
+        path: c.path,
+      }))
+      memberConcepts.sort((a, b) => (a.number ?? 999) - (b.number ?? 999))
+
+      const numbers = memberConcepts.map(m => m.number).filter((n): n is number => n !== null)
+      const numRange = numbers.length > 0
+        ? `${Math.min(...numbers)}-${Math.max(...numbers)}`
+        : ''
+
+      // 内聚度 = 社区内部边数 / 可能的最大内部边数
+      const memberIds = new Set(members.map(m => m.id))
+      let internalEdges = 0
+      for (const e of edges) {
+        if (memberIds.has(e.source) && memberIds.has(e.target)) internalEdges++
+      }
+      const possibleEdges = members.length * (members.length - 1) / 2
+      const cohesion = possibleEdges > 0 ? internalEdges / possibleEdges : 0
+
+      return { name, size: members.length, numRange, cohesion, members: memberConcepts }
+    })
+    .sort((a, b) => b.size - a.size)
+
+  return {
+    totalConcepts: concepts.length,
+    totalEdges: edges.length,
+    totalCommunities: commEntries.length,
+    concepts: commEntries.flatMap(c => c.members),
+    communities: commEntries,
+  }
+}
+
 export function ClusterView() {
-  const [result, setResult] = useState<ClusterResult | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const storeConcepts = useKnowledgeGraphStore(s => s.concepts)
+  const storeEdges = useKnowledgeGraphStore(s => s.edges)
   const [resolution, setResolution] = useState(0.5)
 
-  const fetchCluster = async (res: number) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const resp = await fetch(`/api/cluster?resolution=${res}&path=docs`)
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
-      const data = await resp.json()
-      setResult(data)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '请求失败')
-    }
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    fetchCluster(resolution)
-  }, [])
-
-  const handleRerun = () => {
-    fetchCluster(resolution)
-  }
+  const result = useMemo(() => {
+    if (storeConcepts.length === 0) return null
+    return runLouvain(storeConcepts, storeEdges, resolution)
+  }, [storeConcepts, storeEdges, resolution])
 
   return (
     <div className="flex h-full">
-      {/* 左侧：聚类内容 */}
       <div className="flex-1 overflow-y-auto p-6 min-w-0">
         <div className="mb-6">
           <h1 className="text-xl font-bold mb-2">文档聚类图谱</h1>
@@ -83,7 +135,6 @@ export function ClusterView() {
           </p>
         </div>
 
-        {/* 控制栏 */}
         <div className="flex items-center gap-4 mb-6 p-3 bg-gray-50 rounded-lg">
           <label className="flex items-center gap-2 text-sm">
             <span className="text-gray-600">分辨率:</span>
@@ -98,13 +149,6 @@ export function ClusterView() {
             />
             <span className="font-mono text-sm w-8">{resolution.toFixed(1)}</span>
           </label>
-          <button
-            onClick={handleRerun}
-            disabled={loading}
-            className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? '计算中...' : '重新聚类'}
-          </button>
           {result && (
             <span className="text-xs text-gray-400 ml-auto">
               {result.totalConcepts} 概念 / {result.totalEdges} 边 /{' '}
@@ -113,22 +157,13 @@ export function ClusterView() {
           )}
         </div>
 
-        {/* 错误提示 */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
-            {error}
+        {storeConcepts.length === 0 && (
+          <div className="flex items-center justify-center py-20 text-gray-400 text-sm">
+            暂无概念数据，请先导入文档
           </div>
         )}
 
-        {/* 加载中 */}
-        {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
-          </div>
-        )}
-
-        {/* 社区列表 */}
-        {result && !loading && (
+        {result && (
           <div className="space-y-4">
             {result.communities.map((comm, i) => (
               <CommunityCard
@@ -141,7 +176,6 @@ export function ClusterView() {
         )}
       </div>
 
-      {/* 右侧：图谱分析面板 */}
       <div className="w-80 shrink-0 border-l border-gray-200 bg-white overflow-hidden">
         <SummaryPanel />
       </div>
@@ -159,10 +193,7 @@ function CommunityCard({
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div
-      className={`border rounded-lg overflow-hidden ${COMMUNITY_COLORS[colorIndex]}`}
-    >
-      {/* 头部 */}
+    <div className={`border rounded-lg overflow-hidden ${COMMUNITY_COLORS[colorIndex]}`}>
       <div
         className="flex items-center gap-3 p-3 cursor-pointer hover:opacity-80"
         onClick={() => setExpanded(!expanded)}
@@ -170,9 +201,7 @@ function CommunityCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm">{community.name}</span>
-            <span className="text-xs text-gray-400">
-              {community.size} 个概念
-            </span>
+            <span className="text-xs text-gray-400">{community.size} 个概念</span>
           </div>
           <div className="flex items-center gap-2 mt-1">
             <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-[120px]">
@@ -188,23 +217,19 @@ function CommunityCard({
         </div>
         <svg
           className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+          fill="none" viewBox="0 0 24 24" stroke="currentColor"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </div>
 
-      {/* 成员列表 */}
       {expanded && (
         <div className="border-t border-inherit">
           {community.members.map((m) => (
             <a
               key={m.id}
               href={m.path}
-              target="_blank"
-              rel="noopener noreferrer"
+              target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-black/5 transition-colors"
             >
               <span className="text-gray-400 font-mono w-6 text-right shrink-0">

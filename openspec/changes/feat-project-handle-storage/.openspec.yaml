@@ -1,0 +1,12 @@
+name: feat-project-handle-storage
+title: 基于 FileSystemDirectoryHandle 的多项目管理
+description: 将 projectStore 从存储文件系统路径改为存储 FileSystemDirectoryHandle，前端直接读文件解析概念和边，聚类前端用 Louvain 跑
+status: pending
+dependencies: []
+artifacts:
+  - id: proposal
+    status: done
+  - id: design
+    status: done
+  - id: tasks
+    status: pending

@@ -192,4 +192,4 @@ export interface SuggestionItem {
   relationType: 'leads_to' | 'depends_on' | 'related'
   checked: boolean
 }
-// Project-related types removed - project.ts doesn't exist in this repo
+export type { Project, ProjectConfig, ProjectGraphData } from './project';

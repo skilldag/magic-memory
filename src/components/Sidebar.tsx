@@ -16,30 +16,17 @@ export function Sidebar({ documents, selectedDoc, onDocumentSelect, onClose }: S
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   const handleAddProject = async () => {
-    if ('showDirectoryPicker' in window) {
-      try {
-        const handle = await (window as any).showDirectoryPicker()
-        const name = handle.name
-        const demoPaths = ['/Users/meetai/source/', '/home/user/', './']
-        const suggested = demoPaths[0] + name
-        const folderPath = prompt(
-          `已选择文件夹「${name}」。\n请确认完整路径，否则文件读写可能失败:`,
-          suggested
-        )
-        if (folderPath) {
-          await useProjectStore.getState().createProject(name, folderPath)
-        }
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          console.error('Failed to select folder:', err)
-        }
+    try {
+      const handle = await (window as any).showDirectoryPicker()
+      const name = handle.name
+      const project = await useProjectStore.getState().createProject(name, handle)
+      if (!project) {
+        alert('创建项目失败，请重试')
       }
-    } else {
-      alert('Your browser does not support folder picker. Please enter the path manually.')
-      const folderPath = prompt('请输入文件夹完整路径:')
-      if (folderPath) {
-        const name = folderPath.split('/').pop() || 'New Project'
-        await useProjectStore.getState().createProject(name, folderPath)
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Failed to create project:', err)
+        alert('创建项目失败: ' + (err.message || err))
       }
     }
   }

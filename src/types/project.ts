@@ -1,7 +1,8 @@
 export interface Project {
   id: string;
   name: string;
-  folderPath: string;
+  folderPath?: string;
+  handleStoreId: string | null;
   createdAt: string;
   lastOpenedAt: string;
 }
@@ -9,7 +10,8 @@ export interface Project {
 export interface ProjectConfig {
   id: string;
   name: string;
-  folderPath: string;
+  folderPath?: string;
+  handleStoreId: string | null;
   createdAt: string;
   lastOpenedAt: string;
 }
