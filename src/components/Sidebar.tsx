@@ -4,9 +4,10 @@ import { useProjectStore } from '../store/projectStore'
 
 interface SidebarProps {
   onClose: () => void
+  onProjectCreated?: () => void
 }
 
-export function Sidebar({ onClose }: SidebarProps) {
+export function Sidebar({ onClose, onProjectCreated }: SidebarProps) {
 
   const handleAddProject = async () => {
     try {
@@ -15,6 +16,8 @@ export function Sidebar({ onClose }: SidebarProps) {
       const project = await useProjectStore.getState().createProject(name, handle)
       if (!project) {
         alert('创建项目失败，请重试')
+      } else {
+        onProjectCreated?.()
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {

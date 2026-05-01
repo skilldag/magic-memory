@@ -106,6 +106,7 @@ function App() {
         <div className="shrink-0" style={{ width: 288, minWidth: 288 }}>
           <Sidebar
             onClose={handleSidebarToggle}
+            onProjectCreated={() => setViewMode('knowledge-graph')}
           />
         </div>
       )}
