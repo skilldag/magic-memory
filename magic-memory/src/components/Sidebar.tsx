@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { useDocumentStore } from '../store/documentStore'
+import { useState } from 'react'
+import { ProjectList } from './ProjectList'
+import { useProjectStore } from '../store/projectStore'
 import type { Document } from '../types'
 
 interface SidebarProps {
@@ -7,13 +8,36 @@ interface SidebarProps {
   selectedDoc: Document | null
   onDocumentSelect: (doc: Document) => void
   onClose: () => void
-  onImport: () => void
 }
 
-export function Sidebar({ documents, selectedDoc, onDocumentSelect, onClose, onImport }: SidebarProps) {
+export function Sidebar({ documents, selectedDoc, onDocumentSelect, onClose }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+
+  const handleAddProject = async () => {
+    if ('showDirectoryPicker' in window) {
+      try {
+        const handle = await (window as any).showDirectoryPicker()
+        const name = handle.name
+        const folderPath = prompt('请输入选中的文件夹完整路径:', `/${name}`)
+        if (folderPath) {
+          await useProjectStore.getState().createProject(name, folderPath)
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Failed to select folder:', err)
+        }
+      }
+    } else {
+      alert('Your browser does not support folder picker. Please enter the path manually.')
+      const folderPath = prompt('请输入文件夹完整路径:')
+      if (folderPath) {
+        const name = folderPath.split('/').pop() || 'New Project'
+        await useProjectStore.getState().createProject(name, folderPath)
+      }
+    }
+  }
 
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch =
@@ -32,20 +56,14 @@ export function Sidebar({ documents, selectedDoc, onDocumentSelect, onClose, onI
 
   return (
     <div className="w-72 lg:w-80 border-r border-gray-200 flex flex-col bg-gray-50 shrink-0">
+      <div className="border-b border-gray-200">
+        <ProjectList onAddProject={handleAddProject} />
+      </div>
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">文档列表</h2>
           <div className="flex items-center gap-2">
-            <button
-              onClick={onImport}
-              className="p-1 hover:bg-gray-200 rounded"
-              aria-label="导入文档"
-              title="导入文档"
-            >
-              <svg width={20} height={20} className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-            </button>
+            {/* Removed: 导入文档按钮; replaced by ProjectList-based import flow */}
             <button
               onClick={onClose}
               className="p-1 hover:bg-gray-200 rounded"
