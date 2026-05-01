@@ -494,6 +494,20 @@ useEffect(() => {
             <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => { setActionConcept(hoverConcept.concept); setShowManualLinkDialog(true); setHoverConcept(null) }}
               className="absolute flex items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-teal-500 text-white shadow-lg hover:shadow-xl hover:from-green-500 hover:to-teal-600 transition-all cursor-pointer select-none font-bold"
               style={{ width: 28, height: 28, fontSize: 9, left: hoverConcept.x + (Math.max(hoverConcept.width, hoverConcept.height) / 2 + 2) * Math.cos(35 * Math.PI / 180) - 14, top: hoverConcept.y + (Math.max(hoverConcept.width, hoverConcept.height) / 2 + 2) * Math.sin(35 * Math.PI / 180) - 14, pointerEvents: 'auto' }} title="手动添加概念">手动</button>
+            <button type="button" onMouseDown={e => e.preventDefault()} onClick={async () => {
+              const c = hoverConcept.concept
+              setHoverConcept(null)
+              try {
+                await fetch('/api/delete-doc', {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ path: c.path }),
+                })
+              } catch {}
+              useKnowledgeGraphStore.getState().removeConcept(c.id)
+            }}
+              className="absolute flex items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-700 text-white shadow-lg hover:shadow-xl hover:from-red-600 hover:to-red-800 transition-all cursor-pointer select-none font-bold"
+              style={{ width: 28, height: 28, fontSize: 11, left: hoverConcept.x + (Math.max(hoverConcept.width, hoverConcept.height) / 2 + 2) * Math.cos(-90 * Math.PI / 180) - 14, top: hoverConcept.y + (Math.max(hoverConcept.width, hoverConcept.height) / 2 + 2) * Math.sin(-90 * Math.PI / 180) - 14, pointerEvents: 'auto' }} title="删除概念">删</button>
           </div>
         )}
       </div>
