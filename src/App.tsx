@@ -70,19 +70,6 @@ function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-white">
-      {/* 在文档模式下显示侧边栏 */}
-      {!isGraphMode && !isClusterMode && isSidebarOpen && (
-        <div className="shrink-0" style={{ width: 288, minWidth: 288 }}>
-          <Sidebar
-            documents={documents}
-            selectedDoc={selectedDoc}
-            onDocumentSelect={handleDocumentSelect}
-            onClose={handleSidebarToggle}
-
-          />
-        </div>
-      )}
-
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <Toolbar
           onSidebarToggle={handleSidebarToggle}
@@ -113,6 +100,15 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* 侧边栏在右侧 */}
+      {isSidebarOpen && (
+        <div className="shrink-0" style={{ width: 288, minWidth: 288 }}>
+          <Sidebar
+            onClose={handleSidebarToggle}
+          />
+        </div>
+      )}
 
       {(viewMode === 'documents' || selectedDoc) && isAnnotationPanelOpen && selectedDoc && (
         <div className="shrink-0">
