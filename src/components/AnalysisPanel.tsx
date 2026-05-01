@@ -160,7 +160,7 @@ export function AnalysisPanel({ onNavigate, onPathFocus }: AnalysisPanelProps) {
           onToggle={() => toggleSection('flows')}
         >
           <div className="space-y-1.5">
-            {data.longestPaths.slice(0, 3).map((p, i) => (
+            {data.longestPaths.slice(0, 10).map((p, i) => (
               <div key={i}>
                 <div className="flex items-center w-full">
                   <button
