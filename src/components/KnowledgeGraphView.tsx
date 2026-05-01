@@ -103,10 +103,7 @@ useEffect(() => {
     document.body.style.userSelect = 'none'
 
     const handleMouseMove = (ev: MouseEvent) => {
-      const containerRect = container.getBoundingClientRect()
-      const delta = startX - ev.clientX
-      const newWidth = Math.max(200, startWidth + delta)
-      setRightPanelWidth(newWidth)
+      setRightPanelWidth(Math.max(200, startWidth + (startX - ev.clientX)))
     }
 
     const handleMouseUp = () => {
