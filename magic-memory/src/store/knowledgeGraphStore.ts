@@ -33,6 +33,7 @@ interface KnowledgeGraphStore {
     relationType: 'leads_to' | 'depends_on' | 'related'
     metadataStatus?: 'ai-generated' | 'draft'
   }) => Concept
+  removeConcept: (conceptId: string) => void
   updateProcessState: (conceptId: string, state: Partial<ProcessState>) => void
 
   setConceptPanelMode: (mode: boolean) => void
@@ -275,6 +276,17 @@ isLoading: false,
 
       setLinkSource: (source) => {
         set({ linkSource: source })
+      },
+
+      removeConcept: (conceptId) => {
+        set(state => ({
+          concepts: state.concepts.filter(c => c.id !== conceptId),
+          edges: state.edges.filter(e => e.source !== conceptId && e.target !== conceptId),
+          selectedConcept: state.selectedConcept?.id === conceptId ? null : state.selectedConcept,
+        }))
+        const newRecords = new Map(get().reviewRecords)
+        newRecords.delete(conceptId)
+        set({ reviewRecords: newRecords })
       },
 
       updateProcessState: (conceptId, state) => {

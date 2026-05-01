@@ -1056,6 +1056,38 @@ ${question}
         return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } })
       }
     }
+
+    // DELETE /api/delete-doc
+    if (url.pathname === '/api/delete-doc' && req.method === 'DELETE') {
+      try {
+        const body = await req.json()
+        const { path: filePath } = body
+        if (!filePath) return new Response(JSON.stringify({ error: 'path required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+
+        try { await rm(filePath) } catch {}
+
+        const docIdx = documents.findIndex(d => d.path === filePath)
+        const docId = docIdx !== -1 ? documents[docIdx].id : null
+        if (docIdx !== -1) documents.splice(docIdx, 1)
+
+        const conceptIdx = concepts.findIndex(c => c.path === filePath)
+        const conceptId = conceptIdx !== -1 ? concepts[conceptIdx].id : (docId || filePath)
+        if (conceptIdx !== -1) concepts.splice(conceptIdx, 1)
+
+        for (let i = conceptEdges.length - 1; i >= 0; i--) {
+          if (conceptEdges[i].source === conceptId || conceptEdges[i].target === conceptId) {
+            conceptEdges.splice(i, 1)
+          }
+        }
+
+        return new Response(JSON.stringify({ success: true, conceptId }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
+    }
+
     return new Response('Not found', { status: 404 })
   },
 })
