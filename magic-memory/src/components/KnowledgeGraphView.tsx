@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
+import { useProjectStore } from '../store/projectStore'
 import { KnowledgeGraph } from './KnowledgeGraph'
 import { ConceptDetailPanel } from './ConceptDetailPanel'
 import { AnalysisPanel } from './AnalysisPanel'
@@ -62,9 +63,15 @@ export function KnowledgeGraphView() {
   const isResizing = useRef(false)
   const startXRef = useRef(0)
   const startWidthRef = useRef(0)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef: any = useRef(null)
 
   useEffect(() => { loadGraph() }, [loadGraph])
+
+  // Load projects and react to current project changes
+  const currentProjectId = useProjectStore(s => s.currentProjectId)
+  const loadProjects = useProjectStore(s => s.loadProjects)
+
+  useEffect(() => { loadProjects() }, [loadProjects])
 
 useEffect(() => {
     const toggleHandler = () => {
@@ -154,8 +161,9 @@ useEffect(() => {
 
   const processChain = useMemo(() => {
     if (!processConcept) return null
-    if (processConcept.process) {
-      return chains.find(ch => ch.id === processConcept.process.chain_id) ?? null
+    const proc = processConcept.process
+    if (proc) {
+      return chains.find(ch => ch.id === proc.chain_id) ?? null
     }
     return generateGenericChain(processConcept.id, concepts)
   }, [processConcept, concepts, chains])
@@ -385,9 +393,9 @@ useEffect(() => {
   const isEmpty = concepts.length === 0 && !isLoading && !processMode
 
   return (
-    <div ref={containerRef} className="flex h-full w-full overflow-hidden">
+      <div ref={containerRef as any} className="flex h-full w-full overflow-hidden">
       {/* 左侧图谱 / 过程画板 */}
-      <div ref={graphContainerRef} className="flex-1 min-w-0 relative flex flex-col">
+      <div ref={graphContainerRef as any} className="flex-1 min-w-0 relative flex flex-col">
         {isEmpty ? (
           <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 text-gray-500">
             <div className="max-w-md text-center space-y-6">
@@ -419,6 +427,11 @@ useEffect(() => {
                       手动添加概念
                     </button>
                   </div>
+                )}
+                {currentProjectId && (
+                  <span className="ml-2 text-xs text-gray-400">
+                    Project: { (useProjectStore as any).getState().projects.find((p: any) => p.id === currentProjectId)?.name || '' }
+                  </span>
                 )}
               </div>
             </div>
