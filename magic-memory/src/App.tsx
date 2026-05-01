@@ -21,6 +21,9 @@ function App() {
 
   const handleViewModeChange = (mode: 'documents' | 'knowledge-graph' | 'cluster') => {
     setViewMode(mode)
+    if (mode === 'documents') {
+      setIsSidebarOpen(true)
+    }
   }
 
   const documents = useDocumentStore(state => state.documents)
@@ -78,7 +81,6 @@ function App() {
             selectedDoc={selectedDoc}
             onDocumentSelect={handleDocumentSelect}
             onClose={handleSidebarToggle}
-            onImport={handleImport}
           />
         </div>
       )}

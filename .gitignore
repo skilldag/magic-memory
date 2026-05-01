@@ -1,2 +1,28 @@
 .env
 .worktrees
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+magic-memory/dist/
+
+# Playwright MCP debug logs
+.playwright-mcp/
+
+# Debug screenshots, images, and temp files
+screenshots/
+*.png
+*.log
+import-debug-01-before.md
+screenshot.mjs
+snapshot.yml
+debug-page.yml
+page-snapshot-01.md
+
+# Generated data
+data/
+
+# Redundant lock file (npm is primary)
+bun.lock
