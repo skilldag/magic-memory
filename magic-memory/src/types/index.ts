@@ -192,3 +192,5 @@ export interface SuggestionItem {
   relationType: 'leads_to' | 'depends_on' | 'related'
   checked: boolean
 }
+// Re-export Project-related types for downstream usage
+export type { Project, ProjectConfig, ProjectGraphData } from './project';

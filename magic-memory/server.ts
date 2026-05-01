@@ -4,18 +4,9 @@ import { join, relative, dirname } from 'path'
 import { homedir } from 'os'
 import { existsSync, mkdirSync } from 'fs'
 import { clusterPipeline } from './scripts/cluster'
-import type { Document, Annotation, Concept, ConceptEdge } from './src/types'
+import type { Document, Annotation, Concept, ConceptEdge, Project } from './src/types'
 import type { Edge as ClusterEdge } from './scripts/cluster'
 import { analyzeGraph, formatAnalysisToString } from './src/utils/graphAnalysis'
-
-// Local Project type fallback (in case not exported from src/types)
-type Project = {
-  id: string
-  name: string
-  folderPath: string
-  createdAt: string
-  lastOpenedAt: string
-}
 
 const PORT = 3001
 const DOCS_DIR = join(process.cwd(), '../docs')
