@@ -393,7 +393,7 @@ useEffect(() => {
   return (
     <div ref={containerRef} className="flex h-full w-full overflow-hidden">
       {/* 左侧图谱 / 过程画板 */}
-      <div ref={graphContainerRef} className="flex-1 min-w-0 relative flex flex-col">
+      <div ref={graphContainerRef} className="min-w-0 relative flex flex-col" style={{ width: `calc(100% - ${rightPanelWidth + 40}px)` }}>
         {isEmpty ? (
           <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 text-gray-500">
             <div className="max-w-md text-center space-y-6">
@@ -500,23 +500,27 @@ useEffect(() => {
 
       {/* 可拖拽分割线 */}
       <div
-        className="relative z-20 flex shrink-0 items-center justify-center select-none"
         style={{
-          width: 24,
+          width: 40,
           cursor: 'col-resize',
-          backgroundColor: 'rgba(0,0,0,0.04)',
+          backgroundColor: 'rgba(59, 130, 246, 0.15)',
+          flexShrink: 0,
+          position: 'relative',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          userSelect: 'none',
         }}
         onMouseDown={handleDividerMouseDown}
       >
-        <div
-          className="pointer-events-none rounded-sm"
-          style={{
-            width: 4,
-            height: 48,
-            backgroundColor: 'rgba(0,0,0,0.15)',
-            transition: 'background-color 0.15s',
-          }}
-        />
+        <div style={{
+          width: 4,
+          height: 48,
+          borderRadius: 2,
+          backgroundColor: 'rgba(59, 130, 246, 0.5)',
+          pointerEvents: 'none',
+        }} />
       </div>
 
       {/* 右侧面板 */}
