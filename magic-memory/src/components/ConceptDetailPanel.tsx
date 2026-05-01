@@ -25,7 +25,7 @@ interface ConceptDetailPanelProps {
   onEnterProcess?: (concept: Concept) => void
 }
 
-type ActionKey = 'import' | 'compare' | 'explore' | 'read' | 'align'
+type ActionKey = 'import' | 'compare' | 'read' | 'align'
 
 export function ConceptDetailPanel({
   concept,
@@ -61,6 +61,77 @@ export function ConceptDetailPanel({
   const storeConcepts = useKnowledgeGraphStore(s => s.concepts)
   const addConcept = useKnowledgeGraphStore(s => s.addConcept)
   const addEdge = useKnowledgeGraphStore(s => s.addEdge)
+
+  const [reparseStatus, setReparseStatus] = useState<'idle' | 'loading' | 'done'>('idle')
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 2500)
+  }
+
+  const handleReparseRelations = useCallback(async () => {
+    const store = useKnowledgeGraphStore.getState()
+    const c = store.concepts.find(c => c.id === concept.id)
+    if (!c?.content) {
+      showToast('请先导入文档内容', 'error')
+      return
+    }
+
+    setReparseStatus('loading')
+
+    try {
+      const resp = await fetch('/api/infer-relations-from-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conceptId: concept.id, content: c.content }),
+      })
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+      const { relations } = await resp.json()
+      if (!relations || relations.length === 0) {
+        setReparseStatus('idle')
+        showToast('未找到相似概念，可尝试补充文档内容', 'error')
+        return
+      }
+
+      const relatedIds = relations.map((r: any) => r.targetId)
+
+      const newEdgeSet = new Set<string>()
+      const newEdges: ConceptEdge[] = []
+
+      const addEdgeToSet = (source: string, target: string, type: ConceptEdge['type']) => {
+        const key = `${source}|${target}|${type}`
+        if (!newEdgeSet.has(key)) {
+          newEdgeSet.add(key)
+          newEdges.push({ id: `${source}-${type}-${target}`, source, target, type })
+        }
+      }
+
+      relatedIds.forEach((t: string) => addEdgeToSet(concept.id, t, 'related'))
+
+      // 覆盖：保留不涉及本概念的其他边
+      const keptEdges = store.edges.filter(e =>
+        e.source !== concept.id && e.target !== concept.id
+      )
+
+      useKnowledgeGraphStore.setState({
+        concepts: store.concepts.map(c =>
+          c.id === concept.id
+            ? { ...c, depends_on: c.depends_on, leads_to: c.leads_to, related: relatedIds }
+            : c
+        ),
+        edges: [...keptEdges, ...newEdges],
+      })
+
+      setReparseStatus('done')
+      showToast(`关系更新成功，关联了 ${relatedIds.length} 个概念`, 'success')
+      setTimeout(() => setReparseStatus('idle'), 2500)
+    } catch (e) {
+      console.error('关系推断失败:', e)
+      setReparseStatus('idle')
+      showToast('关系推断失败，请确认后端服务已启动', 'error')
+    }
+  }, [concept.id])
 
   const handleRequestLLM = useCallback(async () => {
     try {
@@ -164,11 +235,22 @@ export function ConceptDetailPanel({
     { key: 'import', label: '导入文档', desc: '从剪贴板粘贴导入文档内容' },
     { key: 'align', label: '语义对齐', desc: '用自由文本对齐图谱，诊断知识缺口' },
     { key: 'compare', label: '对照验证', desc: processState?.filled ? '查看对比结果' : '先完成梳理' },
-    { key: 'explore', label: '探索关联', desc: '前置/后置/相关概念' },
   ]
 
   return (
     <>
+      {/* 通知条 */}
+      {toast && (
+        <div
+          className={`absolute top-0 left-0 right-0 z-50 px-4 py-2 text-xs font-medium text-center shadow-sm transition-all ${
+            toast.type === 'success'
+              ? 'bg-green-50 text-green-700 border-b border-green-200'
+              : 'bg-red-50 text-red-700 border-b border-red-200'
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
       <div className="shrink-0 px-5 pt-4 pb-3 border-b border-gray-100">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
@@ -179,7 +261,7 @@ export function ConceptDetailPanel({
           </div>
           <div className="flex items-center gap-1">
             <button onClick={onDeselect} className="shrink-0 p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600" title="取消选择">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -233,7 +315,7 @@ export function ConceptDetailPanel({
             <div className="space-y-3">
               <p className="text-sm text-gray-600">对 LLM 使用下面的 prompt，然后将生成的内容粘贴到下方输入框中：</p>
               <div className="p-3 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-700 whitespace-pre-wrap font-mono leading-relaxed select-all cursor-text">
-{`以 Unix man page 的严谨技术风格和 markdown 的文本格式，用"问题→解决该问题的子概念和解决过程→引出下一问题"的层层推导方式，解释 ${concept.title} 的核心原理。主体用树状缩进和简洁公式，语言精炼专业。`}
+{`以 Unix man page 的严谨技术风格和 markdown 的文本格式，用"问题→解决该问题的子概念和解决过程→引出下一问题"的层层推导方式，解释 ${concept.title} 的核心原理。主体用树状缩进和简洁公式，语言精炼专业。使用中文。`}
               </div>
               <textarea
                 className="w-full h-48 p-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
@@ -272,82 +354,29 @@ export function ConceptDetailPanel({
           />
         )}
 
-        {action === 'explore' && (
-          <div className="px-5 py-4 space-y-5">
-            <div>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">推导路径</h3>
-              <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <DependencyChainSVG concept={concept} concepts={concepts} />
-              </div>
-            </div>
-            {(() => {
-              const related = getRelatedConcepts(concept.id, edges, concepts)
-              const byType: Record<string, {concept: Concept; edgeType: string}[]> = {
-                leads_to: related.filter(r => r.edgeType === 'leads_to'),
-                depends_on: related.filter(r => r.edgeType === 'depends_on'),
-                related: related.filter(r => r.edgeType === 'related'),
-              }
-              return (
-                <>
-                  {byType.leads_to.length > 0 && (
-                    <div>
-                      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">由此推出</h3>
-                      <div className="space-y-1.5">
-                        {byType.leads_to.map(({ concept: c }) => (
-                          <button key={c.id} onClick={() => onNavigate(c.id)} className="w-full text-left px-3 py-2 rounded-lg border border-green-200 hover:border-green-300 hover:bg-green-50 transition-colors group">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-gray-800 group-hover:text-green-700">{c.title}</span>
-                              <span className="text-xs text-gray-400">→</span>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-0.5">{getRelationReason(concept, c, 'leads_to')}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {byType.depends_on.length > 0 && (
-                    <div>
-                      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">前置基础</h3>
-                      <div className="space-y-1.5">
-                        {byType.depends_on.map(({ concept: c }) => (
-                          <button key={c.id} onClick={() => onNavigate(c.id)} className="w-full text-left px-3 py-2 rounded-lg border border-red-200 hover:border-red-300 hover:bg-red-50 transition-colors group">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-gray-800 group-hover:text-red-700">{c.title}</span>
-                              <span className="text-xs text-gray-400">←</span>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-0.5">{getRelationReason(concept, c, 'depends_on')}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {byType.related.length > 0 && (
-                    <div>
-                      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">平行关联</h3>
-                      <div className="space-y-1.5">
-                        {byType.related.map(({ concept: c }) => (
-                          <button key={c.id} onClick={() => onNavigate(c.id)} className="w-full text-left px-3 py-2 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors group">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-gray-800 group-hover:text-gray-900">{c.title}</span>
-                              <span className="text-xs text-gray-400">↔</span>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-0.5">{getRelationReason(concept, c, 'related')}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )
-            })()}
-          </div>
-        )}
+
 
         {action === 'read' && (
           <div className="px-5 py-4">
+            {/* 文档头部：标题 + 更新关系按钮 */}
+            {docContent && (
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+                <span className="text-xs font-medium text-gray-400">文档内容</span>
+                <button
+                  onClick={handleReparseRelations}
+                  disabled={reparseStatus === 'loading'}
+                  className="px-2.5 py-1 text-xs rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors flex items-center gap-1 disabled:opacity-50"
+                >
+                  <svg width={11} height={11} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {reparseStatus === 'loading' ? '推断中...' : reparseStatus === 'done' ? '✓ 已更新' : '更新关系和图谱'}
+                </button>
+              </div>
+            )}
             {docContent === null && !docLoading ? (
               <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-                <svg className="w-12 h-12 mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg width={48} height={48} className="w-12 h-12 mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
                 <p className="text-sm mb-4">还没有对应的文档内容</p>

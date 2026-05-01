@@ -114,8 +114,7 @@ function App() {
         </div>
       </div>
 
-      {/* 只在文档模式下显示注释面板 */}
-      {!isGraphMode && !isClusterMode && isAnnotationPanelOpen && selectedDoc && (
+      {(viewMode === 'documents' || selectedDoc) && isAnnotationPanelOpen && selectedDoc && (
         <div className="shrink-0">
           <AnnotationPanel
             document={selectedDoc}

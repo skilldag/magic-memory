@@ -1,0 +1,13 @@
+name: feat-canvas-add-concept
+title: 图谱画布双击添加概念 + 手动关系更新
+description: 在 KnowledgeGraph 空白区双击弹出概念名输入框创建节点；在 ConceptDetailPanel 中新增"更新关系和图谱"按钮，解析 frontmatter 后增量更新图结构
+status: pending
+dependencies:
+  - feat-graph-index-generation
+artifacts:
+  - id: proposal
+    status: done
+  - id: design
+    status: done
+  - id: tasks
+    status: pending

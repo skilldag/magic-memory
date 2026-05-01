@@ -1,0 +1,23 @@
+[     294ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:20102
+[     438ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/favicon.ico:0
+[     717ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=e30240b8:1091
+[   41253ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41268ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41286ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41303ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41319ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41336ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41352ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41369ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41386ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41401ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41419ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41436ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41452ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41469ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41486ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41502ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41519ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41536ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41552ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269
+[   41569ms] [LOG] [resize] setNodes called @ http://localhost:3000/src/components/ProcessCanvas.tsx?t=1777419591552:269

@@ -1,0 +1,20 @@
+[     109ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:20102
+[     437ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=91e1b3db:1091
+[  132355ms] ReferenceError: content is not defined
+    at ExploreDialog (http://localhost:3000/src/components/ExploreDialog.tsx?t=1777339651810:246:20)
+    at Object.react_stack_bottom_frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:18509:20)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:5654:24)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:7475:21)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:8525:20)
+    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:997:72)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:12561:98)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:12424:43)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:12408:13)
+    at performWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:11827:37)
+[  132354ms] [WARNING] %s
+
+%s
+ An error occurred in the <ExploreDialog> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:6965
+[  141596ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=91e1b3db:1091
+[  141688ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=91e1b3db:1091

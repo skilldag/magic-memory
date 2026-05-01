@@ -1,0 +1,12 @@
+name: feat-graph-index-generation
+title: 知识图谱索引生成 — 自动/手动双模式
+description: 取代硬编码 mock 数据，通过自动扫描文档或手动 AI 添加两种方式生成知识图谱索引，支持 localStorage 持久化和文档文件读写
+status: pending
+dependencies: []
+artifacts:
+  - id: proposal
+    status: done
+  - id: design
+    status: done
+  - id: tasks
+    status: pending

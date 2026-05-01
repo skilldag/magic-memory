@@ -1,17 +1,29 @@
 import { serve } from 'bun'
-import { readdir, readFile, stat } from 'fs/promises'
-import { join, relative } from 'path'
+import { readdir, readFile, stat, writeFile } from 'fs/promises'
+import { join, relative, dirname } from 'path'
+import { existsSync, mkdirSync } from 'fs'
 import { clusterPipeline } from './scripts/cluster'
 import type { Document, Annotation, Concept, ConceptEdge } from './src/types'
+import type { Edge as ClusterEdge } from './scripts/cluster'
+import { analyzeGraph, formatAnalysisToString } from './src/utils/graphAnalysis'
 
 const PORT = 3001
 const DOCS_DIR = join(process.cwd(), '../docs')
+const ANALYSIS_CACHE_PATH = join(process.cwd(), 'data', 'graph-analysis.json')
 
 const documents: Document[] = []
 const concepts: Concept[] = []
 const conceptEdges: ConceptEdge[] = []
+let graphAnalysisCache: ReturnType<typeof analyzeGraph> | null = null
 
 async function loadDocuments() {
+  // 优先从缓存文件加载分析结果
+  const cacheLoaded = await tryLoadAnalysisCache()
+  if (cacheLoaded) {
+    console.log(`Loaded graph analysis from cache (${ANALYSIS_CACHE_PATH})`)
+    return
+  }
+
   try {
     await loadDocumentsFromDirectory(DOCS_DIR, '')
     console.log(`Loaded ${documents.length} documents`)
@@ -19,15 +31,103 @@ async function loadDocuments() {
     documents.forEach(doc => {
       concepts.push(buildConceptFromDocument(doc))
     })
-    // 从 frontmatter 关系字段推导边
-    conceptEdges.push(...buildEdges())
-    // 从 docs/概念关联图.md 推导边（包含完整的数据流和依赖关系）
-    const graphEdges = await buildEdgesFromConceptGraph()
-    conceptEdges.push(...graphEdges)
-    console.log(`Built knowledge graph: ${concepts.length} concepts, ${conceptEdges.length} edges (${graphEdges.length} from 概念关联图)`)
+
+    // 用 cluster 管道自动构建图（交叉引用 + 目录 + 编号邻近）
+    const clusterResult = clusterPipeline(DOCS_DIR, null, 0.5)
+    if (clusterResult.edges.length > 0) {
+      conceptEdges.push(...assignDirections(clusterResult.edges))
+    }
+    console.log(`Built knowledge graph: ${concepts.length} concepts, ${conceptEdges.length} edges from cluster analysis`)
+
+    const edgeConceptIds = new Set<string>()
+    conceptEdges.forEach(e => { edgeConceptIds.add(e.source); edgeConceptIds.add(e.target) })
+    const graphConcepts = concepts.filter(c => edgeConceptIds.has(c.id))
+    graphAnalysisCache = analyzeGraph(graphConcepts, conceptEdges)
+    console.log(`Computed graph analysis: ${graphAnalysisCache.stats.rootsCount} roots, ${graphAnalysisCache.stats.totalConcepts} concepts`)
+
+    // 写入缓存文件
+    await saveAnalysisCache(graphAnalysisCache)
+    console.log(`Saved graph analysis cache (${ANALYSIS_CACHE_PATH})`)
   } catch (error) {
     console.error('Failed to load documents:', error)
   }
+}
+
+async function tryLoadAnalysisCache(): Promise<boolean> {
+  try {
+    if (!existsSync(ANALYSIS_CACHE_PATH)) return false
+    const content = await readFile(ANALYSIS_CACHE_PATH, 'utf-8')
+    const parsed = JSON.parse(content)
+    // 重建 analyzeGraph 返回结构（JSON 反序列化后类型一致）
+    graphAnalysisCache = parsed
+    console.log(`Found ${parsed.stats.totalConcepts} concepts, ${parsed.stats.totalEdges} edges in cache`)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function saveAnalysisCache(data: any): Promise<void> {
+  const dir = dirname(ANALYSIS_CACHE_PATH)
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+  await writeFile(ANALYSIS_CACHE_PATH, JSON.stringify(data, null, 2))
+}
+
+/** 给 cluster 产生的无向边赋予方向：低 level → 高 level，同 level 按编号小→大 */
+function assignDirections(clusterEdges: ClusterEdge[]): ConceptEdge[] {
+  // cluster 的 concept ID 是文件名去前缀（vllm-config），而 server 的 concept ID 是路径（Foundation/00-vllm-config.md）
+  // 构建短名 → 全路径 ID 映射
+  const shortToFull = new Map<string, string>()
+  for (const c of concepts) {
+    const filename = c.path.split('/').pop() || ''
+    const shortId = filename.replace(/\.md$/i, '').replace(/^\d+[-_\s]+/, '')
+    if (shortId) shortToFull.set(shortId, c.id)
+  }
+
+  const result: ConceptEdge[] = []
+  const seen = new Set<string>()
+
+  for (const e of clusterEdges) {
+    // 编号邻近边 (number_proximity) 产生自然的学习路径 0→1→2→...→50
+    // references 边 (wiki 链接) 产生强关联
+    if (e.type === 'co_directory') continue
+
+    const srcFull = shortToFull.get(e.source)
+    const tgtFull = shortToFull.get(e.target)
+    if (!srcFull || !tgtFull) continue
+
+    const src = concepts.find(c => c.id === srcFull)
+    const tgt = concepts.find(c => c.id === tgtFull)
+    if (!src || !tgt) continue
+
+    let source: string, target: string
+    let type: ConceptEdge['type']
+
+    if (src.level !== tgt.level) {
+      if (src.level < tgt.level) { source = src.id; target = tgt.id }
+      else { source = tgt.id; target = src.id }
+      type = 'leads_to'
+    } else {
+      const srcNum = extractConceptNumber(src.path.split('/').pop() || '')
+      const tgtNum = extractConceptNumber(tgt.path.split('/').pop() || '')
+      if (srcNum !== null && tgtNum !== null && srcNum !== tgtNum) {
+        if (srcNum < tgtNum) { source = src.id; target = tgt.id }
+        else { source = tgt.id; target = src.id }
+        type = 'leads_to'
+      } else {
+        source = src.id; target = tgt.id
+        type = 'related'
+      }
+    }
+
+    const key = `${source}→${target}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    result.push({ id: `${source}-${target}`, source, target, type })
+  }
+
+  console.log(`Assigned directions to ${result.length} cluster edges (from ${clusterEdges.length} undirected)`)
+  return result
 }
 
 async function loadDocumentsFromDirectory(dirPath: string, relativePath: string) {
@@ -422,6 +522,31 @@ const server = serve({
       })
     }
 
+    if (url.pathname === '/api/graph/analysis') {
+      const analysis = graphAnalysisCache ?? await (async () => {
+        const edgeConceptIds = new Set<string>()
+        conceptEdges.forEach(e => { edgeConceptIds.add(e.source); edgeConceptIds.add(e.target) })
+        const graphConcepts = concepts.filter(c => edgeConceptIds.has(c.id))
+        return analyzeGraph(graphConcepts, conceptEdges)
+      })()
+
+      const describe = url.searchParams.get('describe') === 'true'
+      if (describe) {
+        await enrichFlowsWithDescription(analysis)
+      }
+
+      const format = url.searchParams.get('format')
+      if (format === 'text') {
+        return new Response(formatAnalysisToString(analysis), {
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        })
+      }
+
+      return new Response(JSON.stringify(analysis), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
     if (url.pathname.startsWith('/api/graph/')) {
       const id = url.pathname.split('/')[3]
       const concept = concepts.find(c => c.id === id)
@@ -567,6 +692,142 @@ ${content.slice(0, 3000)}
           status: 500,
           headers: { 'Content-Type': 'application/json' },
         })
+      }
+    }
+
+    // POST /api/ask-question — AI 回答用户关于选中文本的问题
+    if (url.pathname === '/api/ask-question' && req.method === 'POST') {
+      try {
+        const body = await req.json()
+        const { selectedText, question } = body
+        if (!selectedText || !question) {
+          return new Response(JSON.stringify({ error: 'selectedText and question required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+
+        const prompt = `你是一个技术学习助手。用户在学习 vLLM 相关知识时，针对一段文本提出了一个问题。
+
+选中文本:
+"""
+${selectedText}
+"""
+
+用户问题:
+${question}
+
+请用中文回答用户的问题。回答要简明扼要、切中要点。如果选中文本不足以回答问题，请基于你的知识补充说明。`
+
+        const apiKey = process.env.DEEPSEEK_API_KEY || ''
+        const baseUrl = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1'
+        const resp = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [
+              { role: 'system', content: '你是一个技术学习助手，帮助用户理解技术概念和回答问题。' },
+              { role: 'user', content: prompt },
+            ],
+            max_tokens: 1000,
+          }),
+        })
+        const data = await resp.json() as any
+        const answer = data?.choices?.[0]?.message?.content || ''
+        return new Response(JSON.stringify({ answer }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
+    }
+
+    // POST /api/infer-relations-from-content — 基于文本相似度推断概念关系（纯算法，无 LLM）
+    if (url.pathname === '/api/infer-relations-from-content' && req.method === 'POST') {
+      try {
+        const body = await req.json()
+        const { conceptId, content } = body
+        if (!conceptId || !content) {
+          return new Response(JSON.stringify({ error: 'conceptId and content required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+
+        // 从服务端内存中获取所有其他概念的内容
+        const candidates = concepts.filter(c => c.id !== conceptId && c.content && c.content.trim())
+        if (candidates.length === 0) {
+          return new Response(JSON.stringify({ relations: [] }), { headers: { 'Content-Type': 'application/json' } })
+        }
+
+        // Tokenize 函数：去 Markdown 语法，提取中文 + 英文关键词
+        function tokenize(text: string): Set<string> {
+          const plain = text
+            .replace(/^---[\s\S]*?---\n/, '')  // 移除 frontmatter
+            .replace(/[#*`~\[\]()>|\\]/g, ' ')  // 移除 markdown 符号
+            .replace(/\s+/g, ' ')
+            .toLowerCase()
+          // 提取中文词组（2-4 字）和英文单词（>=3 字母）
+          const tokens = new Set<string>()
+          // 中文：2-4 字滑动窗口
+          for (let i = 0; i < plain.length - 1; i++) {
+            if (/[\u4e00-\u9fff]/.test(plain[i])) {
+              for (let len = 2; len <= 4 && i + len <= plain.length; len++) {
+                const phrase = plain.slice(i, i + len)
+                if (/^[\u4e00-\u9fff]+$/.test(phrase)) tokens.add(phrase)
+              }
+            }
+          }
+          // 英文：>=3 字母且非停用词
+          const stopWords = new Set(['the', 'and', 'for', 'this', 'that', 'with', 'from', 'which', 'when', 'what', 'into', 'over', 'such', 'each', 'also', 'will', 'can', 'has', 'had', 'but', 'not', 'are', 'was', 'its', 'than', 'then', 'they', 'been', 'more', 'very', 'just', 'should', 'about', 'their', 'there', 'these', 'those', 'have', 'does', 'done', 'being', 'some', 'would', 'could', 'other', 'after', 'before', 'between', 'through', 'during', 'without', 'within', 'across', 'along', 'among', 'around', 'above', 'below', 'under'])
+          for (const m of plain.matchAll(/[a-z]{3,}/g)) {
+            if (!stopWords.has(m[0])) tokens.add(m[0])
+          }
+          return tokens
+        }
+
+        const targetTokens = tokenize(content)
+        if (targetTokens.size === 0) {
+          return new Response(JSON.stringify({ relations: [] }), { headers: { 'Content-Type': 'application/json' } })
+        }
+
+        // Jaccard 相似度计算
+        interface RelationScore {
+          targetId: string
+          targetTitle: string
+          score: number
+        }
+        const scores: RelationScore[] = []
+
+        for (const c of candidates) {
+          const candidateTokens = tokenize(c.content || '')
+          if (candidateTokens.size === 0) continue
+
+          // Jaccard 相似度
+          let intersectionSize = 0
+          for (const t of targetTokens) {
+            if (candidateTokens.has(t)) intersectionSize++
+          }
+          const unionSize = targetTokens.size + candidateTokens.size - intersectionSize
+          const similarity = unionSize > 0 ? intersectionSize / unionSize : 0
+
+          // 标题匹配加分（概念标题在内容中出现）
+          let titleBoost = 0
+          const titleWords = c.title.toLowerCase().split(/[\s_-]+/).filter(w => w.length >= 2)
+          for (const w of titleWords) {
+            if (content.toLowerCase().includes(w)) { titleBoost += 0.05 }
+          }
+
+          const finalScore = Math.min(1, similarity + titleBoost)
+          if (finalScore > 0.01) {
+            scores.push({ targetId: c.id, targetTitle: c.title, score: finalScore })
+          }
+        }
+
+        // 按分数排序，取 top 8
+        scores.sort((a, b) => b.score - a.score)
+        const topRelations = scores.slice(0, 8)
+
+        return new Response(JSON.stringify({ relations: topRelations }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } })
       }
     }
 

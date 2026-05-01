@@ -1,0 +1,235 @@
+[    6239ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:20102
+[    6314ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5174/favicon.ico:0
+[    6603ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:5174/node_modules/.vite/deps/cytoscape.js?v=91e1b3db:1091
+[   22031ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5174/@vite/client:963
+[   22032ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[   23034ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[   24037ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[   25040ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[   26042ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[   27882ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:20102
+[   28259ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:5174/node_modules/.vite/deps/cytoscape.js?v=91e1b3db:1091
+[   36401ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:20102
+[   36723ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:5174/node_modules/.vite/deps/cytoscape.js?v=91e1b3db:1091
+[   41542ms] [LOG] [KG] mouseover node: ModelLoader - 模型加载器 pos: 324.7637211893317 196.61475231974376 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[   41542ms] [LOG] [KGV] onHoverConcept: ModelLoader - 模型加载器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[   66659ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:20102
+[   66986ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:5174/node_modules/.vite/deps/cytoscape.js?v=91e1b3db:1091
+[   71858ms] [LOG] [KG] mouseover node: vllm-core - 核心库 pos: 362.4697387386611 149.90446775621768 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[   71858ms] [LOG] [KGV] onHoverConcept: vllm-core - 核心库 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  141358ms] [LOG] [KG] mouseover node: Init - 初始化系统 pos: 322.8120090312801 232.36520249294114 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  141358ms] [LOG] [KGV] onHoverConcept: Init - 初始化系统 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  141392ms] [LOG] [KG] mouseover node: GpuAllocator - 内存分配器 pos: 388.51521714789646 226.19346637531774 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  141392ms] [LOG] [KGV] onHoverConcept: GpuAllocator - 内存分配器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  141459ms] [LOG] [KG] mouseover node: Foundation Layer - 基础层 pos: 429.5562485968582 204.0330100465565 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  141459ms] [LOG] [KGV] onHoverConcept: Foundation Layer - 基础层 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  143605ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:20102
+[  143930ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:5174/node_modules/.vite/deps/cytoscape.js?v=91e1b3db:1091
+[  144642ms] [LOG] [KG] mouseover node: Speculative Decoding - 投机解码 pos: 320.42546395880845 137.56724306645057 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  144642ms] [LOG] [KGV] onHoverConcept: Speculative Decoding - 投机解码 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  144741ms] [LOG] [KG] mouseover node: N-gram Proposer - N元提议 pos: 400.2832603984651 138.53027586160326 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  144742ms] [LOG] [KGV] onHoverConcept: N-gram Proposer - N元提议 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  144842ms] [LOG] [KG] mouseover node: Distributed - 分布式 pos: 440.3633201947488 86.16033140543769 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  144843ms] [LOG] [KGV] onHoverConcept: Distributed - 分布式 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  144975ms] [LOG] [KG] mouseover node: N-gram Proposer - N元提议 pos: 400.2832603984651 138.53027586160326 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  144975ms] [LOG] [KGV] onHoverConcept: N-gram Proposer - N元提议 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  145431ms] [LOG] [KGV] handleSelectConcept: N-gram Proposer - N元提议 33 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:171
+[  145432ms] [LOG] [KGV] Rendering popover for: N-gram Proposer - N元提议 at 400.2832603984651 138.53027586160326 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  145433ms] [LOG] [KGV] Rendering popover for: N-gram Proposer - N元提议 at 400.2832603984651 138.53027586160326 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  145445ms] [LOG] DocumentViewer received: 33 N-gram Proposer - N元提议 content length: 39 @ http://localhost:5174/src/components/DocumentViewer.tsx:15
+[  145459ms] [LOG] DocumentViewer received: 33 N-gram Proposer - N元提议 content length: 39 @ http://localhost:5174/src/components/DocumentViewer.tsx:15
+[  146525ms] [LOG] [KG] mouseover node: Verifier - 验证器 pos: 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  146525ms] [LOG] [KGV] onHoverConcept: Verifier - 验证器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  146526ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  146527ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  148608ms] [LOG] [KG] mouseover node: Verifier - 验证器 pos: 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  148608ms] [LOG] [KGV] onHoverConcept: Verifier - 验证器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  148609ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  148611ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  149858ms] [LOG] [KG] mouseover node: Verifier - 验证器 pos: 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  149858ms] [LOG] [KGV] onHoverConcept: Verifier - 验证器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  149859ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  149860ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  149941ms] [LOG] [KG] mouseover node: N-gram Proposer - N元提议 pos: 380.25018746561307 423.6637825256863 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  149941ms] [LOG] [KGV] onHoverConcept: N-gram Proposer - N元提议 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  149942ms] [LOG] [KGV] Rendering popover for: N-gram Proposer - N元提议 at 380.25018746561307 423.6637825256863 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  149943ms] [LOG] [KGV] Rendering popover for: N-gram Proposer - N元提议 at 380.25018746561307 423.6637825256863 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  150791ms] [LOG] [KG] mouseover node: Verifier - 验证器 pos: 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  150791ms] [LOG] [KGV] onHoverConcept: Verifier - 验证器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  150792ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  150793ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  151492ms] [LOG] [KG] mouseover node: Continuous Batching - 连续批处理 pos: 658.5576674928496 382.0161480663105 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  151492ms] [LOG] [KGV] onHoverConcept: Continuous Batching - 连续批处理 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  151492ms] [LOG] [KGV] Rendering popover for: Continuous Batching - 连续批处理 at 658.5576674928496 382.0161480663105 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  151494ms] [LOG] [KGV] Rendering popover for: Continuous Batching - 连续批处理 at 658.5576674928496 382.0161480663105 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  152291ms] [LOG] [KG] mouseover node: N-gram Proposer - N元提议 pos: 380.25018746561307 423.6637825256863 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  152291ms] [LOG] [KGV] onHoverConcept: N-gram Proposer - N元提议 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  152292ms] [LOG] [KGV] Rendering popover for: N-gram Proposer - N元提议 at 380.25018746561307 423.6637825256863 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  152293ms] [LOG] [KGV] Rendering popover for: N-gram Proposer - N元提议 at 380.25018746561307 423.6637825256863 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  152791ms] [LOG] [KG] mouseover node: Speculative Decoding - 投机解码 pos: 121.44233250715035 420.5427290646576 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  152791ms] [LOG] [KGV] onHoverConcept: Speculative Decoding - 投机解码 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  152792ms] [LOG] [KGV] Rendering popover for: Speculative Decoding - 投机解码 at 121.44233250715035 420.5427290646576 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  152793ms] [LOG] [KGV] Rendering popover for: Speculative Decoding - 投机解码 at 121.44233250715035 420.5427290646576 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  153325ms] [LOG] [KG] mouseover node: Verifier - 验证器 pos: 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  153325ms] [LOG] [KGV] onHoverConcept: Verifier - 验证器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  153326ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  153327ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  155241ms] [LOG] [KG] mouseover node: Verifier - 验证器 pos: 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  155241ms] [LOG] [KGV] onHoverConcept: Verifier - 验证器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  155242ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  155243ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  173775ms] [LOG] [KG] mouseover node: Continuous Batching - 连续批处理 pos: 658.5576674928496 382.0161480663105 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  173775ms] [LOG] [KGV] onHoverConcept: Continuous Batching - 连续批处理 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  173776ms] [LOG] [KGV] Rendering popover for: Continuous Batching - 连续批处理 at 658.5576674928496 382.0161480663105 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  173777ms] [LOG] [KGV] Rendering popover for: Continuous Batching - 连续批处理 at 658.5576674928496 382.0161480663105 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  177158ms] [LOG] [KG] mouseover node: Verifier - 验证器 pos: 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  177158ms] [LOG] [KGV] onHoverConcept: Verifier - 验证器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  177159ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  177160ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  177691ms] [LOG] [KG] mouseover node: Continuous Batching - 连续批处理 pos: 658.5576674928496 382.0161480663105 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  177692ms] [LOG] [KGV] onHoverConcept: Continuous Batching - 连续批处理 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  177692ms] [LOG] [KGV] Rendering popover for: Continuous Batching - 连续批处理 at 658.5576674928496 382.0161480663105 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  177693ms] [LOG] [KGV] Rendering popover for: Continuous Batching - 连续批处理 at 658.5576674928496 382.0161480663105 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  179675ms] [LOG] [KG] mouseover node: Verifier - 验证器 pos: 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  179675ms] [LOG] [KGV] onHoverConcept: Verifier - 验证器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  179676ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  179677ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 261.5221457520543 191.98855188804055 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  189751ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=91e1b3db:20102
+[  190077ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:5174/node_modules/.vite/deps/cytoscape.js?v=91e1b3db:1091
+[  191226ms] [LOG] [KG] mouseover node: Draft Token - 起草Token pos: 488.01903287514745 68.51611816096437 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  191226ms] [LOG] [KGV] onHoverConcept: Draft Token - 起草Token @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  191886ms] [LOG] [KGV] handleSelectConcept: Draft Token - 起草Token 31 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:171
+[  191887ms] [LOG] [KGV] Rendering popover for: Draft Token - 起草Token at 488.01903287514745 68.51611816096437 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  191889ms] [LOG] [KGV] Rendering popover for: Draft Token - 起草Token at 488.01903287514745 68.51611816096437 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  191899ms] [LOG] DocumentViewer received: 31 Draft Token - 起草Token content length: 44 @ http://localhost:5174/src/components/DocumentViewer.tsx:15
+[  191912ms] [LOG] DocumentViewer received: 31 Draft Token - 起草Token content length: 44 @ http://localhost:5174/src/components/DocumentViewer.tsx:15
+[  192359ms] [LOG] [KG] mouseover node: Draft Token - 起草Token pos: 553.6912011704233 158.9842376858428 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  192359ms] [LOG] [KGV] onHoverConcept: Draft Token - 起草Token @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  192360ms] [LOG] [KGV] Rendering popover for: Draft Token - 起草Token at 553.6912011704233 158.9842376858428 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  192361ms] [LOG] [KGV] Rendering popover for: Draft Token - 起草Token at 553.6912011704233 158.9842376858428 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  193008ms] [LOG] [KG] mouseover node: Verifier - 验证器 pos: 223.8028687615807 148.25250387870688 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  193008ms] [LOG] [KGV] onHoverConcept: Verifier - 验证器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  193009ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 223.8028687615807 148.25250387870688 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  193010ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 223.8028687615807 148.25250387870688 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  196158ms] [LOG] [KG] mouseover node: Draft Token - 起草Token pos: 553.6912011704233 158.9842376858428 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  196158ms] [LOG] [KGV] onHoverConcept: Draft Token - 起草Token @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  196159ms] [LOG] [KGV] Rendering popover for: Draft Token - 起草Token at 553.6912011704233 158.9842376858428 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  196160ms] [LOG] [KGV] Rendering popover for: Draft Token - 起草Token at 553.6912011704233 158.9842376858428 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  198758ms] [LOG] [KG] mouseover node: Verifier - 验证器 pos: 223.8028687615807 148.25250387870688 @ http://localhost:5174/src/components/KnowledgeGraph.tsx:191
+[  198758ms] [LOG] [KGV] onHoverConcept: Verifier - 验证器 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:438
+[  198759ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 223.8028687615807 148.25250387870688 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  198760ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 223.8028687615807 148.25250387870688 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx:459
+[  199292ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 223.8028687615807 148.25250387870688 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx?t=1777349863347:458
+[  199293ms] [LOG] [KGV] Rendering popover for: Verifier - 验证器 at 223.8028687615807 148.25250387870688 @ http://localhost:5174/src/components/KnowledgeGraphView.tsx?t=1777349863347:458
+[  254170ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5174/@vite/client:963
+[  254171ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  255173ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  256176ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  257178ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  258179ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  259182ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  260184ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  261188ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  262190ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  263192ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  264195ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  265197ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  266199ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  267203ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  268208ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  269215ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  270220ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  271225ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  272235ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  273239ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  274251ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  275260ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  276277ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  277297ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  278322ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  279343ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  280379ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  281448ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  282525ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  283601ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  284693ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  285760ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  286810ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  288103ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  289229ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  290390ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  291552ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  292745ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  294082ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  296072ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  298015ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  299963ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  302966ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  304939ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  307503ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  310653ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  314523ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  318292ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  320951ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  326353ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  331096ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  333600ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  335674ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  339944ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  344929ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  349980ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  355335ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  358453ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  362722ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  367788ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  370538ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  373117ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  378730ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  381600ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  387343ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  392605ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  396222ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  401780ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  405338ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  408111ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  411339ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  413430ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  418123ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  422461ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  425706ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  428942ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  433230ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  438713ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  442751ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  444951ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  447311ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  450469ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  455880ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  460633ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  463600ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  465976ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  468350ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  472878ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  476757ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  479443ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  482723ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  486947ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  492086ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  497194ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  500847ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  506742ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  509571ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  514164ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  517822ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  520058ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  523268ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  528872ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  532523ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  536161ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  539394ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  544068ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  549328ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  554826ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  559612ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  562485ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034
+[  565349ms] [ERROR] WebSocket connection to 'ws://localhost:5174/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:5174/@vite/client:1034

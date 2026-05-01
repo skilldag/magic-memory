@@ -6,6 +6,7 @@ import markedKatexExtension from 'marked-katex-extension'
 import { useAnnotationStore } from '../store/annotationStore'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
 import type { Document } from '../types'
+import { QuestionDialog } from './QuestionDialog'
 
 // 配置 marked 支持 LaTeX 公式渲染
 marked.use(markedKatexExtension({ throwOnError: false }))
@@ -20,11 +21,13 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
   const [isLoading, setIsLoading] = useState(true)
   const [selectedText, setSelectedText] = useState('')
   const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null)
+  const [showQuestionDialog, setShowQuestionDialog] = useState(false)
   const viewerRef = useRef<HTMLDivElement>(null)
   const { annotations, addAnnotation, selectAnnotation, selectedAnnotation } = useAnnotationStore()
   const selectedConcept = useKnowledgeGraphStore(s => s.selectedConcept)
   const createConceptWithEdges = useKnowledgeGraphStore(s => s.createConceptWithEdges)
   const selectConcept = useKnowledgeGraphStore(s => s.selectConcept)
+  const addConcept = useKnowledgeGraphStore(s => s.addConcept)
 
   useEffect(() => {
     console.log('DocumentViewer received:', document.id, document.title, 'content length:', document.content?.length)
@@ -110,6 +113,69 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
     onConceptElevated?.()
   }
 
+  const handleQuestionSubmit = async (data: {
+    question: string
+    selectedText: string
+    enableAI: boolean
+    enableConcept: boolean
+  }) => {
+    addAnnotation({
+      documentId: document.id,
+      type: 'question',
+      content: data.question,
+      position: selectionRange!,
+      author: 'User',
+      status: 'open',
+    })
+
+    if (data.enableConcept) {
+      const newConcept = addConcept({
+        title: data.selectedText.trim(),
+        problem: data.question,
+        depends_on: [],
+        leads_to: [],
+        related: [],
+        path: '',
+        tags: ['user-generated'],
+        level: 1,
+        category: 'other',
+      })
+      selectConcept(newConcept)
+      onConceptElevated?.()
+    }
+
+    if (data.enableAI) {
+      try {
+        const resp = await fetch('/api/ask-question', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            selectedText: data.selectedText,
+            question: data.question,
+          }),
+        })
+        if (resp.ok) {
+          const result = await resp.json()
+          const anns = useAnnotationStore.getState().annotations
+          const latest = anns.filter(a => a.documentId === document.id).pop()
+          if (latest && result.answer) {
+            useAnnotationStore.getState().addReply(latest.id, {
+              content: result.answer,
+              author: 'AI',
+            })
+          }
+        }
+      } catch (e) {
+        console.error('AI answer failed:', e)
+      }
+    }
+
+    setSelectedText('')
+    setSelectionRange(null)
+    setShowQuestionDialog(false)
+    window.getSelection()?.removeAllRanges()
+  }
+
   const handleAnnotationClick = (annotationId: string) => {
     const annotation = annotations.find((ann) => ann.id === annotationId)
     if (annotation) {
@@ -172,7 +238,7 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
               添加评论
             </button>
             <button
-              onClick={() => handleAddAnnotation('question')}
+              onClick={() => setShowQuestionDialog(true)}
               className="px-3 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
             >
               提出问题
@@ -201,6 +267,14 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
             </button>
           </div>
         </div>
+      )}
+
+      {showQuestionDialog && (
+        <QuestionDialog
+          selectedText={selectedText}
+          onClose={() => setShowQuestionDialog(false)}
+          onSubmit={handleQuestionSubmit}
+        />
       )}
     </div>
   )

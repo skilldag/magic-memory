@@ -1,0 +1,950 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - heading "文档列表" [level=2] [ref=e8]
+        - generic [ref=e9]:
+          - button "导入文档" [ref=e10]:
+            - img
+          - button "关闭侧边栏" [ref=e12]:
+            - img
+      - textbox "搜索文档..." [ref=e14]
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]: 级别
+          - combobox [ref=e18]:
+            - option "全部级别" [selected]
+            - option "Level 1"
+            - option "Level 2"
+            - option "Level 3"
+        - generic [ref=e19]:
+          - generic [ref=e20]: 分类
+          - combobox [ref=e21]:
+            - option "全部分类" [selected]
+            - option "Level 2"
+            - option "其他"
+            - option "Level 3"
+            - option "vLLM"
+            - option "Level 1"
+            - option "concepts"
+    - generic [ref=e23]:
+      - button "12-highchair L2 Level 2 draft" [ref=e24]:
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - heading "12-highchair" [level=3] [ref=e27]
+            - generic [ref=e28]:
+              - generic [ref=e29]: L2
+              - generic [ref=e30]: Level 2
+          - generic [ref=e31]: draft
+      - button "16-pomegranate L2 Level 2 draft" [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - heading "16-pomegranate" [level=3] [ref=e35]
+            - generic [ref=e36]:
+              - generic [ref=e37]: L2
+              - generic [ref=e38]: Level 2
+          - generic [ref=e39]: draft
+      - button "21-crocodile L2 Level 2 draft" [ref=e40]:
+        - generic [ref=e41]:
+          - generic [ref=e42]:
+            - heading "21-crocodile" [level=3] [ref=e43]
+            - generic [ref=e44]:
+              - generic [ref=e45]: L2
+              - generic [ref=e46]: Level 2
+          - generic [ref=e47]: draft
+      - button "19-medicine L2 Level 2 draft" [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - heading "19-medicine" [level=3] [ref=e51]
+            - generic [ref=e52]:
+              - generic [ref=e53]: L2
+              - generic [ref=e54]: Level 2
+          - generic [ref=e55]: draft
+      - button "29-uncle L2 Level 2 draft" [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]:
+            - heading "29-uncle" [level=3] [ref=e59]
+            - generic [ref=e60]:
+              - generic [ref=e61]: L2
+              - generic [ref=e62]: Level 2
+          - generic [ref=e63]: draft
+      - button "17-microscope L2 Level 2 draft" [ref=e64]:
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - heading "17-microscope" [level=3] [ref=e67]
+            - generic [ref=e68]:
+              - generic [ref=e69]: L2
+              - generic [ref=e70]: Level 2
+          - generic [ref=e71]: draft
+      - button "25-erhu L2 Level 2 draft" [ref=e72]:
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - heading "25-erhu" [level=3] [ref=e75]
+            - generic [ref=e76]:
+              - generic [ref=e77]: L2
+              - generic [ref=e78]: Level 2
+          - generic [ref=e79]: draft
+      - button "10-baseball L2 Level 2 draft" [ref=e80]:
+        - generic [ref=e81]:
+          - generic [ref=e82]:
+            - heading "10-baseball" [level=3] [ref=e83]
+            - generic [ref=e84]:
+              - generic [ref=e85]: L2
+              - generic [ref=e86]: Level 2
+          - generic [ref=e87]: draft
+      - button "28-bully L2 Level 2 draft" [ref=e88]:
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - heading "28-bully" [level=3] [ref=e91]
+            - generic [ref=e92]:
+              - generic [ref=e93]: L2
+              - generic [ref=e94]: Level 2
+          - generic [ref=e95]: draft
+      - button "13-umbrella L2 Level 2 draft" [ref=e96]:
+        - generic [ref=e97]:
+          - generic [ref=e98]:
+            - heading "13-umbrella" [level=3] [ref=e99]
+            - generic [ref=e100]:
+              - generic [ref=e101]: L2
+              - generic [ref=e102]: Level 2
+          - generic [ref=e103]: draft
+      - button "15-parrot L2 Level 2 draft" [ref=e104]:
+        - generic [ref=e105]:
+          - generic [ref=e106]:
+            - heading "15-parrot" [level=3] [ref=e107]
+            - generic [ref=e108]:
+              - generic [ref=e109]: L2
+              - generic [ref=e110]: Level 2
+          - generic [ref=e111]: draft
+      - button "18-money L2 Level 2 draft" [ref=e112]:
+        - generic [ref=e113]:
+          - generic [ref=e114]:
+            - heading "18-money" [level=3] [ref=e115]
+            - generic [ref=e116]:
+              - generic [ref=e117]: L2
+              - generic [ref=e118]: Level 2
+          - generic [ref=e119]: draft
+      - button "22-twins L2 Level 2 draft" [ref=e120]:
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - heading "22-twins" [level=3] [ref=e123]
+            - generic [ref=e124]:
+              - generic [ref=e125]: L2
+              - generic [ref=e126]: Level 2
+          - generic [ref=e127]: draft
+      - button "27-headphones L2 Level 2 draft" [ref=e128]:
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - heading "27-headphones" [level=3] [ref=e131]
+            - generic [ref=e132]:
+              - generic [ref=e133]: L2
+              - generic [ref=e134]: Level 2
+          - generic [ref=e135]: draft
+      - button "23-earplugs L2 Level 2 draft" [ref=e136]:
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - heading "23-earplugs" [level=3] [ref=e139]
+            - generic [ref=e140]:
+              - generic [ref=e141]: L2
+              - generic [ref=e142]: Level 2
+          - generic [ref=e143]: draft
+      - button "26-river L2 Level 2 draft" [ref=e144]:
+        - generic [ref=e145]:
+          - generic [ref=e146]:
+            - heading "26-river" [level=3] [ref=e147]
+            - generic [ref=e148]:
+              - generic [ref=e149]: L2
+              - generic [ref=e150]: Level 2
+          - generic [ref=e151]: draft
+      - button "14-rose L2 Level 2 draft" [ref=e152]:
+        - generic [ref=e153]:
+          - generic [ref=e154]:
+            - heading "14-rose" [level=3] [ref=e155]
+            - generic [ref=e156]:
+              - generic [ref=e157]: L2
+              - generic [ref=e158]: Level 2
+          - generic [ref=e159]: draft
+      - button "11-chopsticks L2 Level 2 draft" [ref=e160]:
+        - generic [ref=e161]:
+          - generic [ref=e162]:
+            - heading "11-chopsticks" [level=3] [ref=e163]
+            - generic [ref=e164]:
+              - generic [ref=e165]: L2
+              - generic [ref=e166]: Level 2
+          - generic [ref=e167]: draft
+      - button "20-cigarette L2 Level 2 draft" [ref=e168]:
+        - generic [ref=e169]:
+          - generic [ref=e170]:
+            - heading "20-cigarette" [level=3] [ref=e171]
+            - generic [ref=e172]:
+              - generic [ref=e173]: L2
+              - generic [ref=e174]: Level 2
+          - generic [ref=e175]: draft
+      - button "24-alarm L2 Level 2 draft" [ref=e176]:
+        - generic [ref=e177]:
+          - generic [ref=e178]:
+            - heading "24-alarm" [level=3] [ref=e179]
+            - generic [ref=e180]:
+              - generic [ref=e181]: L2
+              - generic [ref=e182]: Level 2
+          - generic [ref=e183]: draft
+      - button "推导练习-Agent系统 L1 其他 draft" [ref=e184]:
+        - generic [ref=e185]:
+          - generic [ref=e186]:
+            - heading "推导练习-Agent系统" [level=3] [ref=e187]
+            - generic [ref=e188]:
+              - generic [ref=e189]: L1
+              - generic [ref=e190]: 其他
+          - generic [ref=e191]: draft
+      - button "场景实战题库 L1 其他 draft" [ref=e192]:
+        - generic [ref=e193]:
+          - generic [ref=e194]:
+            - heading "场景实战题库" [level=3] [ref=e195]
+            - generic [ref=e196]:
+              - generic [ref=e197]: L1
+              - generic [ref=e198]: 其他
+          - generic [ref=e199]: draft
+      - button "42-corn L3 Level 3 draft" [ref=e200]:
+        - generic [ref=e201]:
+          - generic [ref=e202]:
+            - heading "42-corn" [level=3] [ref=e203]
+            - generic [ref=e204]:
+              - generic [ref=e205]: L3
+              - generic [ref=e206]: Level 3
+          - generic [ref=e207]: draft
+      - button "33-stars L3 Level 3 draft" [ref=e208]:
+        - generic [ref=e209]:
+          - generic [ref=e210]:
+            - heading "33-stars" [level=3] [ref=e211]
+            - generic [ref=e212]:
+              - generic [ref=e213]: L3
+              - generic [ref=e214]: Level 3
+          - generic [ref=e215]: draft
+      - button "32-fan L3 Level 3 draft" [ref=e216]:
+        - generic [ref=e217]:
+          - generic [ref=e218]:
+            - heading "32-fan" [level=3] [ref=e219]
+            - generic [ref=e220]:
+              - generic [ref=e221]: L3
+              - generic [ref=e222]: Level 3
+          - generic [ref=e223]: draft
+      - button "31-yam L3 Level 3 draft" [ref=e224]:
+        - generic [ref=e225]:
+          - generic [ref=e226]:
+            - heading "31-yam" [level=3] [ref=e227]
+            - generic [ref=e228]:
+              - generic [ref=e229]: L3
+              - generic [ref=e230]: Level 3
+          - generic [ref=e231]: draft
+      - button "40-commander L3 Level 3 draft" [ref=e232]:
+        - generic [ref=e233]:
+          - generic [ref=e234]:
+            - heading "40-commander" [level=3] [ref=e235]
+            - generic [ref=e236]:
+              - generic [ref=e237]: L3
+              - generic [ref=e238]: Level 3
+          - generic [ref=e239]: draft
+      - button "45-master L3 Level 3 draft" [ref=e240]:
+        - generic [ref=e241]:
+          - generic [ref=e242]:
+            - heading "45-master" [level=3] [ref=e243]
+            - generic [ref=e244]:
+              - generic [ref=e245]: L3
+              - generic [ref=e246]: Level 3
+          - generic [ref=e247]: draft
+      - button "50-minivan L3 Level 3 draft" [ref=e248]:
+        - generic [ref=e249]:
+          - generic [ref=e250]:
+            - heading "50-minivan" [level=3] [ref=e251]
+            - generic [ref=e252]:
+              - generic [ref=e253]: L3
+              - generic [ref=e254]: Level 3
+          - generic [ref=e255]: draft
+      - button "37-pheasant L3 Level 3 draft" [ref=e256]:
+        - generic [ref=e257]:
+          - generic [ref=e258]:
+            - heading "37-pheasant" [level=3] [ref=e259]
+            - generic [ref=e260]:
+              - generic [ref=e261]: L3
+              - generic [ref=e262]: Level 3
+          - generic [ref=e263]: draft
+      - button "38-woman L3 Level 3 draft" [ref=e264]:
+        - generic [ref=e265]:
+          - generic [ref=e266]:
+            - heading "38-woman" [level=3] [ref=e267]
+            - generic [ref=e268]:
+              - generic [ref=e269]: L3
+              - generic [ref=e270]: Level 3
+          - generic [ref=e271]: draft
+      - button "41-lizard L3 Level 3 draft" [ref=e272]:
+        - generic [ref=e273]:
+          - generic [ref=e274]:
+            - heading "41-lizard" [level=3] [ref=e275]
+            - generic [ref=e276]:
+              - generic [ref=e277]: L3
+              - generic [ref=e278]: Level 3
+          - generic [ref=e279]: draft
+      - button "49-wetdog L3 Level 3 draft" [ref=e280]:
+        - generic [ref=e281]:
+          - generic [ref=e282]:
+            - heading "49-wetdog" [level=3] [ref=e283]
+            - generic [ref=e284]:
+              - generic [ref=e285]: L3
+              - generic [ref=e286]: Level 3
+          - generic [ref=e287]: draft
+      - button "47-driver L3 Level 3 draft" [ref=e288]:
+        - generic [ref=e289]:
+          - generic [ref=e290]:
+            - heading "47-driver" [level=3] [ref=e291]
+            - generic [ref=e292]:
+              - generic [ref=e293]: L3
+              - generic [ref=e294]: Level 3
+          - generic [ref=e295]: draft
+      - button "36-deer L3 Level 3 draft" [ref=e296]:
+        - generic [ref=e297]:
+          - generic [ref=e298]:
+            - heading "36-deer" [level=3] [ref=e299]
+            - generic [ref=e300]:
+              - generic [ref=e301]: L3
+              - generic [ref=e302]: Level 3
+          - generic [ref=e303]: draft
+      - button "35-coral L3 Level 3 draft" [ref=e304]:
+        - generic [ref=e305]:
+          - generic [ref=e306]:
+            - heading "35-coral" [level=3] [ref=e307]
+            - generic [ref=e308]:
+              - generic [ref=e309]: L3
+              - generic [ref=e310]: Level 3
+          - generic [ref=e311]: draft
+      - button "30-mitsubishi L3 Level 3 draft" [ref=e312]:
+        - generic [ref=e313]:
+          - generic [ref=e314]:
+            - heading "30-mitsubishi" [level=3] [ref=e315]
+            - generic [ref=e316]:
+              - generic [ref=e317]: L3
+              - generic [ref=e318]: Level 3
+          - generic [ref=e319]: draft
+      - button "48-loofah L3 Level 3 draft" [ref=e320]:
+        - generic [ref=e321]:
+          - generic [ref=e322]:
+            - heading "48-loofah" [level=3] [ref=e323]
+            - generic [ref=e324]:
+              - generic [ref=e325]: L3
+              - generic [ref=e326]: Level 3
+          - generic [ref=e327]: draft
+      - button "44-cobra L3 Level 3 draft" [ref=e328]:
+        - generic [ref=e329]:
+          - generic [ref=e330]:
+            - heading "44-cobra" [level=3] [ref=e331]
+            - generic [ref=e332]:
+              - generic [ref=e333]: L3
+              - generic [ref=e334]: Level 3
+          - generic [ref=e335]: draft
+      - button "43-rock L3 Level 3 draft" [ref=e336]:
+        - generic [ref=e337]:
+          - generic [ref=e338]:
+            - heading "43-rock" [level=3] [ref=e339]
+            - generic [ref=e340]:
+              - generic [ref=e341]: L3
+              - generic [ref=e342]: Level 3
+          - generic [ref=e343]: draft
+      - button "46-pomegranate L3 Level 3 draft" [ref=e344]:
+        - generic [ref=e345]:
+          - generic [ref=e346]:
+            - heading "46-pomegranate" [level=3] [ref=e347]
+            - generic [ref=e348]:
+              - generic [ref=e349]: L3
+              - generic [ref=e350]: Level 3
+          - generic [ref=e351]: draft
+      - button "34-vegetable L3 Level 3 draft" [ref=e352]:
+        - generic [ref=e353]:
+          - generic [ref=e354]:
+            - heading "34-vegetable" [level=3] [ref=e355]
+            - generic [ref=e356]:
+              - generic [ref=e357]: L3
+              - generic [ref=e358]: Level 3
+          - generic [ref=e359]: draft
+      - button "39-sword L3 Level 3 draft" [ref=e360]:
+        - generic [ref=e361]:
+          - generic [ref=e362]:
+            - heading "39-sword" [level=3] [ref=e363]
+            - generic [ref=e364]:
+              - generic [ref=e365]: L3
+              - generic [ref=e366]: Level 3
+          - generic [ref=e367]: draft
+      - button "实现层-从0推演系统 L1 其他 draft" [ref=e368]:
+        - generic [ref=e369]:
+          - generic [ref=e370]:
+            - heading "实现层-从0推演系统" [level=3] [ref=e371]
+            - generic [ref=e372]:
+              - generic [ref=e373]: L1
+              - generic [ref=e374]: 其他
+          - generic [ref=e375]: draft
+      - button "概念关联图 L1 其他 draft" [ref=e376]:
+        - generic [ref=e377]:
+          - generic [ref=e378]:
+            - heading "概念关联图" [level=3] [ref=e379]
+            - generic [ref=e380]:
+              - generic [ref=e381]: L1
+              - generic [ref=e382]: 其他
+          - generic [ref=e383]: draft
+      - button "方法论-从需求推导概念模型 L1 其他 draft" [ref=e384]:
+        - generic [ref=e385]:
+          - generic [ref=e386]:
+            - heading "方法论-从需求推导概念模型" [level=3] [ref=e387]
+            - generic [ref=e388]:
+              - generic [ref=e389]: L1
+              - generic [ref=e390]: 其他
+          - generic [ref=e391]: draft
+      - button "渐进式复杂度建设路径 L1 其他 draft" [ref=e392]:
+        - generic [ref=e393]:
+          - generic [ref=e394]:
+            - heading "渐进式复杂度建设路径" [level=3] [ref=e395]
+            - generic [ref=e396]:
+              - generic [ref=e397]: L1
+              - generic [ref=e398]: 其他
+          - generic [ref=e399]: draft
+      - button "vLLM概念推演过程-优化版 L1 vLLM draft" [ref=e400]:
+        - generic [ref=e401]:
+          - generic [ref=e402]:
+            - heading "vLLM概念推演过程-优化版" [level=3] [ref=e403]
+            - generic [ref=e404]:
+              - generic [ref=e405]: L1
+              - generic [ref=e406]: vLLM
+          - generic [ref=e407]: draft
+      - button "方法论-如何分析复杂系统 L1 其他 draft" [ref=e408]:
+        - generic [ref=e409]:
+          - generic [ref=e410]:
+            - heading "方法论-如何分析复杂系统" [level=3] [ref=e411]
+            - generic [ref=e412]:
+              - generic [ref=e413]: L1
+              - generic [ref=e414]: 其他
+          - generic [ref=e415]: draft
+      - button "decode-step L1 vLLM draft" [ref=e416]:
+        - generic [ref=e417]:
+          - generic [ref=e418]:
+            - heading "decode-step" [level=3] [ref=e419]
+            - generic [ref=e420]:
+              - generic [ref=e421]: L1
+              - generic [ref=e422]: vLLM
+          - generic [ref=e423]: draft
+      - button "transformer L1 vLLM draft" [ref=e424]:
+        - generic [ref=e425]:
+          - generic [ref=e426]:
+            - heading "transformer" [level=3] [ref=e427]
+            - generic [ref=e428]:
+              - generic [ref=e429]: L1
+              - generic [ref=e430]: vLLM
+          - generic [ref=e431]: draft
+      - button "logits L1 vLLM draft" [ref=e432]:
+        - generic [ref=e433]:
+          - generic [ref=e434]:
+            - heading "logits" [level=3] [ref=e435]
+            - generic [ref=e436]:
+              - generic [ref=e437]: L1
+              - generic [ref=e438]: vLLM
+          - generic [ref=e439]: draft
+      - button "gpu-memory-pool L1 vLLM draft" [ref=e440]:
+        - generic [ref=e441]:
+          - generic [ref=e442]:
+            - heading "gpu-memory-pool" [level=3] [ref=e443]
+            - generic [ref=e444]:
+              - generic [ref=e445]: L1
+              - generic [ref=e446]: vLLM
+          - generic [ref=e447]: draft
+      - button "tokenizer L1 vLLM draft" [ref=e448]:
+        - generic [ref=e449]:
+          - generic [ref=e450]:
+            - heading "tokenizer" [level=3] [ref=e451]
+            - generic [ref=e452]:
+              - generic [ref=e453]: L1
+              - generic [ref=e454]: vLLM
+          - generic [ref=e455]: draft
+      - button "model L1 vLLM draft" [ref=e456]:
+        - generic [ref=e457]:
+          - generic [ref=e458]:
+            - heading "model" [level=3] [ref=e459]
+            - generic [ref=e460]:
+              - generic [ref=e461]: L1
+              - generic [ref=e462]: vLLM
+          - generic [ref=e463]: draft
+      - button "distributed L1 vLLM draft" [ref=e464]:
+        - generic [ref=e465]:
+          - generic [ref=e466]:
+            - heading "distributed" [level=3] [ref=e467]
+            - generic [ref=e468]:
+              - generic [ref=e469]: L1
+              - generic [ref=e470]: vLLM
+          - generic [ref=e471]: draft
+      - button "prefix-caching L1 vLLM draft" [ref=e472]:
+        - generic [ref=e473]:
+          - generic [ref=e474]:
+            - heading "prefix-caching" [level=3] [ref=e475]
+            - generic [ref=e476]:
+              - generic [ref=e477]: L1
+              - generic [ref=e478]: vLLM
+          - generic [ref=e479]: draft
+      - button "embedding-essence-knowledge-tree L1 vLLM draft" [ref=e480]:
+        - generic [ref=e481]:
+          - generic [ref=e482]:
+            - heading "embedding-essence-knowledge-tree" [level=3] [ref=e483]
+            - generic [ref=e484]:
+              - generic [ref=e485]: L1
+              - generic [ref=e486]: vLLM
+          - generic [ref=e487]: draft
+      - button "quantization-knowledge-tree L1 vLLM draft" [ref=e488]:
+        - generic [ref=e489]:
+          - generic [ref=e490]:
+            - heading "quantization-knowledge-tree" [level=3] [ref=e491]
+            - generic [ref=e492]:
+              - generic [ref=e493]: L1
+              - generic [ref=e494]: vLLM
+          - generic [ref=e495]: draft
+      - button "multi-layer-purpose L1 vLLM draft" [ref=e496]:
+        - generic [ref=e497]:
+          - generic [ref=e498]:
+            - heading "multi-layer-purpose" [level=3] [ref=e499]
+            - generic [ref=e500]:
+              - generic [ref=e501]: L1
+              - generic [ref=e502]: vLLM
+          - generic [ref=e503]: draft
+      - button "prefill-decode L1 vLLM draft" [ref=e504]:
+        - generic [ref=e505]:
+          - generic [ref=e506]:
+            - heading "prefill-decode" [level=3] [ref=e507]
+            - generic [ref=e508]:
+              - generic [ref=e509]: L1
+              - generic [ref=e510]: vLLM
+          - generic [ref=e511]: draft
+      - button "embedding-vs-transformer L1 vLLM draft" [ref=e512]:
+        - generic [ref=e513]:
+          - generic [ref=e514]:
+            - heading "embedding-vs-transformer" [level=3] [ref=e515]
+            - generic [ref=e516]:
+              - generic [ref=e517]: L1
+              - generic [ref=e518]: vLLM
+          - generic [ref=e519]: draft
+      - button "kvcache-knowledge-tree L1 vLLM draft" [ref=e520]:
+        - generic [ref=e521]:
+          - generic [ref=e522]:
+            - heading "kvcache-knowledge-tree" [level=3] [ref=e523]
+            - generic [ref=e524]:
+              - generic [ref=e525]: L1
+              - generic [ref=e526]: vLLM
+          - generic [ref=e527]: draft
+      - button "transformer-forward-pass L1 vLLM draft" [ref=e528]:
+        - generic [ref=e529]:
+          - generic [ref=e530]:
+            - heading "transformer-forward-pass" [level=3] [ref=e531]
+            - generic [ref=e532]:
+              - generic [ref=e533]: L1
+              - generic [ref=e534]: vLLM
+          - generic [ref=e535]: draft
+      - button "scheduler L1 vLLM draft" [ref=e536]:
+        - generic [ref=e537]:
+          - generic [ref=e538]:
+            - heading "scheduler" [level=3] [ref=e539]
+            - generic [ref=e540]:
+              - generic [ref=e541]: L1
+              - generic [ref=e542]: vLLM
+          - generic [ref=e543]: draft
+      - button "dmodel-768-knowledge-tree L1 vLLM draft" [ref=e544]:
+        - generic [ref=e545]:
+          - generic [ref=e546]:
+            - heading "dmodel-768-knowledge-tree" [level=3] [ref=e547]
+            - generic [ref=e548]:
+              - generic [ref=e549]: L1
+              - generic [ref=e550]: vLLM
+          - generic [ref=e551]: draft
+      - button "neural-network-hierarchy-combination-tree L1 vLLM draft" [ref=e552]:
+        - generic [ref=e553]:
+          - generic [ref=e554]:
+            - heading "neural-network-hierarchy-combination-tree" [level=3] [ref=e555]
+            - generic [ref=e556]:
+              - generic [ref=e557]: L1
+              - generic [ref=e558]: vLLM
+          - generic [ref=e559]: draft
+      - button "multi-head-attention L1 vLLM draft" [ref=e560]:
+        - generic [ref=e561]:
+          - generic [ref=e562]:
+            - heading "multi-head-attention" [level=3] [ref=e563]
+            - generic [ref=e564]:
+              - generic [ref=e565]: L1
+              - generic [ref=e566]: vLLM
+          - generic [ref=e567]: draft
+      - button "sampler L1 vLLM draft" [ref=e568]:
+        - generic [ref=e569]:
+          - generic [ref=e570]:
+            - heading "sampler" [level=3] [ref=e571]
+            - generic [ref=e572]:
+              - generic [ref=e573]: L1
+              - generic [ref=e574]: vLLM
+          - generic [ref=e575]: draft
+      - button "gpuallocator-knowledge-tree L1 vLLM draft" [ref=e576]:
+        - generic [ref=e577]:
+          - generic [ref=e578]:
+            - heading "gpuallocator-knowledge-tree" [level=3] [ref=e579]
+            - generic [ref=e580]:
+              - generic [ref=e581]: L1
+              - generic [ref=e582]: vLLM
+          - generic [ref=e583]: draft
+      - button "README L1 vLLM draft" [ref=e584]:
+        - generic [ref=e585]:
+          - generic [ref=e586]:
+            - heading "README" [level=3] [ref=e587]
+            - generic [ref=e588]:
+              - generic [ref=e589]: L1
+              - generic [ref=e590]: vLLM
+          - generic [ref=e591]: draft
+      - button "问题发现方法论 L1 vLLM draft" [ref=e592]:
+        - generic [ref=e593]:
+          - generic [ref=e594]:
+            - heading "问题发现方法论" [level=3] [ref=e595]
+            - generic [ref=e596]:
+              - generic [ref=e597]: L1
+              - generic [ref=e598]: vLLM
+          - generic [ref=e599]: draft
+      - button "layernorm L1 vLLM draft" [ref=e600]:
+        - generic [ref=e601]:
+          - generic [ref=e602]:
+            - heading "layernorm" [level=3] [ref=e603]
+            - generic [ref=e604]:
+              - generic [ref=e605]: L1
+              - generic [ref=e606]: vLLM
+          - generic [ref=e607]: draft
+      - button "openai-api L1 vLLM draft" [ref=e608]:
+        - generic [ref=e609]:
+          - generic [ref=e610]:
+            - heading "openai-api" [level=3] [ref=e611]
+            - generic [ref=e612]:
+              - generic [ref=e613]: L1
+              - generic [ref=e614]: vLLM
+          - generic [ref=e615]: draft
+      - button "embedding L1 vLLM draft" [ref=e616]:
+        - generic [ref=e617]:
+          - generic [ref=e618]:
+            - heading "embedding" [level=3] [ref=e619]
+            - generic [ref=e620]:
+              - generic [ref=e621]: L1
+              - generic [ref=e622]: vLLM
+          - generic [ref=e623]: draft
+      - button "request-queue L1 vLLM draft" [ref=e624]:
+        - generic [ref=e625]:
+          - generic [ref=e626]:
+            - heading "request-queue" [level=3] [ref=e627]
+            - generic [ref=e628]:
+              - generic [ref=e629]: L1
+              - generic [ref=e630]: vLLM
+          - generic [ref=e631]: draft
+      - button "pagedattention-knowledge-tree L1 vLLM draft" [ref=e632]:
+        - generic [ref=e633]:
+          - generic [ref=e634]:
+            - heading "pagedattention-knowledge-tree" [level=3] [ref=e635]
+            - generic [ref=e636]:
+              - generic [ref=e637]: L1
+              - generic [ref=e638]: vLLM
+          - generic [ref=e639]: draft
+      - button "residual L1 vLLM draft" [ref=e640]:
+        - generic [ref=e641]:
+          - generic [ref=e642]:
+            - heading "residual" [level=3] [ref=e643]
+            - generic [ref=e644]:
+              - generic [ref=e645]: L1
+              - generic [ref=e646]: vLLM
+          - generic [ref=e647]: draft
+      - button "sampling-params L1 vLLM draft" [ref=e648]:
+        - generic [ref=e649]:
+          - generic [ref=e650]:
+            - heading "sampling-params" [level=3] [ref=e651]
+            - generic [ref=e652]:
+              - generic [ref=e653]: L1
+              - generic [ref=e654]: vLLM
+          - generic [ref=e655]: draft
+      - button "kv-cache L1 vLLM draft" [ref=e656]:
+        - generic [ref=e657]:
+          - generic [ref=e658]:
+            - heading "kv-cache" [level=3] [ref=e659]
+            - generic [ref=e660]:
+              - generic [ref=e661]: L1
+              - generic [ref=e662]: vLLM
+          - generic [ref=e663]: draft
+      - button "quantization-knowledge-tree-complete L1 vLLM draft" [ref=e664]:
+        - generic [ref=e665]:
+          - generic [ref=e666]:
+            - heading "quantization-knowledge-tree-complete" [level=3] [ref=e667]
+            - generic [ref=e668]:
+              - generic [ref=e669]: L1
+              - generic [ref=e670]: vLLM
+          - generic [ref=e671]: draft
+      - button "engine-api L1 vLLM draft" [ref=e672]:
+        - generic [ref=e673]:
+          - generic [ref=e674]:
+            - heading "engine-api" [level=3] [ref=e675]
+            - generic [ref=e676]:
+              - generic [ref=e677]: L1
+              - generic [ref=e678]: vLLM
+          - generic [ref=e679]: draft
+      - button "batching L1 vLLM draft" [ref=e680]:
+        - generic [ref=e681]:
+          - generic [ref=e682]:
+            - heading "batching" [level=3] [ref=e683]
+            - generic [ref=e684]:
+              - generic [ref=e685]: L1
+              - generic [ref=e686]: vLLM
+          - generic [ref=e687]: draft
+      - button "ffn L1 vLLM draft" [ref=e688]:
+        - generic [ref=e689]:
+          - generic [ref=e690]:
+            - heading "ffn" [level=3] [ref=e691]
+            - generic [ref=e692]:
+              - generic [ref=e693]: L1
+              - generic [ref=e694]: vLLM
+          - generic [ref=e695]: draft
+      - button "position-encoding-knowledge-tree L1 vLLM draft" [ref=e696]:
+        - generic [ref=e697]:
+          - generic [ref=e698]:
+            - heading "position-encoding-knowledge-tree" [level=3] [ref=e699]
+            - generic [ref=e700]:
+              - generic [ref=e701]: L1
+              - generic [ref=e702]: vLLM
+          - generic [ref=e703]: draft
+      - button "speculative-decoding L1 vLLM draft" [ref=e704]:
+        - generic [ref=e705]:
+          - generic [ref=e706]:
+            - heading "speculative-decoding" [level=3] [ref=e707]
+            - generic [ref=e708]:
+              - generic [ref=e709]: L1
+              - generic [ref=e710]: vLLM
+          - generic [ref=e711]: draft
+      - button "paged-attention L1 vLLM draft" [ref=e712]:
+        - generic [ref=e713]:
+          - generic [ref=e714]:
+            - heading "paged-attention" [level=3] [ref=e715]
+            - generic [ref=e716]:
+              - generic [ref=e717]: L1
+              - generic [ref=e718]: vLLM
+          - generic [ref=e719]: draft
+      - button "flash-attention L1 vLLM draft" [ref=e720]:
+        - generic [ref=e721]:
+          - generic [ref=e722]:
+            - heading "flash-attention" [level=3] [ref=e723]
+            - generic [ref=e724]:
+              - generic [ref=e725]: L1
+              - generic [ref=e726]: vLLM
+          - generic [ref=e727]: draft
+      - button "single-layer-limitation L1 vLLM draft" [ref=e728]:
+        - generic [ref=e729]:
+          - generic [ref=e730]:
+            - heading "single-layer-limitation" [level=3] [ref=e731]
+            - generic [ref=e732]:
+              - generic [ref=e733]: L1
+              - generic [ref=e734]: vLLM
+          - generic [ref=e735]: draft
+      - button "quantization L1 vLLM draft" [ref=e736]:
+        - generic [ref=e737]:
+          - generic [ref=e738]:
+            - heading "quantization" [level=3] [ref=e739]
+            - generic [ref=e740]:
+              - generic [ref=e741]: L1
+              - generic [ref=e742]: vLLM
+          - generic [ref=e743]: draft
+      - button "qkv-essence L1 vLLM draft" [ref=e744]:
+        - generic [ref=e745]:
+          - generic [ref=e746]:
+            - heading "qkv-essence" [level=3] [ref=e747]
+            - generic [ref=e748]:
+              - generic [ref=e749]: L1
+              - generic [ref=e750]: vLLM
+          - generic [ref=e751]: draft
+      - button "kvcachemanager-knowledge-tree L1 vLLM draft" [ref=e752]:
+        - generic [ref=e753]:
+          - generic [ref=e754]:
+            - heading "kvcachemanager-knowledge-tree" [level=3] [ref=e755]
+            - generic [ref=e756]:
+              - generic [ref=e757]: L1
+              - generic [ref=e758]: vLLM
+          - generic [ref=e759]: draft
+      - button "transformer-navigation L1 vLLM draft" [ref=e760]:
+        - generic [ref=e761]:
+          - generic [ref=e762]:
+            - heading "transformer-navigation" [level=3] [ref=e763]
+            - generic [ref=e764]:
+              - generic [ref=e765]: L1
+              - generic [ref=e766]: vLLM
+          - generic [ref=e767]: draft
+      - button "知识体系化框架 L1 其他 draft" [ref=e768]:
+        - generic [ref=e769]:
+          - generic [ref=e770]:
+            - heading "知识体系化框架" [level=3] [ref=e771]
+            - generic [ref=e772]:
+              - generic [ref=e773]: L1
+              - generic [ref=e774]: 其他
+          - generic [ref=e775]: draft
+      - button "vLLM概念推演过程 L1 vLLM draft" [ref=e776]:
+        - generic [ref=e777]:
+          - generic [ref=e778]:
+            - heading "vLLM概念推演过程" [level=3] [ref=e779]
+            - generic [ref=e780]:
+              - generic [ref=e781]: L1
+              - generic [ref=e782]: vLLM
+          - generic [ref=e783]: draft
+      - button "定期复盘机制 L1 其他 draft" [ref=e784]:
+        - generic [ref=e785]:
+          - generic [ref=e786]:
+            - heading "定期复盘机制" [level=3] [ref=e787]
+            - generic [ref=e788]:
+              - generic [ref=e789]: L1
+              - generic [ref=e790]: 其他
+          - generic [ref=e791]: draft
+      - button "Level1-自测验证 L1 其他 draft" [ref=e792]:
+        - generic [ref=e793]:
+          - generic [ref=e794]:
+            - heading "Level1-自测验证" [level=3] [ref=e795]
+            - generic [ref=e796]:
+              - generic [ref=e797]: L1
+              - generic [ref=e798]: 其他
+          - generic [ref=e799]: draft
+      - button "03-ear L1 Level 1 draft" [ref=e800]:
+        - generic [ref=e801]:
+          - generic [ref=e802]:
+            - heading "03-ear" [level=3] [ref=e803]
+            - generic [ref=e804]:
+              - generic [ref=e805]: L1
+              - generic [ref=e806]: Level 1
+          - generic [ref=e807]: draft
+      - button "06-spoon L1 Level 1 draft" [ref=e808]:
+        - generic [ref=e809]:
+          - generic [ref=e810]:
+            - heading "06-spoon" [level=3] [ref=e811]
+            - generic [ref=e812]:
+              - generic [ref=e813]: L1
+              - generic [ref=e814]: Level 1
+          - generic [ref=e815]: draft
+      - button "00-egg L1 Level 1 draft" [ref=e816]:
+        - generic [ref=e817]:
+          - generic [ref=e818]:
+            - heading "00-egg" [level=3] [ref=e819]
+            - generic [ref=e820]:
+              - generic [ref=e821]: L1
+              - generic [ref=e822]: Level 1
+          - generic [ref=e823]: draft
+      - button "05-hook L1 Level 1 draft" [ref=e824]:
+        - generic [ref=e825]:
+          - generic [ref=e826]:
+            - heading "05-hook" [level=3] [ref=e827]
+            - generic [ref=e828]:
+              - generic [ref=e829]: L1
+              - generic [ref=e830]: Level 1
+          - generic [ref=e831]: draft
+      - button "02-duck L1 Level 1 draft" [ref=e832]:
+        - generic [ref=e833]:
+          - generic [ref=e834]:
+            - heading "02-duck" [level=3] [ref=e835]
+            - generic [ref=e836]:
+              - generic [ref=e837]: L1
+              - generic [ref=e838]: Level 1
+          - generic [ref=e839]: draft
+      - button "08-gourd L1 Level 1 draft" [ref=e840]:
+        - generic [ref=e841]:
+          - generic [ref=e842]:
+            - heading "08-gourd" [level=3] [ref=e843]
+            - generic [ref=e844]:
+              - generic [ref=e845]: L1
+              - generic [ref=e846]: Level 1
+          - generic [ref=e847]: draft
+      - button "09-balloon L1 Level 1 draft" [ref=e848]:
+        - generic [ref=e849]:
+          - generic [ref=e850]:
+            - heading "09-balloon" [level=3] [ref=e851]
+            - generic [ref=e852]:
+              - generic [ref=e853]: L1
+              - generic [ref=e854]: Level 1
+          - generic [ref=e855]: draft
+      - button "04-boat L1 Level 1 draft" [ref=e856]:
+        - generic [ref=e857]:
+          - generic [ref=e858]:
+            - heading "04-boat" [level=3] [ref=e859]
+            - generic [ref=e860]:
+              - generic [ref=e861]: L1
+              - generic [ref=e862]: Level 1
+          - generic [ref=e863]: draft
+      - button "07-crutch L1 Level 1 draft" [ref=e864]:
+        - generic [ref=e865]:
+          - generic [ref=e866]:
+            - heading "07-crutch" [level=3] [ref=e867]
+            - generic [ref=e868]:
+              - generic [ref=e869]: L1
+              - generic [ref=e870]: Level 1
+          - generic [ref=e871]: draft
+      - button "01-candle L1 Level 1 draft" [ref=e872]:
+        - generic [ref=e873]:
+          - generic [ref=e874]:
+            - heading "01-candle" [level=3] [ref=e875]
+            - generic [ref=e876]:
+              - generic [ref=e877]: L1
+              - generic [ref=e878]: Level 1
+          - generic [ref=e879]: draft
+      - button "attention L1 concepts draft" [ref=e880]:
+        - generic [ref=e881]:
+          - generic [ref=e882]:
+            - heading "attention" [level=3] [ref=e883]
+            - generic [ref=e884]:
+              - generic [ref=e885]: L1
+              - generic [ref=e886]: concepts
+          - generic [ref=e887]: draft
+      - button "Level2-自测验证 L1 其他 draft" [ref=e888]:
+        - generic [ref=e889]:
+          - generic [ref=e890]:
+            - heading "Level2-自测验证" [level=3] [ref=e891]
+            - generic [ref=e892]:
+              - generic [ref=e893]: L1
+              - generic [ref=e894]: 其他
+          - generic [ref=e895]: draft
+      - button "Level3-自测验证 L1 其他 draft" [ref=e896]:
+        - generic [ref=e897]:
+          - generic [ref=e898]:
+            - heading "Level3-自测验证" [level=3] [ref=e899]
+            - generic [ref=e900]:
+              - generic [ref=e901]: L1
+              - generic [ref=e902]: 其他
+          - generic [ref=e903]: draft
+    - generic [ref=e905]: 共 110 个文档
+  - generic:
+    - generic:
+      - generic [ref=e906]:
+        - button "切换侧边栏" [ref=e907]:
+          - img
+        - heading "Magic Memory" [level=1] [ref=e909]
+        - generic [ref=e910]:
+          - button "文档" [ref=e911]
+          - button "知识图" [ref=e912]
+      - generic [ref=e913]:
+        - button "切换注释面板" [ref=e914]:
+          - img
+        - button "导出文档" [disabled] [ref=e916]:
+          - img
+        - button "设置" [ref=e918]:
+          - img
+    - generic:
+      - generic:
+        - generic [ref=e921]:
+          - generic:
+            - generic [ref=e923]: 加载知识图中...
+            - generic [ref=e924]:
+              - generic [ref=e925]: 关系图例
+              - generic [ref=e927]: 依赖 (depends_on)
+              - generic [ref=e929]: 引出 (leads_to)
+              - generic [ref=e931]: 相关 (related)
+              - generic [ref=e933]: 级别颜色
+              - generic [ref=e935]: Level 1 - 基础
+              - generic [ref=e937]: Level 2 - 中级
+              - generic [ref=e939]: Level 3 - 高级
+        - generic [ref=e940]:
+          - generic [ref=e942]:
+            - button "浏览" [ref=e943]
+            - button "学习" [ref=e944]
+            - button "复习" [ref=e945]
+          - generic [ref=e948]:
+            - generic [ref=e949]: 🧠
+            - heading "知识图谱" [level=2] [ref=e950]
+            - paragraph [ref=e951]: 点击左侧节点查看概念详情

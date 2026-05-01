@@ -1,0 +1,129 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - button "切换侧边栏" [ref=e7]:
+        - img
+      - heading "Magic Memory" [level=1] [ref=e9]
+      - generic [ref=e10]:
+        - button "文档" [ref=e11]
+        - button "知识图" [ref=e12]
+    - generic [ref=e13]:
+      - button "切换注释面板" [ref=e14]:
+        - img
+      - button "导出文档" [disabled] [ref=e16]:
+        - img
+      - button "设置" [ref=e18]:
+        - img
+  - generic [ref=e22]:
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - button "浏览" [ref=e25]
+        - button "学习" [ref=e26]
+        - button "复习" [ref=e27]
+      - generic [ref=e28]:
+        - generic [ref=e34]:
+          - button "+" [ref=e35]
+          - button "−" [ref=e36]
+          - button "适应视图" [ref=e37]:
+            - img [ref=e38]
+          - generic [ref=e40]: 65%
+        - generic [ref=e41]:
+          - generic [ref=e42]: 关系图例
+          - generic [ref=e44]: 依赖 (depends_on)
+          - generic [ref=e46]: 引出 (leads_to)
+          - generic [ref=e48]: 相关 (related)
+          - generic [ref=e50]: 级别颜色
+          - generic [ref=e52]: Level 1 - 基础
+          - generic [ref=e54]: Level 2 - 中级
+          - generic [ref=e56]: Level 3 - 高级
+    - generic [ref=e57]:
+      - generic [ref=e58]:
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - heading "Transformer Layers - Transformer层" [level=2] [ref=e64]
+            - paragraph [ref=e65]: "别名: Transformer / 层"
+          - button "取消选择" [ref=e66]:
+            - img
+        - generic [ref=e68]:
+          - generic [ref=e69]: L2
+          - generic [ref=e70]: Model
+      - generic [ref=e71]:
+        - button "从问题出发" [ref=e72]
+        - button "深入理解" [ref=e73]
+        - button "知识关联" [active] [ref=e74]
+      - generic [ref=e99]:
+        - generic [ref=e100]:
+          - heading "依赖关系图" [level=3] [ref=e101]
+          - img [ref=e103]:
+            - generic [ref=e104]:
+              - generic [ref=e107]: VllmCon…
+              - generic [ref=e110]: Device …
+              - generic [ref=e113]: Tensor …
+              - generic [ref=e116]: Embeddi…
+              - generic [ref=e119]: Transfo…
+        - generic [ref=e120]:
+          - heading "由此引出" [level=3] [ref=e121]
+          - generic [ref=e122]:
+            - button "Embedding - 词嵌入 → 如何将词转换为向量？" [ref=e123]:
+              - generic [ref=e124]:
+                - generic [ref=e125]: Embedding - 词嵌入
+                - generic [ref=e126]: →
+              - paragraph [ref=e127]: 如何将词转换为向量？
+            - button "PagedAttention - 分页注意力 → 如何高效管理长序列的 KV Cache？" [ref=e128]:
+              - generic [ref=e129]:
+                - generic [ref=e130]: PagedAttention - 分页注意力
+                - generic [ref=e131]: →
+              - paragraph [ref=e132]: 如何高效管理长序列的 KV Cache？
+        - generic [ref=e133]:
+          - heading "依赖于" [level=3] [ref=e134]
+          - generic [ref=e135]:
+            - button "Embedding - 词嵌入 ← 如何将词转换为向量？" [ref=e136]:
+              - generic [ref=e137]:
+                - generic [ref=e138]: Embedding - 词嵌入
+                - generic [ref=e139]: ←
+              - paragraph [ref=e140]: 如何将词转换为向量？
+            - button "PagedAttention - 分页注意力 ← 如何高效管理长序列的 KV Cache？" [ref=e141]:
+              - generic [ref=e142]:
+                - generic [ref=e143]: PagedAttention - 分页注意力
+                - generic [ref=e144]: ←
+              - paragraph [ref=e145]: 如何高效管理长序列的 KV Cache？
+        - button "从此概念继续探索 添加新的关联概念到知识图谱" [ref=e147]:
+          - img [ref=e148]
+          - generic [ref=e150]:
+            - generic [ref=e151]: 从此概念继续探索
+            - generic [ref=e152]: 添加新的关联概念到知识图谱
+    - generic [ref=e154]:
+      - generic [ref=e155]:
+        - generic [ref=e156]:
+          - heading "从概念探索" [level=2] [ref=e157]
+          - paragraph [ref=e158]: 基于「Transformer Layers - Transformer层」扩展新概念
+        - button [ref=e159]:
+          - img
+      - generic [ref=e161]:
+        - generic [ref=e162]:
+          - generic [ref=e163]: 关系*
+          - generic [ref=e164]:
+            - button "引出 当前概念引出的新概念" [ref=e165]:
+              - generic [ref=e166]: 引出
+              - generic [ref=e167]: 当前概念引出的新概念
+            - button "依赖于 新概念是当前概念的前置依赖" [ref=e168]:
+              - generic [ref=e169]: 依赖于
+              - generic [ref=e170]: 新概念是当前概念的前置依赖
+            - button "相关 新概念与当前概念相关" [ref=e171]:
+              - generic [ref=e172]: 相关
+              - generic [ref=e173]: 新概念与当前概念相关
+        - generic [ref=e174]:
+          - generic [ref=e175]: 概念名称*
+          - textbox "e.g. FlashInfer - 推理加速引擎" [ref=e176]
+        - generic [ref=e177]:
+          - generic [ref=e178]: 它所解决的问题
+          - textbox "这个新概念解决什么核心问题？" [ref=e179]
+        - generic [ref=e180]:
+          - generic [ref=e181]: 可能产生的疑问 (认知缺口)
+          - textbox "学习这个概念时可能有什么疑问？" [ref=e182]
+        - generic [ref=e183]:
+          - generic [ref=e184]: 详细内容 (Markdown)
+          - textbox "用 Markdown 写详细说明... (可选)" [ref=e185]
+      - generic [ref=e186]:
+        - button "取消" [ref=e187]
+        - button "添加到图谱" [disabled] [ref=e188]

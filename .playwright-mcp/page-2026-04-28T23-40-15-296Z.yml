@@ -1,0 +1,87 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - button "切换侧边栏" [ref=e7]:
+        - img
+      - heading "Magic Memory" [level=1] [ref=e9]
+      - generic [ref=e10]:
+        - button "文档" [ref=e11]
+        - button "知识图" [ref=e12]
+    - generic [ref=e13]:
+      - button "切换注释面板" [ref=e14]:
+        - img
+      - button "导出文档" [disabled] [ref=e16]:
+        - img
+      - button "设置" [ref=e18]:
+        - img
+  - generic [ref=e22]:
+    - generic [ref=e49]:
+      - generic [ref=e50]:
+        - button "返回图谱" [ref=e51]:
+          - img [ref=e52]
+          - text: 返回图谱
+        - generic [ref=e54]: VllmConfig - 配置中心
+        - generic [ref=e55]: 过程梳理画板
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - application [ref=e59]:
+            - generic [ref=e61]:
+              - generic:
+                - generic:
+                  - img
+                  - img:
+                    - group "Edge from current_0 to gap_1" [ref=e62] [cursor=pointer]
+                  - img:
+                    - group "Edge from gap_1 to gap_2" [ref=e65] [cursor=pointer]
+                  - img:
+                    - group "Edge from gap_2 to gap_5" [ref=e68] [cursor=pointer]
+                  - img:
+                    - group "Edge from gap_5 to gap_11" [ref=e71] [cursor=pointer]
+                - generic:
+                  - group [ref=e74]:
+                    - generic [ref=e75]:
+                      - generic [ref=e78]: VllmConfig - 配置中心
+                      - generic [ref=e79]: ← 当前概念
+                  - group [ref=e86]:
+                    - generic [ref=e87]:
+                      - generic [ref=e90]: "?"
+                      - generic [ref=e91]: 空缺
+                      - generic [ref=e92]: vLLM 如何统一管理不同的 GPU 设备？
+                  - group [ref=e95]:
+                    - generic [ref=e96]:
+                      - generic [ref=e99]: "?"
+                      - generic [ref=e100]: 空缺
+                      - generic [ref=e101]: 如何统一处理不同来源的 Tensor？
+                  - group [ref=e104]:
+                    - generic [ref=e105]:
+                      - generic [ref=e108]: "?"
+                      - generic [ref=e109]: 空缺
+                      - generic [ref=e110]: 如何高效管理有限的 GPU 显存？
+                  - group [ref=e113]:
+                    - generic [ref=e114]:
+                      - generic [ref=e117]: "?"
+                      - generic [ref=e118]: 空缺
+                      - generic [ref=e119]: 如何加载各种格式的模型权重？
+            - img
+            - img "Mini Map" [ref=e123]
+            - link "React Flow attribution" [ref=e130] [cursor=pointer]:
+              - /url: https://reactflow.dev
+              - text: React Flow
+          - generic [ref=e132]:
+            - button "+" [ref=e133] [cursor=pointer]
+            - button "-" [ref=e134] [cursor=pointer]
+            - button "适应屏幕" [ref=e135] [cursor=pointer]:
+              - img [ref=e136]
+            - button "流程框" [ref=e139] [cursor=pointer]:
+              - img [ref=e140]
+            - button "T" [ref=e142] [cursor=pointer]:
+              - generic [ref=e143]: T
+        - generic [ref=e144]:
+          - button "自动排列" [ref=e145]
+          - button "提交梳理，生成对照" [ref=e146]
+          - generic [ref=e147]: 5 节点 · 4 连线 · Del 删除
+    - generic [ref=e45]:
+      - img [ref=e46]
+      - paragraph [ref=e48]:
+        - text: 点击图谱中的节点
+        - text: 查看概念详情

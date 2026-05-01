@@ -1,0 +1,38 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - button "切换侧边栏" [ref=e7]:
+        - img
+      - heading "Magic Memory" [level=1] [ref=e9]
+      - generic [ref=e10]:
+        - button "文档" [ref=e11]
+        - button "知识图" [ref=e12]
+    - generic [ref=e13]:
+      - button "切换注释面板" [ref=e14]:
+        - img
+      - button "导出文档" [disabled] [ref=e16]:
+        - img
+      - button "设置" [ref=e18]:
+        - img
+  - generic [ref=e22]:
+    - generic [ref=e24]:
+      - generic [ref=e53]:
+        - button "+" [ref=e54]
+        - button "−" [ref=e55]
+        - button "适应视图" [ref=e56]:
+          - img [ref=e57]
+        - generic [ref=e59]: 60%
+      - generic [ref=e28]:
+        - generic [ref=e29]: 关系图例
+        - generic [ref=e31]: 依赖 (depends_on)
+        - generic [ref=e33]: 引出 (leads_to)
+        - generic [ref=e35]: 相关 (related)
+        - generic [ref=e37]: 级别颜色
+        - generic [ref=e39]: Level 1 - 基础
+        - generic [ref=e41]: Level 2 - 中级
+        - generic [ref=e43]: Level 3 - 高级
+    - generic [ref=e45]:
+      - img [ref=e46]
+      - paragraph [ref=e48]:
+        - text: 点击图谱中的节点
+        - text: 查看概念详情

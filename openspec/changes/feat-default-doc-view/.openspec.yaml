@@ -1,0 +1,10 @@
+name: feat-default-doc-view
+title: 概念详情面板默认显示查阅文档
+description: 将「查阅文档」按钮移到操作栏最左边，并且选中概念时默认显示文档内容
+status: pending
+dependencies: []
+artifacts:
+  - id: proposal
+    status: done
+  - id: tasks
+    status: done

@@ -1,0 +1,38 @@
+[     245ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:20102
+[     415ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/favicon.ico:0
+[     700ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=e30240b8:1091
+[   82673ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=e30240b8:1091
+[   82812ms] TypeError: Cannot read properties of null (reading 'isHeadless')
+    at Core2.headless (http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=e30240b8:16795:35)
+    at boundingBoxImpl2 (http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=e30240b8:9141:22)
+    at cachedBoundingBoxImpl2 (http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=e30240b8:9379:10)
+    at elesfn$b.boundingBox (http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=e30240b8:9463:36)
+    at Layout2.run (http://localhost:3000/node_modules/.vite/deps/cytoscape-fcose.js?v=e30240b8:7058:58)
+    at http://localhost:3000/src/components/KnowledgeGraph.tsx?t=1777381226900:271:12
+    at Object.react_stack_bottom_frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:18567:20)
+    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:997:72)
+    at commitHookEffectListMount (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:9411:163)
+    at commitHookPassiveMountEffects (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:9465:60)
+[   82782ms] [WARNING] %s
+
+%s
+ An error occurred in the <KnowledgeGraph> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:6965
+[   87561ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:20102
+[   87899ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=e30240b8:1091
+[  166931ms] ReferenceError: onDoubleTapConcept is not defined
+    at KnowledgeGraph (http://localhost:3000/src/components/KnowledgeGraph.tsx?t=1777381322430:24:40)
+    at Object.react_stack_bottom_frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:18509:20)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:5654:24)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:7475:21)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:8525:20)
+    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:997:72)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:12561:98)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:12424:43)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:12408:13)
+    at performWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:11827:37)
+[  166931ms] [WARNING] %s
+
+%s
+ An error occurred in the <KnowledgeGraph> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:6965

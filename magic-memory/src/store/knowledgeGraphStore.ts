@@ -13,8 +13,10 @@ interface KnowledgeGraphStore {
   error: string | null
   viewMode: 'explore' | 'review'
   
-  // Skeletons and question history features removed
   conceptPanelMode: boolean
+  
+  linkMode: boolean
+  linkSource: string | null
   
   loadGraph: () => Promise<void>
   selectConcept: (concept: Concept) => void
@@ -34,6 +36,8 @@ interface KnowledgeGraphStore {
   updateProcessState: (conceptId: string, state: Partial<ProcessState>) => void
 
   setConceptPanelMode: (mode: boolean) => void
+  setLinkMode: (mode: boolean) => void
+  setLinkSource: (source: string | null) => void
   updateConceptContent: (conceptId: string, content: string) => void
   // history-related actions removed
 }
@@ -47,12 +51,14 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
       selectedConcept: null,
       reviewRecords: new Map(),
       annotations: [],
-      isLoading: false,
+isLoading: false,
       error: null,
       viewMode: 'explore',
       conceptPanelMode: true,
+      linkMode: false,
+      linkSource: null,
       
-loadGraph: async () => {
+      loadGraph: async () => {
     set({ isLoading: true, error: null })
     try {
       // 优先从服务端获取最新数据
@@ -62,7 +68,25 @@ loadGraph: async () => {
         const serverConcepts: Concept[] = data.concepts ?? []
         const serverEdges: ConceptEdge[] = data.edges ?? []
         if (serverConcepts.length > 0) {
-          set({ concepts: serverConcepts, edges: serverEdges, isLoading: false })
+          // 合并：保留用户手动添加的概念（服务端不存在的）
+          const currentState = get()
+          const serverIds = new Set(serverConcepts.map(c => c.id))
+          const userConcepts = currentState.concepts.filter(c => !serverIds.has(c.id))
+          const userEdgeKeys = new Set<string>()
+          const userEdges = currentState.edges.filter(e => {
+            const keep = !serverIds.has(e.source) || !serverIds.has(e.target)
+            if (keep) userEdgeKeys.add(`${e.source}|${e.target}|${e.type}`)
+            return keep
+          })
+          // 去重：排除服务端已包含的边
+          const mergedEdges = [...serverEdges]
+          for (const e of userEdges) {
+            const key = `${e.source}|${e.target}|${e.type}`
+            if (!mergedEdges.some(se => `${se.source}|${se.target}|${se.type}` === key)) {
+              mergedEdges.push(e)
+            }
+          }
+          set({ concepts: [...serverConcepts, ...userConcepts], edges: mergedEdges, isLoading: false })
           return
         }
       }
@@ -245,7 +269,13 @@ loadGraph: async () => {
         set({ conceptPanelMode: mode })
       },
 
-      // skeleton/history related actions removed
+      setLinkMode: (mode) => {
+        set({ linkMode: mode })
+      },
+
+      setLinkSource: (source) => {
+        set({ linkSource: source })
+      },
 
       updateProcessState: (conceptId, state) => {
         const { reviewRecords } = get()
@@ -287,7 +317,6 @@ loadGraph: async () => {
         annotations: state.annotations,
       }),
       merge: (persisted: any, current) => {
-        // Zustand v5 将 partialize 数据包在 { state: {...}, version: N } 中
         const p = persisted?.state ?? persisted
         return {
           ...current,
@@ -295,6 +324,8 @@ loadGraph: async () => {
           edges: p?.edges ?? current.edges,
           reviewRecords: new Map(p?.reviewRecords || []),
           annotations: p?.annotations ?? [],
+          linkMode: false,
+          linkSource: null,
         }
       }
     }

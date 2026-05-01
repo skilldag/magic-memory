@@ -1,0 +1,38 @@
+[     108ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:20102
+[   59335ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:20102
+[  218022ms] ReferenceError: docsPath is not defined
+    at KnowledgeGraphView (http://localhost:3000/src/components/KnowledgeGraphView.tsx?t=1777458666645:182:7)
+    at Object.react_stack_bottom_frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:18509:20)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:5654:24)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:7475:21)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:8525:20)
+    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:997:72)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:12561:98)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:12424:43)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:12408:13)
+    at performWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:11827:37)
+[  218021ms] [WARNING] %s
+
+%s
+ An error occurred in the <KnowledgeGraphView> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:6965
+[  236139ms] ReferenceError: docsPath is not defined
+    at KnowledgeGraphView (http://localhost:3000/src/components/KnowledgeGraphView.tsx?t=1777458684766:275:22)
+    at Object.react_stack_bottom_frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:18509:20)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:5654:24)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:7475:21)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:8525:20)
+    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:997:72)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:12561:98)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:12424:43)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:12408:13)
+    at performWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:11827:37)
+[  236139ms] [WARNING] %s
+
+%s
+ An error occurred in the <KnowledgeGraphView> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=e30240b8:6965
+[  241471ms] [ERROR] [vite] SyntaxError: The requested module '/src/utils/conceptParser.ts' does not provide an export named 'parseFrontmatter' @ http://localhost:3000/@vite/client:881
+[  241471ms] [ERROR] [vite] Failed to reload /src/components/KnowledgeGraphView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:881
+[  252446ms] [ERROR] [vite] SyntaxError: The requested module '/src/utils/conceptParser.ts' does not provide an export named 'parseFrontmatter' @ http://localhost:3000/@vite/client:881
+[  252446ms] [ERROR] [vite] Failed to reload /src/components/KnowledgeGraphView.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:881

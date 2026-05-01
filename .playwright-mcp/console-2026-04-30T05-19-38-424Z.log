@@ -1,0 +1,9 @@
+[     196ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=1c3da450:20102
+[     286ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=1c3da450:1091
+[     407ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=1c3da450:1091
+[     521ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/favicon.ico:0
+[   11270ms] [LOG] DocumentViewer received: Model/14-embedding.md 14-embedding content length: 766 @ http://localhost:3000/src/components/DocumentViewer.tsx?t=1777526196774:18
+[   11310ms] [LOG] DocumentViewer received: Model/14-embedding.md 14-embedding content length: 766 @ http://localhost:3000/src/components/DocumentViewer.tsx?t=1777526196774:18
+[   14455ms] [LOG] Toolbar: switching to documents @ http://localhost:3000/src/components/Toolbar.tsx?t=1777525339611:13
+[   37351ms] [LOG] DocumentViewer received: Model/14-embedding.md 14-embedding content length: 3261 @ http://localhost:3000/src/components/DocumentViewer.tsx?t=1777526196774:18
+[   37361ms] [LOG] DocumentViewer received: Model/14-embedding.md 14-embedding content length: 3261 @ http://localhost:3000/src/components/DocumentViewer.tsx?t=1777526196774:18

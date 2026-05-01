@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import cytoscape, { Core, ElementDefinition } from 'cytoscape'
 import fcose from 'cytoscape-fcose'
 import type { Concept, ConceptEdge } from '../types'
@@ -11,12 +11,18 @@ interface KnowledgeGraphProps {
   edges: ConceptEdge[]
   selectedConcept: Concept | null
   focusEnabled?: boolean
+  linkMode?: boolean
+  linkSource?: string | null
   onSelectConcept: (concept: Concept) => void
   onNavigate?: (conceptId: string) => void
   onDoubleTapConcept?: (concept: Concept) => void
   onBackgroundDoubleTap?: () => void
   onHoverConcept?: (payload: { concept: Concept; x: number; y: number; width: number; height: number }) => void
   onHoverLeave?: () => void
+  onToggleLinkMode?: () => void
+  onLinkStart?: (conceptId: string) => void
+  onLinkEnd?: (sourceId: string, targetId: string) => void
+  onLinkCancel?: () => void
 }
 
 export function KnowledgeGraph({
@@ -24,12 +30,18 @@ export function KnowledgeGraph({
   edges,
   selectedConcept,
   focusEnabled = false,
+  linkMode = false,
+  linkSource = null,
   onSelectConcept,
   onNavigate,
   onDoubleTapConcept,
   onBackgroundDoubleTap,
   onHoverConcept,
-  onHoverLeave
+  onHoverLeave,
+  onToggleLinkMode,
+  onLinkStart,
+  onLinkEnd,
+  onLinkCancel
 }: KnowledgeGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
@@ -47,8 +59,20 @@ export function KnowledgeGraph({
   conceptsRef.current = concepts
   edgesRef.current = edges
   const initialLayoutDoneRef = useRef(false)
+  const linkModeRef = useRef(linkMode)
+  const linkSourceRef = useRef(linkSource)
+  linkModeRef.current = linkMode
+  linkSourceRef.current = linkSource
   const [isReady, setIsReady] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(1)
+
+  // 结构签名：仅当节点 ID 集或边结构变化时变更——纯 content 编辑不触发布局
+  const structuralKey = useMemo(
+    () =>
+      concepts.map(c => c.id).sort().join(',') + '|' +
+      edges.map(e => `${e.source}-${e.target}-${e.type}`).sort().join(','),
+    [concepts, edges]
+  )
 
   const handleZoomIn = useCallback(() => {
     if (!cyRef.current) return
@@ -198,6 +222,10 @@ export function KnowledgeGraph({
         tile: true,
         padding: 80
       })
+      initLayout.one('layoutstop', () => {
+        cy.fit(undefined, 50)
+        setZoomLevel(cy.zoom())
+      })
       initLayout.run()
     } catch (e) {
       console.warn('[KnowledgeGraph] initial layout skipped:', e)
@@ -211,7 +239,22 @@ export function KnowledgeGraph({
       const nodeId = evt.target.id()
       const now = Date.now()
       const prev = lastNodeTapRef.current
-      // Detect double-tap on same node within 400ms
+      
+      if (linkModeRef.current) {
+        console.log('[KnowledgeGraph] node clicked in linkMode, linkSource:', linkSourceRef.current, 'nodeId:', nodeId)
+        if (linkSourceRef.current) {
+          if (linkSourceRef.current !== nodeId) {
+            console.log('[KnowledgeGraph] calling onLinkEnd with:', linkSourceRef.current, nodeId)
+            onLinkEnd?.(linkSourceRef.current, nodeId)
+          }
+        } else {
+          console.log('[KnowledgeGraph] calling onLinkStart with:', nodeId)
+          onLinkStart?.(nodeId)
+        }
+        lastNodeTapRef.current = { id: nodeId, time: now }
+        return
+      }
+      
       if (prev.id === nodeId && now - prev.time < 400) {
         const concept = conceptsRef.current.find(c => c.id === nodeId)
         const handler = onDoubleTapConceptRef.current
@@ -243,6 +286,12 @@ export function KnowledgeGraph({
 
     cy.on('tap', (evt) => {
       if (evt.target !== cy) return
+      
+      if (linkMode && linkSource) {
+        onLinkCancel?.()
+        return
+      }
+      
       const now = Date.now()
       const delta = now - lastBackgroundTapAtRef.current
       lastBackgroundTapAtRef.current = now
@@ -347,7 +396,7 @@ export function KnowledgeGraph({
     } catch (e) {
       console.warn('[KnowledgeGraph] incremental layout skipped:', e)
     }
-  }, [concepts, edges])
+  }, [structuralKey])
 
   useEffect(() => {
     const cy = cyRef.current
@@ -424,6 +473,20 @@ export function KnowledgeGraph({
     wasFocusedRef.current = isFocusedNow
   }, [selectedConcept, focusEnabled])
 
+  useEffect(() => {
+    const cy = cyRef.current
+    if (!cy) return
+    
+    cy.nodes().forEach(n => {
+      const isLinkSource = linkModeRef.current && linkSourceRef.current && n.id() === linkSourceRef.current
+      n.style({
+        'border-width': isLinkSource ? 5 : 2,
+        'border-color': isLinkSource ? '#3b82f6' : '#fff',
+        'border-style': isLinkSource ? 'dashed' : 'solid'
+      })
+    })
+  }, [linkMode, linkSource])
+
   return (
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full" />
@@ -455,12 +518,34 @@ export function KnowledgeGraph({
             className="w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 text-gray-700"
             title="适应视图"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
             </svg>
           </button>
           <div className="text-center text-xs text-gray-400 mt-1">{Math.round(zoomLevel * 100)}%</div>
         </div>
+      )}
+
+      {isReady && (
+        <button
+          onClick={() => {
+            if (linkMode && linkSource) {
+              onLinkCancel?.()
+            } else {
+              onToggleLinkMode?.()
+            }
+          }}
+          className={`absolute top-3 right-[70px] w-8 h-8 rounded shadow flex items-center justify-center transition-colors ${
+            linkMode 
+              ? 'bg-blue-500 text-white hover:bg-blue-600' 
+              : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+          title={linkMode ? '退出连线' : '连线模式'}
+        >
+          <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.979-1.101l1.101-1.102a4 4 0 005.657-5.656l-4-4z" />
+          </svg>
+        </button>
       )}
       
       <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg shadow p-2.5 text-xs space-y-1.5">

@@ -1,15 +1,19 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { KnowledgeGraph } from './KnowledgeGraph'
 import { ConceptDetailPanel } from './ConceptDetailPanel'
+import { AnalysisPanel } from './AnalysisPanel'
 import { ProcessCanvas } from './ProcessCanvas'
 import { ExploreDialog } from './ExploreDialog'
 import { QuickExploreDialog } from './QuickExploreDialog'
 import { ManualAddDialog } from './ManualAddDialog'
 import { BatchLinkDialog } from './BatchLinkDialog'
+import { AddConceptDialog } from './AddConceptDialog'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
 import { generateGenericChain } from '../utils/processComparison'
 import type { Concept, SuggestionItem } from '../types'
 import { parseFrontmatter, matchTitlesToIds } from '../utils/conceptParser'
+import { readMdFiles } from '../utils/fileSystem'
+import { useContainerSize } from '../hooks/useContainerSize'
 
 type RelationType = 'leads_to' | 'depends_on' | 'related'
 
@@ -45,12 +49,13 @@ export function KnowledgeGraphView() {
   const [batchLoading, setBatchLoading] = useState(false)
   const [showExploreDialog, setShowExploreDialog] = useState(false)
   const [showQuickExploreDialog, setShowQuickExploreDialog] = useState(false)
-  // Question dialog removed
+  const [showAddConceptDialog, setShowAddConceptDialog] = useState(false)
+  const [linkMode, setLinkMode] = useState(false)
+  const [linkSource, setLinkSource] = useState<string | null>(null)
   const [folderHandle, setFolderHandle] = useState<FileSystemDirectoryHandle | null>(null)
   const [folderName, setFolderName] = useState('')
   const [isScanning, setIsScanning] = useState(false)
-  const graphContainerRef = useRef<HTMLDivElement>(null)
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+  const { containerRef: graphContainerRef, size: containerSize } = useContainerSize()
   const selectedConceptRef = useRef<Concept | null>(null)
   const preventHideRef = useRef(false)
   const [rightPanelWidth, setRightPanelWidth] = useState(420)
@@ -61,18 +66,32 @@ export function KnowledgeGraphView() {
 
   useEffect(() => { loadGraph() }, [loadGraph])
 
-  useEffect(() => {
-    const el = graphContainerRef.current
-    if (!el) return
-    const ro = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        setContainerSize({ width: entry.contentRect.width, height: entry.contentRect.height })
-      }
-    })
-    ro.observe(el)
-    setContainerSize({ width: el.clientWidth, height: el.clientHeight })
-    return () => ro.disconnect()
+useEffect(() => {
+    const toggleHandler = () => {
+      console.log('[KnowledgeGraphView] toggle-link-mode received, setting linkMode to true')
+      setLinkMode(true)
+    }
+    const exitHandler = () => {
+      console.log('[KnowledgeGraphView] exit-link-mode received, setting linkMode to false')
+      setLinkMode(false)
+      setLinkSource(null)
+    }
+    window.addEventListener('toggle-link-mode', toggleHandler)
+    window.addEventListener('exit-link-mode', exitHandler)
+    return () => {
+      window.removeEventListener('toggle-link-mode', toggleHandler)
+      window.removeEventListener('exit-link-mode', exitHandler)
+    }
   }, [])
+  
+  useEffect(() => {
+    console.log('[KnowledgeGraphView] linkMode state changed to:', linkMode)
+  }, [linkMode])
+
+  const storeSetLinkMode = useKnowledgeGraphStore(s => s.setLinkMode)
+  useEffect(() => {
+    storeSetLinkMode(linkMode)
+  }, [linkMode, storeSetLinkMode])
 
   // 拖拽分割线
   useEffect(() => {
@@ -234,26 +253,6 @@ export function KnowledgeGraphView() {
     }
   }, [])
 
-  // 递归读取目录下所有 .md 文件内容
-  async function readMdFiles(dirHandle: FileSystemDirectoryHandle, pathPrefix = ''): Promise<{ path: string; content: string }[]> {
-    const results: { path: string; content: string }[] = []
-    for await (const [name, entry] of (dirHandle as any).entries()) {
-      const entryPath = pathPrefix ? `${pathPrefix}/${name}` : name
-      if (entry.kind === 'directory' && !name.startsWith('.')) {
-        results.push(...await readMdFiles(entry, entryPath))
-      } else if (entry.kind === 'file' && name.endsWith('.md')) {
-        try {
-          const file = await (entry as FileSystemFileHandle).getFile()
-          const content = await file.text()
-          if (content.trim()) {
-            results.push({ path: entryPath, content })
-          }
-        } catch { /* skip unreadable */ }
-      }
-    }
-    return results
-  }
-
   const handleAutoScan = useCallback(async () => {
     if (!folderHandle) { alert('请先选择文档目录'); return }
     setIsScanning(true)
@@ -358,6 +357,25 @@ export function KnowledgeGraphView() {
     }
   }, [folderHandle])
 
+  const handleAddConcept = useCallback((title: string) => {
+    const concept = useKnowledgeGraphStore.getState().addConcept({
+      title,
+      level: 1,
+      category: '',
+      problem: '',
+      depends_on: [],
+      leads_to: [],
+      related: [],
+      path: `./docs/user/${Date.now()}-${title.toLowerCase().replace(/\s+/g, '-')}.md`,
+      tags: ['user-added'],
+      metadata: { status: 'draft' as const },
+    })
+    setSelectedConceptId(concept.id)
+    selectedConceptRef.current = concept
+    useKnowledgeGraphStore.getState().selectConcept(concept)
+    setShowAddConceptDialog(false)
+  }, [])
+
   const handleOnboardingManualAdd = useCallback(() => {
     if (!folderHandle) { alert('请先选择文档目录'); return }
     setShowQuickExploreDialog(true)
@@ -373,7 +391,7 @@ export function KnowledgeGraphView() {
         {isEmpty ? (
           <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 text-gray-500">
             <div className="max-w-md text-center space-y-6">
-              <svg className="w-20 h-20 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg width={80} height={80} className="w-20 h-20 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
               </svg>
               <h2 className="text-lg font-medium text-gray-700">还没有知识图谱索引</h2>
@@ -437,11 +455,25 @@ export function KnowledgeGraphView() {
           <KnowledgeGraph
             concepts={concepts} edges={edges} selectedConcept={selectedConcept}
             focusEnabled={true}
+            linkMode={linkMode}
+            linkSource={linkSource}
             onSelectConcept={handleSelectConcept} onNavigate={handleNavigate}
             onDoubleTapConcept={(c) => { handleSelectConcept(c); handleEnterProcess(c) }}
-            onBackgroundDoubleTap={() => { setSelectedConceptId(null); selectedConceptRef.current = null; cancelHideHoverActions(); setHoverConcept(null); useKnowledgeGraphStore.setState({ selectedConcept: null }) }}
+            onBackgroundDoubleTap={() => { setShowAddConceptDialog(true) }}
             onHoverConcept={payload => { cancelHideHoverActions(); setHoverConcept(payload) }}
             onHoverLeave={() => scheduleHideHoverActions()}
+            onToggleLinkMode={() => { 
+              setLinkMode(!linkMode)
+              if (!linkMode) setLinkSource(null) 
+            }}
+            onLinkStart={(id) => setLinkSource(id)}
+            onLinkEnd={(sourceId, targetId) => {
+              const addEdge = useKnowledgeGraphStore.getState().addEdge
+              addEdge(sourceId, targetId, 'related')
+              setLinkSource(null)
+              setLinkMode(false)
+            }}
+            onLinkCancel={() => { setLinkSource(null); setLinkMode(false) }}
           />
         )}
         {hoverConcept && selectedConceptRef.current && (
@@ -475,12 +507,7 @@ export function KnowledgeGraphView() {
             onEnterProcess={handleEnterProcess}
           />
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 px-8">
-            <svg className="w-16 h-16 mb-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            <p className="text-sm text-center leading-relaxed">点击图谱中的节点<br/>查看概念详情</p>
-          </div>
+          <AnalysisPanel />
         )}
       </div>
 
@@ -499,6 +526,12 @@ export function KnowledgeGraphView() {
           onClose={() => { setShowBatchLinkDialog(false); setBatchSuggestions([]) }}
           onToggle={(idx) => setBatchSuggestions(prev => prev.map((v, i) => i === idx ? { ...v, checked: !v.checked } : v))}
           onConfirm={confirmBatchAdd}
+        />
+      )}
+      {showAddConceptDialog && (
+        <AddConceptDialog
+          onClose={() => setShowAddConceptDialog(false)}
+          onConfirm={handleAddConcept}
         />
       )}
     </div>

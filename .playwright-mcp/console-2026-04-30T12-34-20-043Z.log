@@ -1,0 +1,16 @@
+[     192ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=1c3da450:20102
+[     303ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=1c3da450:1091
+[     391ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=1c3da450:1091
+[     485ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/favicon.ico:0
+[   26470ms] [WARNING] You have set a custom wheel sensitivity.  This will make your app zoom unnaturally when using mainstream mice.  You should change this value from the default only if you can guarantee that all your users will use the same hardware and OS configuration as your current machine. @ http://localhost:3000/node_modules/.vite/deps/cytoscape.js?v=1c3da450:1091
+[   26532ms] [LOG] DocumentViewer received: user_1777552486497 transformer content length: 0 @ http://localhost:3000/src/components/DocumentViewer.tsx?t=1777551999292:25
+[   26533ms] [LOG] DocumentViewer received: user_1777552486497 transformer content length: 0 @ http://localhost:3000/src/components/DocumentViewer.tsx?t=1777551999292:25
+[   26553ms] [LOG] DocumentViewer received: user_1777552486497 transformer content length: 666 @ http://localhost:3000/src/components/DocumentViewer.tsx?t=1777551999292:25
+[   57313ms] [LOG] DocumentViewer received: user_1777552486497 transformer content length: 666 @ http://localhost:3000/src/components/DocumentViewer.tsx?t=1777551999292:25
+[   57314ms] [LOG] DocumentViewer received: user_1777552486497 transformer content length: 666 @ http://localhost:3000/src/components/DocumentViewer.tsx?t=1777551999292:25
+[   57319ms] [LOG] DocumentViewer received: user_1777552486497 transformer content length: 2875 @ http://localhost:3000/src/components/DocumentViewer.tsx?t=1777551999292:25
+[   74458ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/api/infer-relations-from-content:0
+[   74458ms] [ERROR] 关系推断失败: Error: HTTP 404
+    at http://localhost:3000/src/components/ConceptDetailPanel.tsx?t=1777551999292:55:27 @ http://localhost:3000/src/components/ConceptDetailPanel.tsx?t=1777551999292:83
+[  106102ms] [LOG] Toolbar: switching to knowledge-graph @ http://localhost:3000/src/components/Toolbar.tsx?t=1777546358112:13
+[  108179ms] [LOG] Toolbar: switching to knowledge-graph @ http://localhost:3000/src/components/Toolbar.tsx?t=1777546358112:13
