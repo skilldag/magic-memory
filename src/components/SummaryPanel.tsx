@@ -83,8 +83,8 @@ export function SummaryPanel({ onNavigate, onPathFocus }: SummaryPanelProps) {
 
   if (error || !data) {
     return (
-      <div className="text-xs text-red-500 px-2 py-1">
-        {error || '无数据'}
+      <div className="text-xs text-gray-400 px-2 py-1">
+        选择概念查看详情
       </div>
     )
   }

@@ -10,7 +10,7 @@ export interface Document {
   metadata?: {
     author?: string
     version?: string
-    status?: 'draft' | 'review' | 'approved'
+    status?: 'draft' | 'review' | 'approved' | 'ai-generated'
   }
 }
 
@@ -102,7 +102,7 @@ export interface Concept {
   metadata?: {
     author?: string
     version?: string
-    status?: 'draft' | 'review' | 'approved'
+    status?: 'draft' | 'review' | 'approved' | 'ai-generated'
   }
 }
 

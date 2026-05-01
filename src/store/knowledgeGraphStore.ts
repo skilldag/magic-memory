@@ -102,6 +102,8 @@ isLoading: false,
         isLoading: false
       })
     }
+    // 服务端无数据或无响应时结束加载
+    set({ isLoading: false })
   },
       
       selectConcept: (concept) => {
