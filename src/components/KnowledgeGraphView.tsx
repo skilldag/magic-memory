@@ -92,28 +92,24 @@ useEffect(() => {
   }, [linkMode, storeSetLinkMode])
 
   // 拖拽分割线
-  const dividerRef = useRef<HTMLDivElement>(null)
   const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
-    console.log('[Divider] mousedown at', e.clientX, 'width=', rightPanelWidth)
     const startX = e.clientX
     const startWidth = rightPanelWidth
     const container = containerRef.current
-    if (!container) { console.warn('[Divider] no container'); return }
+    if (!container) return
 
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
 
     const handleMouseMove = (ev: MouseEvent) => {
       const containerRect = container.getBoundingClientRect()
-      const maxWidth = Math.min(containerRect.width * 0.6, 720)
+      const maxWidth = Math.min(containerRect.width * 0.85, 720)
       const newWidth = Math.max(300, Math.min(maxWidth, startWidth + (startX - ev.clientX)))
-      console.log('[Divider] move', ev.clientX, 'newWidth=', newWidth)
       setRightPanelWidth(newWidth)
     }
 
     const handleMouseUp = () => {
-      console.log('[Divider] mouseup')
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
       document.body.style.cursor = ''
