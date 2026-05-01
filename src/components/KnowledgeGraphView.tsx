@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { KnowledgeGraph } from './KnowledgeGraph'
 import { ConceptDetailPanel } from './ConceptDetailPanel'
-import { AnalysisPanel } from './AnalysisPanel'
+import { SummaryPanel } from './SummaryPanel'
 import { ProcessCanvas } from './ProcessCanvas'
 import { ExploreDialog } from './ExploreDialog'
 import { QuickExploreDialog } from './QuickExploreDialog'
@@ -60,9 +60,6 @@ export function KnowledgeGraphView() {
   const selectedConceptRef = useRef<Concept | null>(null)
   const preventHideRef = useRef(false)
   const [rightPanelWidth, setRightPanelWidth] = useState(420)
-  const isResizing = useRef(false)
-  const startXRef = useRef(0)
-  const startWidthRef = useRef(0)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => { loadGraph() }, [loadGraph])
@@ -95,35 +92,37 @@ useEffect(() => {
   }, [linkMode, storeSetLinkMode])
 
   // 拖拽分割线
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing.current || !containerRef.current) return
-      const containerRect = containerRef.current.getBoundingClientRect()
+  const dividerRef = useRef<HTMLDivElement>(null)
+  const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    console.log('[Divider] mousedown at', e.clientX, 'width=', rightPanelWidth)
+    const startX = e.clientX
+    const startWidth = rightPanelWidth
+    const container = containerRef.current
+    if (!container) { console.warn('[Divider] no container'); return }
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      const containerRect = container.getBoundingClientRect()
       const maxWidth = Math.min(containerRect.width * 0.6, 720)
-      const newWidth = Math.max(300, Math.min(maxWidth, startWidthRef.current + (startXRef.current - e.clientX)))
+      const newWidth = Math.max(300, Math.min(maxWidth, startWidth + (startX - ev.clientX)))
+      console.log('[Divider] move', ev.clientX, 'newWidth=', newWidth)
       setRightPanelWidth(newWidth)
     }
+
     const handleMouseUp = () => {
-      isResizing.current = false
+      console.log('[Divider] mouseup')
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
     }
+
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [])
-
-  const handleDividerMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault()
-    isResizing.current = true
-    startXRef.current = e.clientX
-    startWidthRef.current = rightPanelWidth
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-  }
+  }, [rightPanelWidth])
 
   const handleSelectConcept = (concept: Concept) => {
     selectedConceptRef.current = concept
@@ -508,9 +507,24 @@ useEffect(() => {
 
       {/* 可拖拽分割线 */}
       <div
-        className="w-1 shrink-0 cursor-col-resize bg-transparent hover:bg-blue-300 active:bg-blue-400 transition-colors relative z-10"
+        className="relative z-20 flex shrink-0 items-center justify-center select-none"
+        style={{
+          width: 24,
+          cursor: 'col-resize',
+          backgroundColor: 'rgba(0,0,0,0.04)',
+        }}
         onMouseDown={handleDividerMouseDown}
-      />
+      >
+        <div
+          className="pointer-events-none rounded-sm"
+          style={{
+            width: 4,
+            height: 48,
+            backgroundColor: 'rgba(0,0,0,0.15)',
+            transition: 'background-color 0.15s',
+          }}
+        />
+      </div>
 
       {/* 右侧面板 */}
       <div className="shrink-0 bg-white flex flex-col overflow-hidden border-l border-gray-200" style={{ width: rightPanelWidth }}>
@@ -522,7 +536,7 @@ useEffect(() => {
             onEnterProcess={handleEnterProcess}
           />
         ) : (
-          <AnalysisPanel
+          <SummaryPanel
             onNavigate={handleNavigate}
             onPathFocus={handlePathFocus}
           />

@@ -1,8 +1,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
-import { useProjectStore } from '../store/projectStore'
 import { KnowledgeGraph } from './KnowledgeGraph'
 import { ConceptDetailPanel } from './ConceptDetailPanel'
-import { AnalysisPanel } from './AnalysisPanel'
+import { SummaryPanel } from './SummaryPanel'
 import { ProcessCanvas } from './ProcessCanvas'
 import { ExploreDialog } from './ExploreDialog'
 import { QuickExploreDialog } from './QuickExploreDialog'
@@ -53,25 +52,17 @@ export function KnowledgeGraphView() {
   const [showAddConceptDialog, setShowAddConceptDialog] = useState(false)
   const [linkMode, setLinkMode] = useState(false)
   const [linkSource, setLinkSource] = useState<string | null>(null)
+  const [focusedNodeIds, setFocusedNodeIds] = useState<string[] | undefined>(undefined)
   const [folderHandle, setFolderHandle] = useState<FileSystemDirectoryHandle | null>(null)
   const [folderName, setFolderName] = useState('')
   const [isScanning, setIsScanning] = useState(false)
-  const { containerRef: graphContainerRef, size: containerSize } = useContainerSize()
+  const { containerRef: graphContainerRef, size: containerSize } = useContainerSize<HTMLDivElement>()
   const selectedConceptRef = useRef<Concept | null>(null)
   const preventHideRef = useRef(false)
   const [rightPanelWidth, setRightPanelWidth] = useState(420)
-  const isResizing = useRef(false)
-  const startXRef = useRef(0)
-  const startWidthRef = useRef(0)
-  const containerRef: any = useRef(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => { loadGraph() }, [loadGraph])
-
-  // Load projects and react to current project changes
-  const currentProjectId = useProjectStore(s => s.currentProjectId)
-  const loadProjects = useProjectStore(s => s.loadProjects)
-
-  useEffect(() => { loadProjects() }, [loadProjects])
 
 useEffect(() => {
     const toggleHandler = () => {
@@ -101,35 +92,37 @@ useEffect(() => {
   }, [linkMode, storeSetLinkMode])
 
   // 拖拽分割线
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing.current || !containerRef.current) return
-      const containerRect = containerRef.current.getBoundingClientRect()
+  const dividerRef = useRef<HTMLDivElement>(null)
+  const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    console.log('[Divider] mousedown at', e.clientX, 'width=', rightPanelWidth)
+    const startX = e.clientX
+    const startWidth = rightPanelWidth
+    const container = containerRef.current
+    if (!container) { console.warn('[Divider] no container'); return }
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      const containerRect = container.getBoundingClientRect()
       const maxWidth = Math.min(containerRect.width * 0.6, 720)
-      const newWidth = Math.max(300, Math.min(maxWidth, startWidthRef.current + (startXRef.current - e.clientX)))
+      const newWidth = Math.max(300, Math.min(maxWidth, startWidth + (startX - ev.clientX)))
+      console.log('[Divider] move', ev.clientX, 'newWidth=', newWidth)
       setRightPanelWidth(newWidth)
     }
+
     const handleMouseUp = () => {
-      isResizing.current = false
+      console.log('[Divider] mouseup')
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
     }
+
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [])
-
-  const handleDividerMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault()
-    isResizing.current = true
-    startXRef.current = e.clientX
-    startWidthRef.current = rightPanelWidth
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-  }
+  }, [rightPanelWidth])
 
   const handleSelectConcept = (concept: Concept) => {
     selectedConceptRef.current = concept
@@ -137,6 +130,7 @@ useEffect(() => {
     selectConcept(concept)
     cancelHideHoverActions()
     setHoverConcept(null)
+    setFocusedNodeIds(undefined)
   }
 
   const handleEnterProcess = (concept: Concept) => {
@@ -161,9 +155,8 @@ useEffect(() => {
 
   const processChain = useMemo(() => {
     if (!processConcept) return null
-    const proc = processConcept.process
-    if (proc) {
-      return chains.find(ch => ch.id === proc.chain_id) ?? null
+    if (processConcept.process) {
+      return chains.find(ch => ch.id === processConcept.process?.chain_id) ?? null
     }
     return generateGenericChain(processConcept.id, concepts)
   }, [processConcept, concepts, chains])
@@ -173,8 +166,20 @@ useEffect(() => {
     if (concept) {
       setSelectedConceptId(concept.id)
       selectedConceptRef.current = concept
+      setFocusedNodeIds(undefined)
     }
   }
+
+  const handlePathFocus = useCallback((ids: string[]) => {
+    if (ids.length === 0) return
+    setFocusedNodeIds(ids)
+    const first = concepts.find(c => c.id === ids[0])
+    if (first) {
+      setSelectedConceptId(first.id)
+      selectedConceptRef.current = first
+      selectConcept(first)
+    }
+  }, [concepts, selectConcept])
 
   const handleManualAdd = (source: Concept, titles: string[], relationType: RelationType) => {
     titles.forEach(title => {
@@ -393,9 +398,9 @@ useEffect(() => {
   const isEmpty = concepts.length === 0 && !isLoading && !processMode
 
   return (
-      <div ref={containerRef as any} className="flex h-full w-full overflow-hidden">
+    <div ref={containerRef} className="flex h-full w-full overflow-hidden">
       {/* 左侧图谱 / 过程画板 */}
-      <div ref={graphContainerRef as any} className="flex-1 min-w-0 relative flex flex-col">
+      <div ref={graphContainerRef} className="flex-1 min-w-0 relative flex flex-col">
         {isEmpty ? (
           <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 text-gray-500">
             <div className="max-w-md text-center space-y-6">
@@ -427,11 +432,6 @@ useEffect(() => {
                       手动添加概念
                     </button>
                   </div>
-                )}
-                {currentProjectId && (
-                  <span className="ml-2 text-xs text-gray-400">
-                    Project: { (useProjectStore as any).getState().projects.find((p: any) => p.id === currentProjectId)?.name || '' }
-                  </span>
                 )}
               </div>
             </div>
@@ -468,6 +468,7 @@ useEffect(() => {
           <KnowledgeGraph
             concepts={concepts} edges={edges} selectedConcept={selectedConcept}
             focusEnabled={true}
+            focusedNodeIds={focusedNodeIds}
             linkMode={linkMode}
             linkSource={linkSource}
             onSelectConcept={handleSelectConcept} onNavigate={handleNavigate}
@@ -500,29 +501,30 @@ useEffect(() => {
             <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => { setActionConcept(hoverConcept.concept); setShowManualLinkDialog(true); setHoverConcept(null) }}
               className="absolute flex items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-teal-500 text-white shadow-lg hover:shadow-xl hover:from-green-500 hover:to-teal-600 transition-all cursor-pointer select-none font-bold"
               style={{ width: 28, height: 28, fontSize: 9, left: hoverConcept.x + (Math.max(hoverConcept.width, hoverConcept.height) / 2 + 2) * Math.cos(35 * Math.PI / 180) - 14, top: hoverConcept.y + (Math.max(hoverConcept.width, hoverConcept.height) / 2 + 2) * Math.sin(35 * Math.PI / 180) - 14, pointerEvents: 'auto' }} title="手动添加概念">手动</button>
-            <button type="button" onMouseDown={e => e.preventDefault()} onClick={async () => {
-              const c = hoverConcept.concept
-              setHoverConcept(null)
-              try {
-                await fetch('/api/delete-doc', {
-                  method: 'DELETE',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ path: c.path }),
-                })
-              } catch {}
-              useKnowledgeGraphStore.getState().removeConcept(c.id)
-            }}
-              className="absolute flex items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-700 text-white shadow-lg hover:shadow-xl hover:from-red-600 hover:to-red-800 transition-all cursor-pointer select-none font-bold"
-              style={{ width: 28, height: 28, fontSize: 11, left: hoverConcept.x + (Math.max(hoverConcept.width, hoverConcept.height) / 2 + 2) * Math.cos(-90 * Math.PI / 180) - 14, top: hoverConcept.y + (Math.max(hoverConcept.width, hoverConcept.height) / 2 + 2) * Math.sin(-90 * Math.PI / 180) - 14, pointerEvents: 'auto' }} title="删除概念">删</button>
           </div>
         )}
       </div>
 
       {/* 可拖拽分割线 */}
       <div
-        className="w-1 shrink-0 cursor-col-resize bg-transparent hover:bg-blue-300 active:bg-blue-400 transition-colors relative z-10"
+        className="relative z-20 flex shrink-0 items-center justify-center select-none"
+        style={{
+          width: 24,
+          cursor: 'col-resize',
+          backgroundColor: 'rgba(0,0,0,0.04)',
+        }}
         onMouseDown={handleDividerMouseDown}
-      />
+      >
+        <div
+          className="pointer-events-none rounded-sm"
+          style={{
+            width: 4,
+            height: 48,
+            backgroundColor: 'rgba(0,0,0,0.15)',
+            transition: 'background-color 0.15s',
+          }}
+        />
+      </div>
 
       {/* 右侧面板 */}
       <div className="shrink-0 bg-white flex flex-col overflow-hidden border-l border-gray-200" style={{ width: rightPanelWidth }}>
@@ -534,7 +536,10 @@ useEffect(() => {
             onEnterProcess={handleEnterProcess}
           />
         ) : (
-          <AnalysisPanel />
+          <SummaryPanel
+            onNavigate={handleNavigate}
+            onPathFocus={handlePathFocus}
+          />
         )}
       </div>
 
