@@ -20,7 +20,12 @@ export function Sidebar({ documents, selectedDoc, onDocumentSelect, onClose }: S
       try {
         const handle = await (window as any).showDirectoryPicker()
         const name = handle.name
-        const folderPath = prompt('请输入选中的文件夹完整路径:', `/${name}`)
+        const demoPaths = ['/Users/meetai/source/', '/home/user/', './']
+        const suggested = demoPaths[0] + name
+        const folderPath = prompt(
+          `已选择文件夹「${name}」。\n请确认完整路径，否则文件读写可能失败:`,
+          suggested
+        )
         if (folderPath) {
           await useProjectStore.getState().createProject(name, folderPath)
         }
