@@ -103,7 +103,7 @@ function App() {
 
       {/* 侧边栏在右侧 */}
       {isSidebarOpen && (
-        <div className="shrink-0" style={{ width: 288, minWidth: 288 }}>
+        <div className="shrink-0">
           <Sidebar
             onClose={handleSidebarToggle}
             onProjectSwitch={() => setViewMode('knowledge-graph')}
