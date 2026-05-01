@@ -192,16 +192,5 @@ export interface SuggestionItem {
   relationType: 'leads_to' | 'depends_on' | 'related'
   checked: boolean
 }
-
-export interface Concept {
-  id: string
-  name?: string
-}
-
-export interface ConceptEdge {
-  from: string
-  to: string
-}
-
 // Export project types for downstream usage
 export type { Project, ProjectConfig, ProjectGraphData } from './project';
