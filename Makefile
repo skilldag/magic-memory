@@ -1,6 +1,6 @@
 .PHONY: run dev server explore clean restart stop
 
-WD = magic-memory
+WD = .
 
 # 启动所有服务（前端 + 后端 + AI 探索，后台进程需手动 kill）
 run:
