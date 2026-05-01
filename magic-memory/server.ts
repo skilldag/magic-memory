@@ -1,15 +1,38 @@
 import { serve } from 'bun'
-import { readdir, readFile, stat, writeFile } from 'fs/promises'
+import { readdir, readFile, stat, writeFile, rm } from 'fs/promises'
 import { join, relative, dirname } from 'path'
+import { homedir } from 'os'
 import { existsSync, mkdirSync } from 'fs'
 import { clusterPipeline } from './scripts/cluster'
 import type { Document, Annotation, Concept, ConceptEdge } from './src/types'
 import type { Edge as ClusterEdge } from './scripts/cluster'
 import { analyzeGraph, formatAnalysisToString } from './src/utils/graphAnalysis'
 
+// Local Project type fallback (in case not exported from src/types)
+type Project = {
+  id: string
+  name: string
+  folderPath: string
+  createdAt: string
+  lastOpenedAt: string
+}
+
 const PORT = 3001
 const DOCS_DIR = join(process.cwd(), '../docs')
 const ANALYSIS_CACHE_PATH = join(process.cwd(), 'data', 'graph-analysis.json')
+
+// ===== Project storage constants =====
+const MAGIC_MEMORY_DIR = join(homedir(), '.magic-memory');
+const PROJECTS_DIR = join(MAGIC_MEMORY_DIR, 'projects');
+const PROJECT_LIST_FILE = join(PROJECTS_DIR, 'project-list.json');
+
+// Ensure directories exist
+function ensureProjectDirs() {
+  if (!existsSync(PROJECTS_DIR)) {
+    mkdirSync(PROJECTS_DIR, { recursive: true });
+  }
+}
+ensureProjectDirs();
 
 const documents: Document[] = []
 const concepts: Concept[] = []
@@ -52,6 +75,33 @@ async function loadDocuments() {
     console.error('Failed to load documents:', error)
   }
 }
+
+// ===== Project Management Helpers =====
+async function loadProjectList(): Promise<Project[]> {
+  try {
+    // If no list file yet, return empty list
+    if (!existsSync(PROJECT_LIST_FILE)) return []
+    const content = await readFile(PROJECT_LIST_FILE, 'utf-8')
+    return JSON.parse(content) as Project[]
+  } catch {
+    return []
+  }
+}
+
+async function saveProjectList(projects: Project[]): Promise<void> {
+  await writeFile(PROJECT_LIST_FILE, JSON.stringify(projects, null, 2))
+}
+
+async function createProjectDir(projectId: string): Promise<string> {
+  const projectDir = join(PROJECTS_DIR, projectId)
+  mkdirSync(projectDir, { recursive: true })
+  return projectDir
+}
+
+function generateProjectId(): string {
+  return `proj_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+}
+// ===== End Project Management Helpers =====
 
 async function tryLoadAnalysisCache(): Promise<boolean> {
   try {
@@ -854,6 +904,167 @@ ${question}
       }
     }
 
+    // === PROJECT API ROUTES ===
+    if (url.pathname === '/api/projects' && req.method === 'GET') {
+      try {
+        const projects = await loadProjectList()
+        return new Response(JSON.stringify({ projects }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    if (url.pathname === '/api/projects' && req.method === 'POST') {
+      try {
+        const body = await req.json()
+        const { name, folderPath } = body
+        if (!name || !folderPath) {
+          return new Response(JSON.stringify({ error: 'name and folderPath required' }), {
+            status: 400, headers: { 'Content-Type': 'application/json' },
+          })
+        }
+        if (!existsSync(folderPath)) {
+          return new Response(JSON.stringify({ error: 'Folder does not exist' }), {
+            status: 400, headers: { 'Content-Type': 'application/json' },
+          })
+        }
+        const projectId = generateProjectId()
+        const projectDir = await createProjectDir(projectId)
+        const concepts: any[] = []
+        await scanDirectoryForIndex(folderPath, concepts)
+        const ids = new Map(concepts.map(c => [c.id, c]))
+        const edges: any[] = []
+        const edgeSet = new Set<string>()
+        for (const c of concepts) {
+          for (const t of c.leads_to || []) {
+            if (ids.has(t)) {
+              const eid = c.id + '-leads-' + t
+              if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'leads_to' }) }
+            }
+          }
+          for (const t of c.depends_on || []) {
+            if (ids.has(t)) {
+              const eid = c.id + '-depends-' + t
+              if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'depends_on' }) }
+            }
+          }
+          for (const t of c.related || []) {
+            if (ids.has(t)) {
+              const eid = c.id + '-related-' + t
+              if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'related' }) }
+            }
+          }
+        }
+        const now = new Date().toISOString()
+        const project: Project = {
+          id: projectId, name, folderPath, createdAt: now, lastOpenedAt: now,
+        }
+        await writeFile(join(projectDir, 'config.json'), JSON.stringify(project, null, 2))
+        await writeFile(join(projectDir, 'concepts.json'), JSON.stringify(concepts, null, 2))
+        await writeFile(join(projectDir, 'edges.json'), JSON.stringify(edges, null, 2))
+        const projects = await loadProjectList()
+        projects.push(project)
+        await saveProjectList(projects)
+        return new Response(JSON.stringify({ project, concepts, edges }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), {
+          status: 500, headers: { 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    const projectsGetMatch = url.pathname.match(/^\/api\/projects\/([^\/]+)$/)
+    if (projectsGetMatch && req.method === 'GET') {
+      const projectId = projectsGetMatch[1]
+      const projectDir = join(PROJECTS_DIR, projectId)
+      if (!existsSync(projectDir)) {
+        return new Response(JSON.stringify({ error: 'Project not found' }), {
+          status: 404, headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      try {
+        const configContent = await readFile(join(projectDir, 'config.json'), 'utf-8')
+        const project = JSON.parse(configContent)
+        let concepts: any[] = []
+        let edges: any[] = []
+        if (existsSync(join(projectDir, 'concepts.json'))) {
+          concepts = JSON.parse(await readFile(join(projectDir, 'concepts.json'), 'utf-8'))
+        }
+        if (existsSync(join(projectDir, 'edges.json'))) {
+          edges = JSON.parse(await readFile(join(projectDir, 'edges.json'), 'utf-8'))
+        }
+        project.lastOpenedAt = new Date().toISOString()
+        await writeFile(join(projectDir, 'config.json'), JSON.stringify(project, null, 2))
+        const projects = await loadProjectList()
+        const idx = projects.findIndex(p => p.id === projectId)
+        if (idx >= 0) {
+          projects[idx].lastOpenedAt = project.lastOpenedAt
+          await saveProjectList(projects)
+        }
+        return new Response(JSON.stringify({ project, concepts, edges }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), {
+          status: 500, headers: { 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    const projectsDelMatch = url.pathname.match(/^\/api\/projects\/([^\/]+)$/)
+    if (projectsDelMatch && req.method === 'DELETE') {
+      const projectId = projectsDelMatch[1]
+      const projectDir = join(PROJECTS_DIR, projectId)
+      if (!existsSync(projectDir)) {
+        return new Response(JSON.stringify({ error: 'Project not found' }), {
+          status: 404, headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      try {
+        await rm(projectDir, { recursive: true, force: true })
+        const projects = await loadProjectList()
+        const filtered = projects.filter(p => p.id !== projectId)
+        await saveProjectList(filtered)
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), {
+          status: 500, headers: { 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    // END PROJECT API ROUTES
+    // POST /api/write-doc — 写入 .md 文件
+    if (url.pathname === '/api/write-doc' && req.method === 'POST') {
+      try {
+        const body = await req.json()
+        const { path: filePath, content } = body
+        if (!filePath || content === undefined) return new Response(JSON.stringify({ error: 'path and content required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+        await Bun.write(filePath, content)
+        // 同步更新服务端内存中的 documents 和 concepts，确保刷新后 /api/graph 返回最新内容
+        const doc = documents.find(d => d.path === filePath)
+        if (doc) {
+          const fmMatch = doc.content.match(/^---[\s\S]*?---\n/)
+          doc.content = fmMatch ? fmMatch[0] + content : content
+          const c = concepts.find(c => c.id === doc.id)
+          if (c) c.content = content
+        }
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { 'Content-Type': 'application/json' }
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
+    }
     return new Response('Not found', { status: 404 })
   },
 })
