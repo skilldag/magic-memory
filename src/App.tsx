@@ -78,7 +78,7 @@ function App() {
             selectedDoc={selectedDoc}
             onDocumentSelect={handleDocumentSelect}
             onClose={handleSidebarToggle}
-            onImport={handleImport}
+
           />
         </div>
       )}
