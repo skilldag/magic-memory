@@ -68,7 +68,7 @@ export function Toolbar({
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            文档
+            文档管理
           </button>
           <button
             onClick={() => handleViewModeChange('knowledge-graph')}

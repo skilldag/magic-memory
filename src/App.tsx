@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { DocumentViewer } from './components/DocumentViewer'
+import { ProjectList } from './components/ProjectList'
 import { Sidebar } from './components/Sidebar'
 import { AnnotationPanel } from './components/AnnotationPanel'
 import { Toolbar } from './components/Toolbar'
@@ -9,6 +10,7 @@ import { KnowledgeGraphView } from './components/KnowledgeGraphView'
 import { ClusterView } from './components/ClusterView'
 import { useDocumentStore } from './store/documentStore'
 import { useAnnotationStore } from './store/annotationStore'
+import { useProjectStore } from './store/projectStore'
 import type { Document } from './types'
 
 function App() {
@@ -65,6 +67,28 @@ function App() {
     setViewMode('knowledge-graph')
   }
 
+  const handleAddProject = async () => {
+    try {
+      const handle = await (window as any).showDirectoryPicker()
+      const name = handle.name
+      const project = await useProjectStore.getState().createProject(name, handle)
+      if (!project) {
+        alert('创建项目失败，请重试')
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Failed to create project:', err)
+        alert('创建项目失败: ' + (err.message || err))
+      }
+    }
+  }
+
+  const handleProjectSwitch = () => {
+    if (viewMode !== 'knowledge-graph') {
+      setViewMode('knowledge-graph')
+    }
+  }
+
   const isGraphMode = viewMode === 'knowledge-graph'
   const isClusterMode = viewMode === 'cluster'
 
@@ -82,27 +106,49 @@ function App() {
           viewMode={viewMode}
         />
 
-        <div className="flex-1 overflow-hidden min-w-0">
-          {isClusterMode ? (
-            <ClusterView />
-          ) : isGraphMode ? (
-            <KnowledgeGraphView />
-          ) : selectedDoc ? (
-            <DocumentViewer document={selectedDoc} onConceptElevated={handleConceptElevated} />
-          ) : (
-            <div className="flex h-full items-center justify-center text-gray-500">
-              <div className="text-center">
-                <div className="mb-4 text-6xl">📚</div>
-                <h2 className="text-xl font-semibold mb-2">欢迎使用 Magic Memory</h2>
-                <p className="text-sm">从左侧选择一个文档开始阅读和标注</p>
+        <div className="flex-1 overflow-hidden min-w-0 flex">
+          <div className="flex-1 overflow-hidden min-w-0">
+            {isClusterMode ? (
+              <ClusterView />
+            ) : isGraphMode ? (
+              <KnowledgeGraphView />
+            ) : selectedDoc ? (
+              <DocumentViewer document={selectedDoc} onConceptElevated={handleConceptElevated} />
+            ) : (
+              <div className="flex h-full items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <div className="mb-4 text-6xl">📚</div>
+                  <h2 className="text-xl font-semibold mb-2">欢迎使用 Magic Memory</h2>
+                  <p className="text-sm">从侧边栏选择一个文档开始阅读和标注</p>
+                </div>
+              </div>
+            )}
+          </div>
+          {viewMode === 'documents' && (
+            <div className="w-[560px] border-l border-gray-200 flex flex-col shrink-0 bg-white">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                <h2 className="text-sm font-semibold text-gray-900">项目</h2>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <ProjectList onSwitch={handleProjectSwitch} />
+              </div>
+              <div className="border-t border-gray-200">
+                <button
+                  onClick={handleAddProject}
+                  className="w-full flex items-center justify-center gap-1.5 px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  添加项目
+                </button>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* 侧边栏在右侧 */}
-      {isSidebarOpen && (
+      {isSidebarOpen && viewMode !== 'documents' && (
         <div className="shrink-0">
           <Sidebar
             onClose={handleSidebarToggle}

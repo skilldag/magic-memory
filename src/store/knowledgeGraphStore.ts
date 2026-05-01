@@ -62,26 +62,25 @@ isLoading: false,
       loadGraph: async () => {
     set({ isLoading: true, error: null })
     try {
-      // 优先从服务端获取最新数据
+      // 如果已有数据（来自项目选择），不覆盖
+      const currentState = get()
+      if (currentState.concepts.length > 0 && currentState.edges.length > 0) {
+        set({ isLoading: false })
+        return
+      }
+
+      // 首次加载：从服务端获取
       const resp = await fetch('/api/graph')
       if (resp.ok) {
         const data = await resp.json()
         const serverConcepts: Concept[] = data.concepts ?? []
         const serverEdges: ConceptEdge[] = data.edges ?? []
         if (serverConcepts.length > 0) {
-          // 合并：保留用户手动添加的概念（服务端不存在的）
           const currentState = get()
           const serverIds = new Set(serverConcepts.map(c => c.id))
           const userConcepts = currentState.concepts.filter(c => !serverIds.has(c.id))
-          const userEdgeKeys = new Set<string>()
-          const userEdges = currentState.edges.filter(e => {
-            const keep = !serverIds.has(e.source) || !serverIds.has(e.target)
-            if (keep) userEdgeKeys.add(`${e.source}|${e.target}|${e.type}`)
-            return keep
-          })
-          // 去重：排除服务端已包含的边
           const mergedEdges = [...serverEdges]
-          for (const e of userEdges) {
+          for (const e of currentState.edges) {
             const key = `${e.source}|${e.target}|${e.type}`
             if (!mergedEdges.some(se => `${se.source}|${se.target}|${se.type}` === key)) {
               mergedEdges.push(e)
@@ -91,17 +90,8 @@ isLoading: false,
           return
         }
       }
-      // 服务端无数据，回退到 localStorage 缓存的持久化数据
-      const currentState = get()
-      if (currentState.concepts.length > 0 && currentState.edges.length > 0) {
-        set({ isLoading: false })
-        return
-      }
-      // 完全无数据：延迟后显示空状态（引导 UI 接管）
-      await new Promise(resolve => setTimeout(resolve, 300))
-      set({ isLoading: false })
     } catch (error) {
-      // 网络错误时，回退到持久化缓存
+      // 网络错误时，持久化数据兜底
       const currentState = get()
       if (currentState.concepts.length > 0) {
         set({ isLoading: false })

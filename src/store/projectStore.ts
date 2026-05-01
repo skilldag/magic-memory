@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import type { Project } from '../types';
 import { saveHandle, loadHandle, deleteHandle, ensurePermission } from '../utils/handleStorage';
 import { readMdFiles } from '../utils/fileSystem';
-import { parseFrontmatter, matchTitlesToIds } from '../utils/conceptParser';
 
 interface ProjectStore {
   projects: Project[];
@@ -75,57 +74,31 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         return null;
       }
 
-      // 读文件解析概念
+      // 读文件构建概念
       const files = await readMdFiles(handle);
       const concepts: any[] = [];
       for (const file of files) {
-        const parsed = parseFrontmatter(file.content);
-        const hasFm = parsed.meta && Object.keys(parsed.meta).length > 0;
-        if (hasFm) {
-          const meta = parsed.meta as any;
-          concepts.push({
-            id: meta.id || file.path.replace('.md', '').replace(/\//g, '-'),
-            title: meta.title || file.path.replace('.md', ''),
-            path: file.path,
-            level: meta.level ?? 1,
-            category: meta.category || '',
-            problem: meta.problem || '',
-            gap_anticipate: meta.gap_anticipate || '',
-            depends_on: meta.depends_on || [],
-            leads_to: meta.leads_to || [],
-            related: meta.related || [],
-            alias: meta.alias,
-            tags: meta.tags || [],
-            lastModified: new Date(),
-          })
-        }
+        if (!file.path.endsWith('.md')) continue;
+        const id = file.path.replace('.md', '').replace(/\//g, '-');
+        const title = file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', '');
+        concepts.push({
+          id,
+          title,
+          path: file.path,
+          level: 1,
+          category: '',
+          problem: '',
+          gap_anticipate: '',
+          depends_on: [],
+          leads_to: [],
+          related: [],
+          tags: [],
+          lastModified: new Date(),
+        })
       }
 
-      // 构建边
-      const built = concepts.map((c: any) => ({
-        ...c,
-        depends_on: matchTitlesToIds(c.depends_on, concepts),
-        leads_to: matchTitlesToIds(c.leads_to, concepts),
-        related: matchTitlesToIds(c.related, concepts),
-      }));
-      const ids = new Set(built.map((c: any) => c.id));
-      const edges: any[] = [];
-      const edgeSet = new Set<string>();
-      for (const c of built) {
-        for (const t of c.leads_to) {
-          if (ids.has(t)) { const eid = `${c.id}-leads-${t}`; if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'leads_to' }); } }
-        }
-        for (const t of c.depends_on) {
-          if (ids.has(t)) { const eid = `${c.id}-depends-${t}`; if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'depends_on' }); } }
-        }
-        for (const t of c.related) {
-          if (ids.has(t)) { const eid = `${c.id}-related-${t}`; if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'related' }); } }
-        }
-      }
-
-      // 更新 knowledgeGraphStore
       const { useKnowledgeGraphStore } = await import('./knowledgeGraphStore');
-      useKnowledgeGraphStore.setState({ concepts: built, edges, isLoading: false });
+      useKnowledgeGraphStore.setState({ concepts, edges: [], isLoading: false });
 
       // 持久化项目列表
       const { projects } = get();
@@ -178,45 +151,30 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         const ok = await ensurePermission(handle);
         if (!ok) throw new Error('请授权文件夹读取权限');
 
-        const files = await readMdFiles(handle);
-        const concepts: any[] = [];
-        for (const file of files) {
-          const parsed = parseFrontmatter(file.content);
-          if (parsed.meta && Object.keys(parsed.meta).length > 0) {
-            const meta = parsed.meta as any;
-            concepts.push({
-              id: meta.id || file.path.replace('.md', '').replace(/\//g, '-'),
-              title: meta.title || file.path.replace('.md', ''),
-              path: file.path,
-              level: meta.level ?? 1,
-              category: meta.category || '',
-              problem: meta.problem || '',
-              depends_on: meta.depends_on || [],
-              leads_to: meta.leads_to || [],
-              related: meta.related || [],
-              tags: meta.tags || [],
-              lastModified: new Date(),
-            });
-          }
-        }
+      const files = await readMdFiles(handle);
+      const concepts: any[] = [];
+      for (const file of files) {
+        if (!file.path.endsWith('.md')) continue;
+        const id = file.path.replace('.md', '').replace(/\//g, '-');
+        const title = file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', '');
+        concepts.push({
+          id,
+          title,
+          path: file.path,
+          level: 1,
+          category: '',
+          problem: '',
+          gap_anticipate: '',
+          depends_on: [],
+          leads_to: [],
+          related: [],
+          tags: [],
+          lastModified: new Date(),
+        })
+      }
 
-        const built = concepts.map((c: any) => ({
-          ...c,
-          depends_on: matchTitlesToIds(c.depends_on, concepts),
-          leads_to: matchTitlesToIds(c.leads_to, concepts),
-          related: matchTitlesToIds(c.related, concepts),
-        }));
-        const ids = new Set(built.map((c: any) => c.id));
-        const edges: any[] = [];
-        const edgeSet = new Set<string>();
-        for (const c of built) {
-          for (const t of c.leads_to) { if (ids.has(t)) { const eid = `${c.id}-leads-${t}`; if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'leads_to' }); } } }
-          for (const t of c.depends_on) { if (ids.has(t)) { const eid = `${c.id}-depends-${t}`; if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'depends_on' }); } } }
-          for (const t of c.related) { if (ids.has(t)) { const eid = `${c.id}-related-${t}`; if (!edgeSet.has(eid)) { edgeSet.add(eid); edges.push({ id: eid, source: c.id, target: t, type: 'related' }); } } }
-        }
-
-        const { useKnowledgeGraphStore } = await import('./knowledgeGraphStore');
-        useKnowledgeGraphStore.setState({ concepts: built, edges, isLoading: false });
+      const { useKnowledgeGraphStore } = await import('./knowledgeGraphStore');
+      useKnowledgeGraphStore.setState({ concepts, edges: [], isLoading: false });
       }
 
       set({
