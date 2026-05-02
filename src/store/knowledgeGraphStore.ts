@@ -60,49 +60,6 @@ isLoading: false,
       linkSource: null,
       
       loadGraph: async () => {
-    set({ isLoading: true, error: null })
-    try {
-      // 如果已有数据（来自项目选择），不覆盖
-      const currentState = get()
-      if (currentState.concepts.length > 0 && currentState.edges.length > 0) {
-        set({ isLoading: false })
-        return
-      }
-
-      // 首次加载：从服务端获取
-      const resp = await fetch('/api/graph')
-      if (resp.ok) {
-        const data = await resp.json()
-        const serverConcepts: Concept[] = data.concepts ?? []
-        const serverEdges: ConceptEdge[] = data.edges ?? []
-        if (serverConcepts.length > 0) {
-          const currentState = get()
-          const serverIds = new Set(serverConcepts.map(c => c.id))
-          const userConcepts = currentState.concepts.filter(c => !serverIds.has(c.id))
-          const mergedEdges = [...serverEdges]
-          for (const e of currentState.edges) {
-            const key = `${e.source}|${e.target}|${e.type}`
-            if (!mergedEdges.some(se => `${se.source}|${se.target}|${se.type}` === key)) {
-              mergedEdges.push(e)
-            }
-          }
-          set({ concepts: [...serverConcepts, ...userConcepts], edges: mergedEdges, isLoading: false })
-          return
-        }
-      }
-    } catch (error) {
-      // 网络错误时，持久化数据兜底
-      const currentState = get()
-      if (currentState.concepts.length > 0) {
-        set({ isLoading: false })
-        return
-      }
-      set({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        isLoading: false
-      })
-    }
-    // 服务端无数据或无响应时结束加载
     set({ isLoading: false })
   },
       
@@ -220,7 +177,6 @@ isLoading: false,
       },
 
       createConceptWithEdges: (source, input) => {
-        const { concepts } = get()
         const id = `user_${Date.now()}`
         const concept: Concept = {
           id,
@@ -315,7 +271,16 @@ isLoading: false,
     {
       name: 'knowledge-graph-storage',
       partialize: (state) => ({
-        concepts: state.concepts,
+        concepts: state.concepts.map(c => ({
+          id: c.id, title: c.title, alias: c.alias,
+          level: c.level, category: c.category,
+          problem: c.problem, gap_anticipate: c.gap_anticipate,
+          depends_on: c.depends_on, leads_to: c.leads_to, related: c.related,
+          path: c.path, tags: c.tags,
+          lastModified: c.lastModified,
+          metadata: c.metadata,
+          // Excluded: content, elements, hierarchy, process (runtime-only)
+        })),
         edges: state.edges,
         reviewRecords: Array.from(state.reviewRecords.entries()),
         annotations: state.annotations,
