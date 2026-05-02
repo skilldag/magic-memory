@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import type { Project } from '../types';
+import type { Project, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain } from '../types';
 import { saveHandle, loadHandle, deleteHandle, ensurePermission } from '../utils/handleStorage';
-import { readMdFiles } from '../utils/fileSystem';
 
 interface ProjectStore {
   projects: Project[];
@@ -17,8 +16,41 @@ interface ProjectStore {
   clearError: () => void;
 }
 
+interface GraphSnapshot {
+  edges: ConceptEdge[];
+  reviewRecords: [string, ReviewRecord][];
+  annotations: UserAnnotation[];
+  chains: ProcessChain[];
+}
+
 function generateId(): string {
   return `proj_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function mergeProjects(server: Project[], local: Project[]): Project[] {
+  const seen = new Set<string>();
+  const result: Project[] = [];
+
+  for (const p of [...server, ...local]) {
+    if (!seen.has(p.id)) {
+      seen.add(p.id);
+      result.push(p);
+    }
+  }
+  return result;
+}
+
+function loadSnapshots(): Record<string, GraphSnapshot> {
+  try {
+    const raw = localStorage.getItem('magic-memory-graph-snapshots');
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSnapshots(snapshots: Record<string, GraphSnapshot>) {
+  localStorage.setItem('magic-memory-graph-snapshots', JSON.stringify(snapshots));
 }
 
 export const useProjectStore = create<ProjectStore>((set, get) => ({
@@ -30,27 +62,55 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   loadProjects: async () => {
     set({ isLoading: true, error: null });
+
+    let localProjects: Project[] = [];
+    const stored = localStorage.getItem('magic-memory-projects');
+    console.log('[loadProjects] stored projects:', stored);
+    if (stored) {
+      try {
+        localProjects = JSON.parse(stored);
+      } catch {}
+    }
+
     try {
       const resp = await fetch('/api/projects');
       if (resp.ok) {
         const data = await resp.json();
-        set({ projects: data.projects || [], isLoading: false });
+        const serverProjects: Project[] = data.projects || [];
+        const merged = mergeProjects(serverProjects, localProjects);
+        console.log('[loadProjects] merged projects:', merged.length, merged.map(p => p.id));
+        set({ projects: merged, isLoading: false });
+        localStorage.setItem('magic-memory-projects', JSON.stringify(merged));
+
         const { currentProjectId, projects } = get();
+        console.log('[loadProjects] currentProjectId:', currentProjectId, 'projects:', projects.length);
         if (!currentProjectId && projects.length > 0) {
+          const { useKnowledgeGraphStore } = await import('./knowledgeGraphStore');
+          const kg = useKnowledgeGraphStore.getState();
+          console.log('[loadProjects] KG state before snapshot: edges=', kg.edges.length, 'concepts=', kg.concepts.length);
+          const snapshots = loadSnapshots();
+          snapshots[projects[0].id] = {
+            edges: kg.edges,
+            reviewRecords: Array.from(kg.reviewRecords.entries()),
+            annotations: kg.annotations,
+            chains: kg.chains,
+          };
+          saveSnapshots(snapshots);
+          console.log('[loadProjects] saved snapshot for', projects[0].id, 'with', kg.edges.length, 'edges');
           get().switchProject(projects[0].id);
         }
         return;
       }
-    } catch {}
-    // 后端不可用时，从 localStorage 恢复
-    const stored = localStorage.getItem('magic-memory-projects');
-    if (stored) {
-      try {
-        const projects: Project[] = JSON.parse(stored);
-        set({ projects, isLoading: false });
-        return;
-      } catch {}
+    } catch {
+      console.log('[loadProjects] server unavailable, using localStorage');
     }
+
+    if (localProjects.length > 0) {
+      console.log('[loadProjects] fallback to localStorage projects:', localProjects.length);
+      set({ projects: localProjects, isLoading: false });
+      return;
+    }
+
     set({ isLoading: false });
   },
 
@@ -58,6 +118,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     set({ isLoading: true, error: null, isScanning: true });
     try {
       const handleStoreId = generateId();
+
+      const { projects } = get();
+      const existing = projects.find(p => p.name === name);
+      if (existing) {
+        set({ currentProjectId: existing.id, isLoading: false, isScanning: false });
+        return existing;
+      }
+
       await saveHandle(handleStoreId, handle);
 
       const project: Project = {
@@ -74,34 +142,41 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         return null;
       }
 
-      // 读文件构建概念
-      const files = await readMdFiles(handle);
-      const concepts: any[] = [];
-      for (const file of files) {
-        if (!file.path.endsWith('.md')) continue;
-        const id = file.path.replace('.md', '').replace(/\//g, '-');
-        const title = file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', '');
-        concepts.push({
-          id,
-          title,
+      // Batch streaming: read files progressively
+      const allConcepts: any[] = [];
+      const allFiles: { path: string; content: string }[] = [];
+      const { readMdFilesBatched } = await import('../utils/fileSystem');
+      const kgStore = (await import('./knowledgeGraphStore')).useKnowledgeGraphStore;
+
+      for await (const batch of readMdFilesBatched(handle)) {
+        allFiles.push(...batch);
+        const newConcepts = batch.map(file => ({
+          id: file.path.replace('.md', '').replace(/\//g, '-'),
+          title: file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', ''),
           path: file.path,
-          level: 1,
-          category: '',
-          problem: '',
-          gap_anticipate: '',
-          depends_on: [],
-          leads_to: [],
-          related: [],
-          tags: [],
+          level: 1, category: '', problem: '', gap_anticipate: '',
+          depends_on: [], leads_to: [], related: [], tags: [],
           lastModified: new Date(),
-        })
+        }));
+        allConcepts.push(...newConcepts);
+        // Push progressively to store
+        kgStore.setState({ concepts: [...allConcepts], isLoading: true });
       }
 
-      const { useKnowledgeGraphStore } = await import('./knowledgeGraphStore');
-      useKnowledgeGraphStore.setState({ concepts, edges: [], isLoading: false });
+      const snapshot = loadSnapshots()[project.id];
+      const { deriveEdges } = await import('../utils/deriveEdges');
+      const derivedEdges = deriveEdges(allConcepts, allFiles);
+      const edges = snapshot?.edges?.length ? snapshot.edges : derivedEdges;
+      console.log('[createProject] edges: snapshot:', snapshot?.edges?.length, 'derived:', derivedEdges.length, 'final:', edges.length, 'project:', project.id);
+      kgStore.setState({
+        concepts: allConcepts,
+        edges,
+        reviewRecords: new Map(snapshot?.reviewRecords || []),
+        annotations: snapshot?.annotations || [],
+        chains: snapshot?.chains || [],
+        isLoading: false,
+      });
 
-      // 持久化项目列表
-      const { projects } = get();
       const updated = [...projects, project];
       set({ projects: updated, currentProjectId: project.id, isLoading: false, isScanning: false });
       localStorage.setItem('magic-memory-projects', JSON.stringify(updated));
@@ -133,6 +208,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       currentProjectId: currentProjectId === projectId ? null : currentProjectId,
     });
     localStorage.setItem('magic-memory-projects', JSON.stringify(filtered));
+
+    const snapshots = loadSnapshots();
+    delete snapshots[projectId];
+    saveSnapshots(snapshots);
+
     try { await fetch(`/api/projects/${projectId}`, { method: 'DELETE' }); } catch {}
     return true;
   },
@@ -140,41 +220,67 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   switchProject: async (projectId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const { projects } = get();
+      const { projects, currentProjectId } = get();
       const project = projects.find(p => p.id === projectId);
       if (!project) throw new Error('项目不存在');
+
+      console.log('[switchProject] from:', currentProjectId, 'to:', projectId);
+      if (currentProjectId !== projectId) {
+        const { useKnowledgeGraphStore } = await import('./knowledgeGraphStore');
+        const kg = useKnowledgeGraphStore.getState();
+        console.log('[switchProject] kg.edges before save:', kg.edges.length, 'sourceId:', currentProjectId || projectId);
+        const snapshots = loadSnapshots();
+        const sourceId = currentProjectId || projectId;
+        snapshots[sourceId] = {
+          edges: kg.edges,
+          reviewRecords: Array.from(kg.reviewRecords.entries()),
+          annotations: kg.annotations,
+          chains: kg.chains,
+        };
+        saveSnapshots(snapshots);
+      }
 
       if (project.handleStoreId) {
         const handle = await loadHandle(project.handleStoreId);
         if (!handle) throw new Error('项目文件夹句柄已丢失，请重新选择');
-
         const ok = await ensurePermission(handle);
         if (!ok) throw new Error('请授权文件夹读取权限');
 
-      const files = await readMdFiles(handle);
-      const concepts: any[] = [];
-      for (const file of files) {
-        if (!file.path.endsWith('.md')) continue;
-        const id = file.path.replace('.md', '').replace(/\//g, '-');
-        const title = file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', '');
-        concepts.push({
-          id,
-          title,
-          path: file.path,
-          level: 1,
-          category: '',
-          problem: '',
-          gap_anticipate: '',
-          depends_on: [],
-          leads_to: [],
-          related: [],
-          tags: [],
-          lastModified: new Date(),
-        })
-      }
+        // Batch streaming: read files progressively
+        const allConcepts: any[] = [];
+        const allFiles: { path: string; content: string }[] = [];
+        const { readMdFilesBatched } = await import('../utils/fileSystem');
+        const kgStore = (await import('./knowledgeGraphStore')).useKnowledgeGraphStore;
 
-      const { useKnowledgeGraphStore } = await import('./knowledgeGraphStore');
-      useKnowledgeGraphStore.setState({ concepts, edges: [], isLoading: false });
+        for await (const batch of readMdFilesBatched(handle)) {
+          allFiles.push(...batch);
+          const newConcepts = batch.map(file => ({
+            id: file.path.replace('.md', '').replace(/\//g, '-'),
+            title: file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', ''),
+            path: file.path,
+            level: 1, category: '', problem: '', gap_anticipate: '',
+            depends_on: [], leads_to: [], related: [], tags: [],
+            lastModified: new Date(),
+          }));
+          allConcepts.push(...newConcepts);
+          // Push progressively to store
+          kgStore.setState({ concepts: [...allConcepts], isLoading: true });
+        }
+
+        const snapshot = loadSnapshots()[projectId];
+        const { deriveEdges } = await import('../utils/deriveEdges');
+        const derivedEdges = deriveEdges(allConcepts, allFiles);
+        const restoredEdges = snapshot?.edges?.length ? snapshot.edges : derivedEdges;
+        console.log('[switchProject] edges: snapshot:', snapshot?.edges?.length, 'derived:', derivedEdges.length, 'final:', restoredEdges.length, 'for project:', projectId);
+
+        kgStore.setState({
+          concepts: allConcepts,
+          edges: restoredEdges,
+          reviewRecords: new Map(snapshot?.reviewRecords || []),
+          annotations: snapshot?.annotations || [],
+          chains: snapshot?.chains || [],
+          isLoading: false,
+        });
       }
 
       set({
