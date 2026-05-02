@@ -210,29 +210,51 @@ export function KnowledgeGraph({
       wheelSensitivity: 0.15
     })
 
-    // 首次布局单独执行，try-catch 防止 crash
+    // Stage 1: fast rough layout (immediate)
     try {
-      const initLayout = cy.layout({
+      const fastLayout = cy.layout({
         name: 'fcose',
-        quality: 'proof',
-        animate: true,
-        animationDuration: 800,
+        quality: 'default',
+        animate: false,
         nodeRepulsion: 25000,
         idealEdgeLength: 160,
         gravity: 0.08,
-        gravityRange: 3.0,
-        nestingFactor: 0.5,
-        numIter: 2000,
+        numIter: 200,
         tile: true,
         padding: 80
       } as cytoscape.LayoutOptions)
-      initLayout.one('layoutstop', () => {
+      fastLayout.one('layoutstop', () => {
         cy.fit(undefined, 50)
         setZoomLevel(cy.zoom())
       })
-      initLayout.run()
+      fastLayout.run()
     } catch (e) {
-      console.warn('[KnowledgeGraph] initial layout skipped:', e)
+      console.warn('[KnowledgeGraph] fast layout skipped:', e)
+      // Fallback: basic fit even if layout fails
+      try { cy.fit(undefined, 50) } catch {}
+    }
+
+    // Stage 2: refined layout during idle time
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(() => {
+        try {
+          const refineLayout = cy.layout({
+            name: 'fcose',
+            quality: 'proof',
+            animate: true,
+            animationDuration: 600,
+            nodeRepulsion: 25000,
+            idealEdgeLength: 160,
+            gravity: 0.08,
+            numIter: 1000,
+            tile: true,
+            padding: 80
+          } as cytoscape.LayoutOptions)
+          refineLayout.run()
+        } catch (e) {
+          console.warn('[KnowledgeGraph] refine layout skipped:', e)
+        }
+      }, { timeout: 3000 })
     }
 
     cy.on('zoom', () => {
@@ -380,21 +402,19 @@ export function KnowledgeGraph({
       }
     })
 
-    // 运行增量布局（try-catch 防止与首次渲染布局冲突）
+    // 增量布局（快速，不精化 — 精化在 idle 回调中已处理）
     try {
       const layout = cy.layout({
         name: 'fcose',
-        quality: 'proof',
+        quality: 'default',
         animate: true,
-        animationDuration: 800,
-        nodeRepulsion: 25000,
+        animationDuration: 400,
+        nodeRepulsion: 20000,
         idealEdgeLength: 160,
         gravity: 0.08,
-        gravityRange: 3.0,
-        nestingFactor: 0.5,
-        numIter: 2000,
+        numIter: 200,
         tile: true,
-        padding: 80
+        padding: 40
       } as cytoscape.LayoutOptions)
       layout.run()
     } catch (e) {
@@ -480,10 +500,8 @@ export function KnowledgeGraph({
     }
 
     const selectedNode = cy.getElementById(selectedConcept.id)
-    // 只取子概念（leads_to / depends_on），排除平行关联（related）
     const connectedEdges = selectedNode.connectedEdges()
-    const relevantEdges = connectedEdges.filter(e => e.data('edgeType') !== 'related')
-    const neighborNodes = relevantEdges.connectedNodes()
+    const neighborNodes = connectedEdges.connectedNodes()
     const relatedNodeIds = new Set([selectedConcept.id, ...neighborNodes.map(n => n.id())])
 
     cy.nodes().forEach(n => {
