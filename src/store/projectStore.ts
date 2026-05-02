@@ -164,8 +164,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       }
 
       const snapshot = loadSnapshots()[project.id];
-      const { deriveEdges } = await import('../utils/deriveEdges');
-      const derivedEdges = deriveEdges(allConcepts, allFiles);
+      const { deriveEdgesInWorker } = await import('../workers/deriveEdges.worker');
+      const derivedEdges = await deriveEdgesInWorker(allConcepts, allFiles);
       const edges = snapshot?.edges?.length ? snapshot.edges : derivedEdges;
       console.log('[createProject] edges: snapshot:', snapshot?.edges?.length, 'derived:', derivedEdges.length, 'final:', edges.length, 'project:', project.id);
       kgStore.setState({
@@ -268,8 +268,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         }
 
         const snapshot = loadSnapshots()[projectId];
-        const { deriveEdges } = await import('../utils/deriveEdges');
-        const derivedEdges = deriveEdges(allConcepts, allFiles);
+        const { deriveEdgesInWorker } = await import('../workers/deriveEdges.worker');
+        const derivedEdges = await deriveEdgesInWorker(allConcepts, allFiles);
         const restoredEdges = snapshot?.edges?.length ? snapshot.edges : derivedEdges;
         console.log('[switchProject] edges: snapshot:', snapshot?.edges?.length, 'derived:', derivedEdges.length, 'final:', restoredEdges.length, 'for project:', projectId);
 
