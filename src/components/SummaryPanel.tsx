@@ -1,34 +1,14 @@
-import { useEffect, useState } from 'react'
-
-interface FlowPath {
-  name: string
-  pathIds: string[]
-  pathTitles: string[]
-  length: number
-}
-
-interface RootConceptInfo {
-  id: string
-  title: string
-  level: number
-  category: string
-  inDegree: number
-  outDegree: number
-}
-
-interface HubConceptInfo {
-  id: string
-  title: string
-  level: number
-  totalDegree: number
-}
+import { useMemo, useState, useRef } from 'react'
+import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
+import { analyzeGraph } from '../utils/graphAnalysis'
+import type { FlowPath, GraphAnalysis } from '../utils/graphAnalysis'
 
 interface SummaryData {
-  rootConcepts: RootConceptInfo[]
+  rootConcepts: { id: string; title: string; level: number; category: string; inDegree: number; outDegree: number }[]
   dataFlowPaths: FlowPath[]
   dependencyChains: FlowPath[]
   longestPaths: FlowPath[]
-  hubConcepts: HubConceptInfo[]
+  hubConcepts: { id: string; title: string; level: number; totalDegree: number }[]
   stats: {
     totalConcepts: number
     totalEdges: number
@@ -43,45 +23,54 @@ interface SummaryPanelProps {
 }
 
 export function SummaryPanel({ onNavigate, onPathFocus }: SummaryPanelProps) {
-  const [data, setData] = useState<SummaryData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const concepts = useKnowledgeGraphStore(s => s.concepts)
+  const edges = useKnowledgeGraphStore(s => s.edges)
   const [expandedSection, setExpandedSection] = useState<string | null>('roots')
   const [expandedPath, setExpandedPath] = useState<number | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    fetch('/api/graph/summary')
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return r.json()
-      })
-      .then(d => {
-        if (!cancelled) setData(d)
-      })
-      .catch(e => {
-        if (!cancelled) setError(e.message)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [])
+  const analysisCacheRef = useRef(new Map<string, GraphAnalysis>())
+
+  const structuralKey = useMemo(
+    () => concepts.map(c => c.id).sort().join(',') + '|' +
+           edges.map(e => `${e.source}-${e.target}-${e.type}`).sort().join(','),
+    [concepts, edges]
+  )
+
+  const analysis = useMemo(() => {
+    const key = structuralKey
+    const cached = analysisCacheRef.current.get(key)
+    if (cached) return cached
+
+    const result = analyzeGraph(concepts, edges)
+
+    // LRU: keep max 5 entries
+    if (analysisCacheRef.current.size >= 5) {
+      const firstKey = analysisCacheRef.current.keys().next().value!
+      analysisCacheRef.current.delete(firstKey)
+    }
+    analysisCacheRef.current.set(key, result)
+    return result
+  }, [structuralKey, concepts, edges])
+
+  const data: SummaryData = useMemo(() => ({
+    rootConcepts: analysis.rootConcepts,
+    dataFlowPaths: analysis.longestPaths,
+    dependencyChains: analysis.longestPaths,
+    longestPaths: analysis.longestPaths,
+    hubConcepts: analysis.hubConcepts,
+    stats: {
+      totalConcepts: analysis.stats.totalConcepts,
+      totalEdges: analysis.stats.totalEdges,
+      rootsCount: analysis.stats.rootsCount,
+      crossLayerJumpsCount: analysis.stats.crossLayerJumpsCount,
+    },
+  }), [analysis])
 
   const toggleSection = (name: string) => {
     setExpandedSection(expandedSection === name ? null : name)
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
-        分析中...
-      </div>
-    )
-  }
-
-  if (error || !data) {
+  if (!data || (concepts.length === 0 && edges.length === 0)) {
     return (
       <div className="text-xs text-gray-400 px-2 py-1">
         选择概念查看详情
