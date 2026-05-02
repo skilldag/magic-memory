@@ -112,6 +112,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (localProjects.length > 0) {
       console.log('[loadProjects] fallback to localStorage projects:', localProjects.length);
       set({ projects: localProjects, isLoading: false });
+
+      // Auto-switch to first project if none selected
+      const { currentProjectId } = get();
+      if (!currentProjectId) {
+        await get().switchProject(localProjects[0].id);
+      }
+
       console.timeEnd('[perf] loadProjects total');
       return;
     }
