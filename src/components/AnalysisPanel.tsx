@@ -1,34 +1,14 @@
-import { useEffect, useState } from 'react'
-
-interface FlowPath {
-  name: string
-  pathIds: string[]
-  pathTitles: string[]
-  length: number
-}
-
-interface RootConceptInfo {
-  id: string
-  title: string
-  level: number
-  category: string
-  inDegree: number
-  outDegree: number
-}
-
-interface HubConceptInfo {
-  id: string
-  title: string
-  level: number
-  totalDegree: number
-}
+import { useMemo, useState } from 'react'
+import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
+import { analyzeGraph } from '../utils/graphAnalysis'
+import type { FlowPath } from '../utils/graphAnalysis'
 
 interface AnalysisData {
-  rootConcepts: RootConceptInfo[]
+  rootConcepts: { id: string; title: string; level: number; category: string; inDegree: number; outDegree: number }[]
   dataFlowPaths: FlowPath[]
   dependencyChains: FlowPath[]
   longestPaths: FlowPath[]
-  hubConcepts: HubConceptInfo[]
+  hubConcepts: { id: string; title: string; level: number; totalDegree: number }[]
   stats: {
     totalConcepts: number
     totalEdges: number
@@ -43,48 +23,35 @@ interface AnalysisPanelProps {
 }
 
 export function AnalysisPanel({ onNavigate, onPathFocus }: AnalysisPanelProps) {
-  const [data, setData] = useState<AnalysisData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const concepts = useKnowledgeGraphStore(s => s.concepts)
+  const edges = useKnowledgeGraphStore(s => s.edges)
   const [expandedSection, setExpandedSection] = useState<string | null>('roots')
   const [expandedPath, setExpandedPath] = useState<number | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    fetch('/api/graph/analysis')
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return r.json()
-      })
-      .then(d => {
-        if (!cancelled) setData(d)
-      })
-      .catch(e => {
-        if (!cancelled) setError(e.message)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [])
+  const analysis = useMemo(() => analyzeGraph(concepts, edges), [concepts, edges])
+
+  const data: AnalysisData = useMemo(() => ({
+    rootConcepts: analysis.rootConcepts,
+    dataFlowPaths: analysis.longestPaths,
+    dependencyChains: analysis.longestPaths,
+    longestPaths: analysis.longestPaths,
+    hubConcepts: analysis.hubConcepts,
+    stats: {
+      totalConcepts: analysis.stats.totalConcepts,
+      totalEdges: analysis.stats.totalEdges,
+      rootsCount: analysis.stats.rootsCount,
+      crossLayerJumpsCount: analysis.stats.crossLayerJumpsCount,
+    },
+  }), [analysis])
 
   const toggleSection = (name: string) => {
     setExpandedSection(expandedSection === name ? null : name)
   }
 
-  if (loading) {
+  if (!data || (concepts.length === 0 && edges.length === 0)) {
     return (
-      <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
-        分析中...
-      </div>
-    )
-  }
-
-  if (error || !data) {
-    return (
-      <div className="text-xs text-red-500 px-2 py-1">
-        {error || '无数据'}
+      <div className="text-xs text-gray-400 px-2 py-1">
+        选择概念查看详情
       </div>
     )
   }

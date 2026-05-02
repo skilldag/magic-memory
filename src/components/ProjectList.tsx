@@ -18,15 +18,20 @@ export function ProjectList({ onSwitch }: ProjectListProps) {
     onSwitch?.();
   };
 
-  const handleDelete = async (projectId: string, e: React.MouseEvent) => {
+  const handleDeleteClick = (projectId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirmDelete === projectId) {
-      await deleteProject(projectId);
-      setConfirmDelete(null);
-    } else {
-      setConfirmDelete(projectId);
-      setTimeout(() => setConfirmDelete(null), 3000);
-    }
+    setConfirmDelete(projectId);
+  };
+
+  const handleConfirmDelete = async (projectId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await deleteProject(projectId);
+    setConfirmDelete(null);
+  };
+
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmDelete(null);
   };
 
   if (isLoading && projects.length === 0) {
@@ -47,24 +52,38 @@ export function ProjectList({ onSwitch }: ProjectListProps) {
         <div
           key={project.id}
           onClick={() => handleSwitch(project.id)}
-          className={`group flex items-center justify-between px-4 py-2.5 cursor-pointer transition-colors ${
+          className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-colors ${
             currentProjectId === project.id
               ? 'bg-blue-50 text-blue-700'
               : 'hover:bg-gray-50 text-gray-700'
           }`}
         >
           <span className="text-sm font-medium truncate">{project.name}</span>
-          <button
-            onClick={(e) => handleDelete(project.id, e)}
-            className={`shrink-0 p-1 rounded hover:bg-gray-200 transition-opacity ${
-              confirmDelete === project.id ? 'opacity-100 bg-red-100 text-red-600' : 'opacity-0 group-hover:opacity-100'
-            }`}
-            title={confirmDelete === project.id ? '再次点击确认删除' : '删除项目'}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          {confirmDelete === project.id ? (
+            <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+              <span className="text-xs text-red-600 font-medium">确认删除?</span>
+              <button
+                onClick={(e) => handleConfirmDelete(project.id, e)}
+                className="px-2 py-1 text-xs font-medium text-white bg-red-500 rounded hover:bg-red-600 transition-colors"
+              >
+                删除
+              </button>
+              <button
+                onClick={handleCancelDelete}
+                className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+              >
+                取消
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={(e) => handleDeleteClick(project.id, e)}
+              className="shrink-0 px-2 py-1 text-xs font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+              title="删除项目"
+            >
+              删除
+            </button>
+          )}
         </div>
       ))}
     </div>
