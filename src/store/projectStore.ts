@@ -149,44 +149,55 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         return null;
       }
 
-      // Batch read files (accumulate locally, single setState at end)
-      const allConcepts: any[] = [];
-      const allFiles: { path: string; content: string }[] = [];
-      const { readMdFilesBatched } = await import('../utils/fileSystem');
+      // Phase 1: Quick metadata scan — enumerate file paths only
       const kgStore = (await import('./knowledgeGraphStore')).useKnowledgeGraphStore;
+      const { scanMdPaths, readMdFilesBatched } = await import('../utils/fileSystem');
 
-      kgStore.setState({ isLoading: true });
+      kgStore.setState({ isLoading: false, loadingProgress: 0 });
+      console.time('[perf] scanMdPaths');
+      const pathDefs: { path: string; id: string; title: string }[] = [];
+      for await (const batch of scanMdPaths(handle)) {
+        for (const entryPath of batch) {
+          const id = entryPath.replace('.md', '').replace(/\//g, '-');
+          const title = entryPath.replace('.md', '').split('/').pop() || entryPath.replace('.md', '');
+          pathDefs.push({ path: entryPath, id, title });
+        }
+      }
+      console.timeEnd('[perf] scanMdPaths');
+
+      // Build concepts from metadata and render immediately
+      const concepts: any[] = pathDefs.map(({ path, id, title }) => ({
+        id, title, path,
+        level: 1, category: '', problem: '', gap_anticipate: '',
+        depends_on: [], leads_to: [], related: [], tags: [],
+        lastModified: new Date(),
+      }));
+      kgStore.setState({ concepts, edges: [], loadingProgress: 0 });
+
+      // Phase 2: Background content scanning + edge derivation
+      kgStore.setState({ loadingProgress: 5 });
+      const allFiles: { path: string; content: string }[] = [];
+      const totalPaths = pathDefs.length;
+      let readCount = 0;
+
       console.time('[perf] readMdFilesBatched');
       for await (const batch of readMdFilesBatched(handle)) {
         allFiles.push(...batch);
-        for (const file of batch) {
-          allConcepts.push({
-            id: file.path.replace('.md', '').replace(/\//g, '-'),
-            title: file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', ''),
-            path: file.path,
-            level: 1, category: '', problem: '', gap_anticipate: '',
-            depends_on: [], leads_to: [], related: [], tags: [],
-            lastModified: new Date(),
-          });
-        }
+        readCount += batch.length;
+        const progress = Math.min(5 + Math.round((readCount / totalPaths) * 70), 75);
+        kgStore.setState({ loadingProgress: progress });
       }
       console.timeEnd('[perf] readMdFilesBatched');
 
-      const snapshot = loadSnapshots()[project.id];
+      kgStore.setState({ loadingProgress: 80 });
       console.time('[perf] deriveEdgesInWorker');
       const { deriveEdgesInWorker } = await import('../workers/deriveEdges.worker');
-      const derivedEdges = await deriveEdgesInWorker(allConcepts, allFiles);
+      const derivedEdges = await deriveEdgesInWorker(concepts, allFiles);
       console.timeEnd('[perf] deriveEdgesInWorker');
+
+      const snapshot = loadSnapshots()[project.id];
       const edges = snapshot?.edges?.length ? snapshot.edges : derivedEdges;
-      console.log('[createProject] edges: snapshot:', snapshot?.edges?.length, 'derived:', derivedEdges.length, 'final:', edges.length, 'project:', project.id);
-      kgStore.setState({
-        concepts: allConcepts,
-        edges,
-        reviewRecords: new Map(snapshot?.reviewRecords || []),
-        annotations: snapshot?.annotations || [],
-        chains: snapshot?.chains || [],
-        isLoading: false,
-      });
+      kgStore.setState({ edges, loadingProgress: 100 });
 
       const updated = [...projects, project];
       set({ projects: updated, currentProjectId: project.id, isLoading: false, isScanning: false });
@@ -259,45 +270,72 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         const ok = await ensurePermission(handle);
         if (!ok) throw new Error('请授权文件夹读取权限');
 
-        // Batch read files (accumulate locally, single setState at end)
-        const allConcepts: any[] = [];
-        const allFiles: { path: string; content: string }[] = [];
-        const { readMdFilesBatched } = await import('../utils/fileSystem');
         const kgStore = (await import('./knowledgeGraphStore')).useKnowledgeGraphStore;
+        const { scanMdPaths, readMdFilesBatched } = await import('../utils/fileSystem');
+        const snapshot = loadSnapshots()[projectId];
 
-        kgStore.setState({ isLoading: true });
-        console.time('[perf] readMdFilesBatched');
-        for await (const batch of readMdFilesBatched(handle)) {
-          allFiles.push(...batch);
-          for (const file of batch) {
-            allConcepts.push({
-              id: file.path.replace('.md', '').replace(/\//g, '-'),
-              title: file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', ''),
-              path: file.path,
-              level: 1, category: '', problem: '', gap_anticipate: '',
-              depends_on: [], leads_to: [], related: [], tags: [],
-              lastModified: new Date(),
-            });
+        // Phase 1: Quick metadata scan — enumerate file paths only, no file reading
+        kgStore.setState({ isLoading: false, loadingProgress: 0 });
+        console.time('[perf] scanMdPaths');
+        const pathDefs: { path: string; id: string; title: string }[] = [];
+        for await (const batch of scanMdPaths(handle)) {
+          for (const entryPath of batch) {
+            const id = entryPath.replace('.md', '').replace(/\//g, '-');
+            const title = entryPath.replace('.md', '').split('/').pop() || entryPath.replace('.md', '');
+            pathDefs.push({ path: entryPath, id, title });
           }
         }
-        console.timeEnd('[perf] readMdFilesBatched');
+        console.timeEnd('[perf] scanMdPaths');
 
-        const snapshot = loadSnapshots()[projectId];
-        console.time('[perf] deriveEdgesInWorker');
-        const { deriveEdgesInWorker } = await import('../workers/deriveEdges.worker');
-        const derivedEdges = await deriveEdgesInWorker(allConcepts, allFiles);
-        console.timeEnd('[perf] deriveEdgesInWorker');
-        const restoredEdges = snapshot?.edges?.length ? snapshot.edges : derivedEdges;
-        console.log('[switchProject] edges: snapshot:', snapshot?.edges?.length, 'derived:', derivedEdges.length, 'final:', restoredEdges.length, 'for project:', projectId);
-
+        // Build concept nodes from metadata and render immediately
+        const concepts = pathDefs.map(({ path, id, title }) => ({
+          id, title, path,
+          level: 1, category: '', problem: '', gap_anticipate: '',
+          depends_on: [], leads_to: [], related: [], tags: [],
+          lastModified: new Date(),
+        }));
         kgStore.setState({
-          concepts: allConcepts,
-          edges: restoredEdges,
+          concepts,
+          edges: snapshot?.edges || [],
           reviewRecords: new Map(snapshot?.reviewRecords || []),
           annotations: snapshot?.annotations || [],
           chains: snapshot?.chains || [],
-          isLoading: false,
+          loadingProgress: 0,
         });
+
+        // Phase 2: Background content scanning + edge derivation
+        // Graph nodes already visible — content reading happens progressively
+        if (!snapshot?.edges?.length) {
+          kgStore.setState({ loadingProgress: 5 });
+          const allFiles: { path: string; content: string }[] = [];
+          const totalPaths = pathDefs.length;
+          let readCount = 0;
+
+          console.time('[perf] readMdFilesBatched');
+          for await (const batch of readMdFilesBatched(handle)) {
+            allFiles.push(...batch);
+            readCount += batch.length;
+            const progress = Math.min(5 + Math.round((readCount / totalPaths) * 70), 75);
+            kgStore.setState({ loadingProgress: progress });
+          }
+          console.timeEnd('[perf] readMdFilesBatched');
+
+          kgStore.setState({ loadingProgress: 80 });
+          console.time('[perf] deriveEdgesInWorker');
+          const { deriveEdgesInWorker } = await import('../workers/deriveEdges.worker');
+          const derivedEdges = await deriveEdgesInWorker(concepts, allFiles);
+          console.timeEnd('[perf] deriveEdgesInWorker');
+
+          kgStore.setState({
+            edges: derivedEdges,
+            loadingProgress: 100,
+          });
+        } else {
+          // Snapshot has edges — skip Phase 2
+          kgStore.setState({ loadingProgress: 100 });
+        }
+
+        console.log('[switchProject] done, concepts:', concepts.length, 'edges:', kgStore.getState().edges.length, 'for project:', projectId);
       }
 
       set({

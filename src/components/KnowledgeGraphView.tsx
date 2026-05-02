@@ -21,6 +21,7 @@ export function KnowledgeGraphView() {
   const edges = useKnowledgeGraphStore(s => s.edges)
   const loadGraph = useKnowledgeGraphStore(s => s.loadGraph)
   const isLoading = useKnowledgeGraphStore(s => s.isLoading)
+  const loadingProgress = useKnowledgeGraphStore(s => s.loadingProgress)
   const reviewRecords = useKnowledgeGraphStore(s => s.reviewRecords)
   const createConceptWithEdges = useKnowledgeGraphStore(s => s.createConceptWithEdges)
   const selectConcept = useKnowledgeGraphStore(s => s.selectConcept)
@@ -285,7 +286,13 @@ useEffect(() => {
       }
 
       if (concepts.length > 0) {
-        useKnowledgeGraphStore.setState({ concepts, edges: [], isLoading: false })
+        const { deriveEdges } = await import('../utils/deriveEdges');
+        const derivedEdges = deriveEdges(concepts, files);
+        const conceptIds = new Set(concepts.map(c => c.id));
+        const kgState = useKnowledgeGraphStore.getState();
+        const matchedEdges = kgState.edges.filter(e => conceptIds.has(e.source) && conceptIds.has(e.target));
+        const edges = matchedEdges.length ? matchedEdges : derivedEdges;
+        useKnowledgeGraphStore.setState({ concepts, edges, isLoading: false })
       } else {
         alert('所选目录中没有找到 Markdown 文档')
       }
@@ -327,6 +334,15 @@ useEffect(() => {
     <div ref={containerRef} className="flex h-full w-full overflow-hidden">
       {/* 左侧图谱 / 过程画板 */}
       <div ref={graphContainerRef} className="min-w-0 relative flex flex-col" style={{ width: `calc(100% - ${rightPanelWidth + 40}px)` }}>
+        {/* Progress bar during Phase 2 content loading */}
+        {loadingProgress > 0 && loadingProgress < 100 && (
+          <div className="shrink-0 w-full bg-gray-100 h-1">
+            <div
+              className="h-full bg-blue-500 transition-all duration-300 ease-out"
+              style={{ width: `${loadingProgress}%` }}
+            />
+          </div>
+        )}
         {isEmpty ? (
           <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 text-gray-500">
             <div className="max-w-md text-center space-y-6">

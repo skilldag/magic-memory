@@ -10,6 +10,7 @@ interface KnowledgeGraphStore {
   reviewRecords: Map<string, ReviewRecord>
   annotations: UserAnnotation[]
   isLoading: boolean
+  loadingProgress: number  // 0-100, for progressive loading progress bar
   error: string | null
   viewMode: 'explore' | 'review'
   
@@ -52,7 +53,8 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
       selectedConcept: null,
       reviewRecords: new Map(),
       annotations: [],
-isLoading: false,
+      isLoading: false,
+      loadingProgress: 0,
       error: null,
       viewMode: 'explore',
       conceptPanelMode: true,

@@ -46,3 +46,28 @@ export async function* readMdFilesBatched(
   }
   if (batch.length > 0) yield batch
 }
+
+/**
+ * Scan directory for .md file paths only (no content reading).
+ * Much faster than readMdFiles — only enumerates directory entries.
+ */
+export async function* scanMdPaths(
+  dirHandle: FileSystemDirectoryHandle,
+  pathPrefix = '',
+  batchSize = 50,
+): AsyncGenerator<string[], void, undefined> {
+  let batch: string[] = []
+  for await (const [name, entry] of (dirHandle as any).entries()) {
+    const entryPath = pathPrefix ? `${pathPrefix}/${name}` : name
+    if (entry.kind === 'directory' && !name.startsWith('.')) {
+      for await (const subBatch of scanMdPaths(entry, entryPath, batchSize)) {
+        batch.push(...subBatch)
+        if (batch.length >= batchSize) { yield batch; batch = [] }
+      }
+    } else if (entry.kind === 'file' && name.endsWith('.md')) {
+      batch.push(entryPath)
+      if (batch.length >= batchSize) { yield batch; batch = [] }
+    }
+  }
+  if (batch.length > 0) yield batch
+}
