@@ -237,6 +237,8 @@ export function KnowledgeGraph({
     // Stage 2: refined layout during idle time
     if (typeof requestIdleCallback !== 'undefined') {
       requestIdleCallback(() => {
+        const cy = cyRef.current
+        if (!cy) return  // component unmounted
         try {
           const refineLayout = cy.layout({
             name: 'fcose',
