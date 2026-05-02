@@ -1,3 +1,9 @@
+/**
+ * @deprecated This file is a duplicate of graphAnalysis.ts.
+ * All callers should import from graphAnalysis.ts instead.
+ * Will be removed in a future cleanup.
+ */
+
 import type { Concept, ConceptEdge } from '../types'
 
 // ========== 输出类型 ==========
