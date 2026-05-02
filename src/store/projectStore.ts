@@ -142,25 +142,25 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         return null;
       }
 
-      // Batch streaming: read files progressively
+      // Batch read files (accumulate locally, single setState at end — avoid triggering persist on every batch)
       const allConcepts: any[] = [];
       const allFiles: { path: string; content: string }[] = [];
       const { readMdFilesBatched } = await import('../utils/fileSystem');
       const kgStore = (await import('./knowledgeGraphStore')).useKnowledgeGraphStore;
 
+      kgStore.setState({ isLoading: true });
       for await (const batch of readMdFilesBatched(handle)) {
         allFiles.push(...batch);
-        const newConcepts = batch.map(file => ({
-          id: file.path.replace('.md', '').replace(/\//g, '-'),
-          title: file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', ''),
-          path: file.path,
-          level: 1, category: '', problem: '', gap_anticipate: '',
-          depends_on: [], leads_to: [], related: [], tags: [],
-          lastModified: new Date(),
-        }));
-        allConcepts.push(...newConcepts);
-        // Push progressively to store
-        kgStore.setState({ concepts: [...allConcepts], isLoading: true });
+        for (const file of batch) {
+          allConcepts.push({
+            id: file.path.replace('.md', '').replace(/\//g, '-'),
+            title: file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', ''),
+            path: file.path,
+            level: 1, category: '', problem: '', gap_anticipate: '',
+            depends_on: [], leads_to: [], related: [], tags: [],
+            lastModified: new Date(),
+          });
+        }
       }
 
       const snapshot = loadSnapshots()[project.id];
@@ -246,25 +246,25 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         const ok = await ensurePermission(handle);
         if (!ok) throw new Error('请授权文件夹读取权限');
 
-        // Batch streaming: read files progressively
+        // Batch read files (accumulate locally, single setState at end)
         const allConcepts: any[] = [];
         const allFiles: { path: string; content: string }[] = [];
         const { readMdFilesBatched } = await import('../utils/fileSystem');
         const kgStore = (await import('./knowledgeGraphStore')).useKnowledgeGraphStore;
 
+        kgStore.setState({ isLoading: true });
         for await (const batch of readMdFilesBatched(handle)) {
           allFiles.push(...batch);
-          const newConcepts = batch.map(file => ({
-            id: file.path.replace('.md', '').replace(/\//g, '-'),
-            title: file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', ''),
-            path: file.path,
-            level: 1, category: '', problem: '', gap_anticipate: '',
-            depends_on: [], leads_to: [], related: [], tags: [],
-            lastModified: new Date(),
-          }));
-          allConcepts.push(...newConcepts);
-          // Push progressively to store
-          kgStore.setState({ concepts: [...allConcepts], isLoading: true });
+          for (const file of batch) {
+            allConcepts.push({
+              id: file.path.replace('.md', '').replace(/\//g, '-'),
+              title: file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', ''),
+              path: file.path,
+              level: 1, category: '', problem: '', gap_anticipate: '',
+              depends_on: [], leads_to: [], related: [], tags: [],
+              lastModified: new Date(),
+            });
+          }
         }
 
         const snapshot = loadSnapshots()[projectId];
