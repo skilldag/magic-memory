@@ -61,6 +61,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   error: null,
 
   loadProjects: async () => {
+    console.time('[perf] loadProjects total');
     set({ isLoading: true, error: null });
 
     let localProjects: Project[] = [];
@@ -73,7 +74,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     }
 
     try {
+      console.time('[perf] fetch /api/projects');
       const resp = await fetch('/api/projects');
+      console.timeEnd('[perf] fetch /api/projects');
       if (resp.ok) {
         const data = await resp.json();
         const serverProjects: Project[] = data.projects || [];
@@ -99,6 +102,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
           console.log('[loadProjects] saved snapshot for', projects[0].id, 'with', kg.edges.length, 'edges');
           get().switchProject(projects[0].id);
         }
+        console.timeEnd('[perf] loadProjects total');
         return;
       }
     } catch {
@@ -108,13 +112,16 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (localProjects.length > 0) {
       console.log('[loadProjects] fallback to localStorage projects:', localProjects.length);
       set({ projects: localProjects, isLoading: false });
+      console.timeEnd('[perf] loadProjects total');
       return;
     }
 
     set({ isLoading: false });
+    console.timeEnd('[perf] loadProjects total');
   },
 
   createProject: async (name: string, handle: FileSystemDirectoryHandle) => {
+    console.time('[perf] createProject total');
     set({ isLoading: true, error: null, isScanning: true });
     try {
       const handleStoreId = generateId();
@@ -142,13 +149,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         return null;
       }
 
-      // Batch read files (accumulate locally, single setState at end — avoid triggering persist on every batch)
+      // Batch read files (accumulate locally, single setState at end)
       const allConcepts: any[] = [];
       const allFiles: { path: string; content: string }[] = [];
       const { readMdFilesBatched } = await import('../utils/fileSystem');
       const kgStore = (await import('./knowledgeGraphStore')).useKnowledgeGraphStore;
 
       kgStore.setState({ isLoading: true });
+      console.time('[perf] readMdFilesBatched');
       for await (const batch of readMdFilesBatched(handle)) {
         allFiles.push(...batch);
         for (const file of batch) {
@@ -162,10 +170,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
           });
         }
       }
+      console.timeEnd('[perf] readMdFilesBatched');
 
       const snapshot = loadSnapshots()[project.id];
+      console.time('[perf] deriveEdgesInWorker');
       const { deriveEdgesInWorker } = await import('../workers/deriveEdges.worker');
       const derivedEdges = await deriveEdgesInWorker(allConcepts, allFiles);
+      console.timeEnd('[perf] deriveEdgesInWorker');
       const edges = snapshot?.edges?.length ? snapshot.edges : derivedEdges;
       console.log('[createProject] edges: snapshot:', snapshot?.edges?.length, 'derived:', derivedEdges.length, 'final:', edges.length, 'project:', project.id);
       kgStore.setState({
@@ -189,6 +200,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         });
       } catch {}
 
+      console.timeEnd('[perf] createProject total');
       return project;
     } catch (error) {
       set({ error: error instanceof Error ? error.message : '创建项目失败', isLoading: false, isScanning: false });
@@ -218,6 +230,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   switchProject: async (projectId: string) => {
+    console.time('[perf] switchProject total');
     set({ isLoading: true, error: null });
     try {
       const { projects, currentProjectId } = get();
@@ -253,6 +266,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         const kgStore = (await import('./knowledgeGraphStore')).useKnowledgeGraphStore;
 
         kgStore.setState({ isLoading: true });
+        console.time('[perf] readMdFilesBatched');
         for await (const batch of readMdFilesBatched(handle)) {
           allFiles.push(...batch);
           for (const file of batch) {
@@ -266,10 +280,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
             });
           }
         }
+        console.timeEnd('[perf] readMdFilesBatched');
 
         const snapshot = loadSnapshots()[projectId];
+        console.time('[perf] deriveEdgesInWorker');
         const { deriveEdgesInWorker } = await import('../workers/deriveEdges.worker');
         const derivedEdges = await deriveEdgesInWorker(allConcepts, allFiles);
+        console.timeEnd('[perf] deriveEdgesInWorker');
         const restoredEdges = snapshot?.edges?.length ? snapshot.edges : derivedEdges;
         console.log('[switchProject] edges: snapshot:', snapshot?.edges?.length, 'derived:', derivedEdges.length, 'final:', restoredEdges.length, 'for project:', projectId);
 
@@ -288,8 +305,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         projects: projects.map(p => p.id === projectId ? { ...p, lastOpenedAt: new Date().toISOString() } : p),
         isLoading: false,
       });
+      console.timeEnd('[perf] switchProject total');
     } catch (error) {
       set({ error: error instanceof Error ? error.message : '切换项目失败', isLoading: false });
+      console.timeEnd('[perf] switchProject total');
     }
   },
 
