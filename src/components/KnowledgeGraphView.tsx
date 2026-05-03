@@ -9,9 +9,9 @@ import { ManualAddDialog } from './ManualAddDialog'
 import { BatchLinkDialog } from './BatchLinkDialog'
 import { AddConceptDialog } from './AddConceptDialog'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
+import type { ProjectInfo } from '../store/knowledgeGraphStore'
 import { generateGenericChain } from '../utils/processComparison'
 import type { Concept, SuggestionItem } from '../types'
-import { readMdFiles } from '../utils/fileSystem'
 import { useContainerSize } from '../hooks/useContainerSize'
 
 type RelationType = 'leads_to' | 'depends_on' | 'related'
@@ -38,6 +38,7 @@ export function KnowledgeGraphView() {
     if (storeSelectedConcept) return storeSelectedConcept
     return selectedConceptId ? concepts.find(c => c.id === selectedConceptId) ?? null : null
   }, [storeSelectedConcept, selectedConceptId, concepts])
+
   const [processMode, setProcessMode] = useState(false)
   const [processConcept, setProcessConcept] = useState<Concept | null>(null)
   const [hoverConcept, setHoverConcept] = useState<{ concept: Concept; x: number; y: number; width: number; height: number } | null>(null)
@@ -53,9 +54,6 @@ export function KnowledgeGraphView() {
   const [linkMode, setLinkMode] = useState(false)
   const [linkSource, setLinkSource] = useState<string | null>(null)
   const [focusedNodeIds, setFocusedNodeIds] = useState<string[] | undefined>(undefined)
-  const [folderHandle, setFolderHandle] = useState<FileSystemDirectoryHandle | null>(null)
-  const [folderName, setFolderName] = useState('')
-  const [isScanning, setIsScanning] = useState(false)
   const { containerRef: graphContainerRef, size: containerSize } = useContainerSize<HTMLDivElement>()
   const selectedConceptRef = useRef<Concept | null>(null)
   const preventHideRef = useRef(false)
@@ -159,6 +157,7 @@ useEffect(() => {
     if (concept) {
       setSelectedConceptId(concept.id)
       selectedConceptRef.current = concept
+      selectConcept(concept)
       setFocusedNodeIds(undefined)
     }
   }
@@ -245,63 +244,16 @@ useEffect(() => {
     setHideHoverTimer(timerId)
   }
 
-  // Skeleton mode removed: skeletonNodes no longer used
+  const projects = useKnowledgeGraphStore(s => s.projects)
+  const activeProjectId = useKnowledgeGraphStore(s => s.activeProjectId)
+  const fetchProjects = useKnowledgeGraphStore(s => s.fetchProjects)
+  const loadProjectGraph = useKnowledgeGraphStore(s => s.loadProjectGraph)
 
-  const handleBrowseFolder = useCallback(async () => {
-    try {
-      const handle = await (window as any).showDirectoryPicker()
-      setFolderHandle(handle)
-      setFolderName(handle.name)
-    } catch (e: any) {
-      if (e.name !== 'AbortError') {
-        alert('选择文件夹失败: ' + (e.message || e))
-      }
-    }
-  }, [])
+  useEffect(() => { fetchProjects() }, [fetchProjects])
 
-  const handleAutoScan = useCallback(async () => {
-    if (!folderHandle) { alert('请先选择文档目录'); return }
-    setIsScanning(true)
-    try {
-      const files = await readMdFiles(folderHandle)
-      const concepts: any[] = []
-      
-      for (const file of files) {
-        if (!file.path.endsWith('.md')) continue;
-        const id = file.path.replace('.md', '').replace(/\//g, '-')
-        const title = file.path.replace('.md', '').split('/').pop() || file.path.replace('.md', '')
-        concepts.push({
-          id,
-          title,
-          path: file.path,
-          level: 1,
-          category: '',
-          problem: '',
-          gap_anticipate: '',
-          depends_on: [],
-          leads_to: [],
-          related: [],
-          tags: [],
-        })
-      }
-
-      if (concepts.length > 0) {
-        const { deriveEdges } = await import('../utils/deriveEdges');
-        const derivedEdges = deriveEdges(concepts, files);
-        const conceptIds = new Set(concepts.map(c => c.id));
-        const kgState = useKnowledgeGraphStore.getState();
-        const matchedEdges = kgState.edges.filter(e => conceptIds.has(e.source) && conceptIds.has(e.target));
-        const edges = matchedEdges.length ? matchedEdges : derivedEdges;
-        useKnowledgeGraphStore.setState({ concepts, edges, isLoading: false })
-      } else {
-        alert('所选目录中没有找到 Markdown 文档')
-      }
-    } catch (e: any) {
-      alert('扫描失败: ' + (e.message || e))
-    } finally {
-      setIsScanning(false)
-    }
-  }, [folderHandle])
+  const handleSelectProject = (projectId: string) => {
+    loadProjectGraph(projectId)
+  }
 
   const handleAddConcept = useCallback((title: string) => {
     const concept = useKnowledgeGraphStore.getState().addConcept({
@@ -322,19 +274,12 @@ useEffect(() => {
     setShowAddConceptDialog(false)
   }, [])
 
-  const handleOnboardingManualAdd = useCallback(() => {
-    if (!folderHandle) { alert('请先选择文档目录'); return }
-    setShowQuickExploreDialog(true)
-  }, [folderHandle])
-
-  // 检测是否显示空状态引导
-  const isEmpty = concepts.length === 0 && !isLoading && !processMode
+  const showProjectList = concepts.length === 0 && !isLoading && !processMode && !activeProjectId
+  const showEmptyGraph = activeProjectId && concepts.length === 0 && !isLoading
 
   return (
     <div ref={containerRef} className="flex h-full w-full overflow-hidden">
-      {/* 左侧图谱 / 过程画板 */}
       <div ref={graphContainerRef} className="min-w-0 relative flex flex-col" style={{ width: `calc(100% - ${rightPanelWidth + 40}px)` }}>
-        {/* Progress bar during Phase 2 content loading */}
         {loadingProgress > 0 && loadingProgress < 100 && (
           <div className="shrink-0 w-full bg-gray-100 h-1">
             <div
@@ -343,39 +288,42 @@ useEffect(() => {
             />
           </div>
         )}
-        {isEmpty ? (
+        {showProjectList ? (
           <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 text-gray-500">
             <div className="max-w-md text-center space-y-6">
               <svg width={80} height={80} className="w-20 h-20 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
               </svg>
-              <h2 className="text-lg font-medium text-gray-700">还没有知识图谱索引</h2>
-              <p className="text-sm text-gray-400">设置文档目录路径，选择索引生成方式</p>
-              <div className="space-y-4">
-                <button
-                  onClick={handleBrowseFolder}
-                  className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors"
-                >
-                  {folderName ? `📂 ${folderName}` : '点击选择文档目录'}
-                </button>
-                {folderName && (
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleAutoScan}
-                      disabled={isScanning}
-                      className="flex-1 px-4 py-2.5 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
-                    >
-                      {isScanning ? '扫描中...' : '自动扫描建索引'}
-                    </button>
-                    <button
-                      onClick={handleOnboardingManualAdd}
-                      className="flex-1 px-4 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:border-blue-300 hover:text-blue-600 transition-colors"
-                    >
-                      手动添加概念
-                    </button>
-                  </div>
-                )}
+              <h2 className="text-lg font-medium text-gray-700">知识图谱</h2>
+              <p className="text-sm text-gray-400">
+                使用命令行初始化项目:
+              </p>
+              <div className="bg-gray-100 rounded-lg p-3 text-left text-xs font-mono text-gray-600">
+                magic-memory init /path/to/docs<br />
+                magic-memory server start
               </div>
+              {projects.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-500">已注册的项目:</p>
+                  {projects.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => handleSelectProject(p.id)}
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-left hover:border-blue-300 hover:text-blue-600 transition-colors"
+                    >
+                      <div className="text-sm font-medium text-gray-700">{p.name}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        {p.conceptCount} 概念 · {p.edgeCount} 边 · {p.sourceDir}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {projects.length === 0 && (
+                <p className="text-xs text-gray-400">
+                  全局服务未运行或没有注册项目
+                </p>
+              )}
             </div>
           </div>
         ) : processMode && processConcept ? (
@@ -404,6 +352,23 @@ useEffect(() => {
                 }}
                 onNavigate={handleNavigate}
               />
+            </div>
+          </div>
+        ) : showEmptyGraph ? (
+          <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 text-gray-400 relative">
+            <div className="text-center space-y-4">
+              <svg width={48} height={48} className="mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h8M12 8v8" />
+              </svg>
+              <p className="text-sm">此项目暂无概念</p>
+              <button
+                onClick={() => setShowAddConceptDialog(true)}
+                className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                + 添加概念
+              </button>
+              <p className="text-xs text-gray-300">或使用命令行从文档构建: <code className="font-mono">memo init /path/to/docs</code></p>
             </div>
           </div>
         ) : (

@@ -10,6 +10,7 @@ interface DocumentStore {
 
   loadDocuments: () => Promise<void>
   selectDocument: (document: Document) => void
+  addDocument: (document: Document) => void
   updateDocument: (id: string, updates: Partial<Document>) => void
   searchDocuments: (query: string) => Document[]
   filterByLevel: (level: number) => Document[]
@@ -41,6 +42,14 @@ export const useDocumentStore = create<DocumentStore>()(
 
       selectDocument: (document) => {
         set({ selectedDocument: document })
+      },
+
+      addDocument: (document) => {
+        set((state) => ({
+          documents: state.documents.some(d => d.id === document.id)
+            ? state.documents.map(d => d.id === document.id ? { ...d, ...document } : d)
+            : [...state.documents, document],
+        }))
       },
 
       updateDocument: (id, updates) => {

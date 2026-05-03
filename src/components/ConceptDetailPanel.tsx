@@ -13,7 +13,8 @@ import {
 import { generateReferenceFlow, diffFlows, getGapConceptIds, generateGenericChain } from '../utils/processComparison'
 import { loadDocContent, clearDocCache } from '../utils/docLoader'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
-import type { Concept, ConceptEdge, ReviewRecord, ProcessChain } from '../types'
+import { useDocumentStore } from '../store/documentStore'
+import type { Concept, ConceptEdge, ReviewRecord, ProcessChain, Document } from '../types'
 
 interface ConceptDetailPanelProps {
   concept: Concept
@@ -84,7 +85,11 @@ export function ConceptDetailPanel({
       const resp = await fetch('/api/infer-relations-from-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conceptId: concept.id, content: c.content }),
+        body: JSON.stringify({
+          conceptId: concept.id,
+          content: c.content,
+          concepts: store.concepts.map(c => ({ id: c.id, title: c.title, problem: c.problem })),
+        }),
       })
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
       const { relations } = await resp.json()
@@ -165,6 +170,14 @@ export function ConceptDetailPanel({
   const [importContent, setImportContent] = useState('')
   const [importLoading, setImportLoading] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
+  const [importedContent, setImportedContent] = useState<string | null>(null)
+
+  useEffect(() => {
+    setImportContent('')
+    setImportLoading(false)
+    setImportError(null)
+    setImportedContent(null)
+  }, [concept.id])
 
   const handleImport = useCallback(async () => {
     if (!importContent.trim()) return
@@ -182,8 +195,13 @@ export function ConceptDetailPanel({
       }
       clearDocCache(concept.path)
       updateConceptContent(concept.id, importContent)
+      const updatedConcept = useKnowledgeGraphStore.getState().concepts.find(c => c.id === concept.id)
+      if (updatedConcept) {
+        useKnowledgeGraphStore.getState().selectConcept(updatedConcept)
+      }
+      const savedContent = importContent
       setImportContent('')
-      setAction('read')
+      setImportedContent(savedContent)
     } catch (e: any) {
       setImportError('导入失败: ' + (e.message || e))
     } finally {
@@ -315,7 +333,7 @@ export function ConceptDetailPanel({
             <div className="space-y-3">
               <p className="text-sm text-gray-600">对 LLM 使用下面的 prompt，然后将生成的内容粘贴到下方输入框中：</p>
               <div className="p-3 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-700 whitespace-pre-wrap font-mono leading-relaxed select-all cursor-text">
-{`以 Unix man page 的严谨技术风格和 markdown 的文本格式，用"问题→解决该问题的子概念和解决过程→引出下一问题"的层层推导方式，解释 ${concept.title} 的核心原理。主体用树状缩进和简洁公式，语言精炼专业,一读就懂。使用中文。`}
+{`以 Unix man page 的严谨技术风格和 markdown 的文本格式，用"问题→解决该问题的子概念和解决过程→引出下一问题"的层层推导方式，解释 ${concept.title} 的核心原理。主体用树状缩进和简洁公式，语言精炼专业,一读就懂,容易记忆,容易联想和建模。使用中文。`}
               </div>
               <textarea
                 className="w-full h-48 p-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
@@ -332,6 +350,18 @@ export function ConceptDetailPanel({
               </button>
               {importError && (
                 <p className="text-sm text-red-500">{importError}</p>
+              )}
+              {importedContent && (
+                <div className="pt-4 border-t border-gray-200">
+                  <p className="text-sm font-medium text-green-600 mb-2">✓ 导入成功</p>
+                  <div className="prose prose-sm max-w-none">
+                    <DocumentViewer document={{
+                      id: concept.id, title: concept.title, path: concept.path,
+                      content: importedContent, level: concept.level, category: concept.category,
+                      tags: concept.tags, lastModified: concept.lastModified, metadata: concept.metadata,
+                    }} />
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -374,7 +404,7 @@ export function ConceptDetailPanel({
                 </button>
               </div>
             )}
-            {docContent === null && !docLoading ? (
+            {docContent === null && !docLoading && !concept.content ? (
               <div className="flex flex-col items-center justify-center py-16 text-gray-400">
                 <svg width={48} height={48} className="w-12 h-12 mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -391,7 +421,7 @@ export function ConceptDetailPanel({
               <div className="prose prose-sm max-w-none">
                 <DocumentViewer document={{
                   id: concept.id, title: concept.title, path: concept.path,
-                  content: docContent ?? '', level: concept.level, category: concept.category,
+                  content: docContent ?? concept.content ?? '', level: concept.level, category: concept.category,
                   tags: concept.tags, lastModified: concept.lastModified, metadata: concept.metadata,
                 }} />
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import 'katex/dist/katex.min.css'
@@ -25,6 +25,19 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
   const viewerRef = useRef<HTMLDivElement>(null)
   const { annotations, addAnnotation, selectAnnotation, selectedAnnotation } = useAnnotationStore()
   const selectedConcept = useKnowledgeGraphStore(s => s.selectedConcept)
+
+  const fullPath = useMemo(() => {
+    const { projects, activeProjectId } = useKnowledgeGraphStore.getState()
+    const project = projects.find(p => p.id === activeProjectId)
+    const sourceDir = project?.sourceDir || ''
+    if (!document.path) return '路径未知'
+    if (document.path.startsWith('/')) return document.path
+    if (sourceDir) {
+      const relPath = document.path.replace(/^\.\//, '')
+      return `${sourceDir}/${relPath}`
+    }
+    return document.path
+  }, [document.path])
   const createConceptWithEdges = useKnowledgeGraphStore(s => s.createConceptWithEdges)
   const selectConcept = useKnowledgeGraphStore(s => s.selectConcept)
   const addConcept = useKnowledgeGraphStore(s => s.addConcept)
@@ -188,17 +201,9 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
       <div className="border-b border-gray-200 px-6 py-4">
         <h1 className="text-2xl font-bold text-gray-900">{document.title}</h1>
         <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
-          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">
-            Level {document.level}
+          <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded font-mono text-xs" title="文档存储路径">
+            {fullPath}
           </span>
-          <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded">
-            {document.category}
-          </span>
-          {document.tags.map((tag) => (
-            <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 rounded">
-              {tag}
-            </span>
-          ))}
         </div>
       </div>
 

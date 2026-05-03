@@ -425,6 +425,83 @@ ${question}
       }
     }
 
+    // POST /api/infer-relations-from-content — LLM 推断概念间关系
+    if (url.pathname === '/api/infer-relations-from-content' && req.method === 'POST') {
+      try {
+        const body = await req.json()
+        const { conceptId, content, concepts: allConcepts } = body
+        if (!conceptId || !content || !allConcepts) {
+          return new Response(JSON.stringify({ error: 'conceptId, content, and concepts required' }), {
+            status: 400, headers: { 'Content-Type': 'application/json' },
+          })
+        }
+
+        const sourceConcept = allConcepts.find((c: any) => c.id === conceptId)
+        const otherConcepts = allConcepts.filter((c: any) => c.id !== conceptId)
+        const conceptListStr = otherConcepts
+          .map((c: any) => `- ID: ${c.id}, 名称: ${c.title}${c.problem ? `, 核心问题: ${c.problem}` : ''}`)
+          .join('\n')
+
+        const prompt = `你是一个知识图谱分析助手。请根据以下概念文档内容，从候选概念列表中找出与之直接相关的概念。
+
+当前概念名称: ${sourceConcept?.title || conceptId}
+当前概念文档内容:
+"""
+${content.slice(0, 3000)}
+"""
+
+候选概念列表:
+${conceptListStr}
+
+请分析当前概念的文档内容，找出候选概念中与它最直接相关的概念（通常 2-5 个）。
+判断依据：概念之间的因果依赖、功能关联、或共同解决一个问题。
+
+只返回 JSON 格式的数组，不要额外说明：
+["concept_id_1", "concept_id_2", ...]`
+
+        const apiKey = process.env.DEEPSEEK_API_KEY || ''
+        const baseUrl = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1'
+        const resp = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [
+              { role: 'system', content: '你是一个知识图谱分析助手，只输出 JSON，不输出其他内容。' },
+              { role: 'user', content: prompt },
+            ],
+            max_tokens: 1000,
+          }),
+        })
+        const data = await resp.json() as any
+        let relatedIds: string[] = []
+        const rawContent = data?.choices?.[0]?.message?.content || '[]'
+        try {
+          relatedIds = JSON.parse(rawContent)
+        } catch {
+          // 尝试从 JSON 代码块中提取
+          const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/)
+          if (jsonMatch) {
+            try { relatedIds = JSON.parse(jsonMatch[1]) } catch {}
+          }
+        }
+        if (!Array.isArray(relatedIds)) relatedIds = []
+
+        const relations = relatedIds
+          .filter((id: string) => allConcepts.some((c: any) => c.id === id))
+          .map((targetId: string) => ({ targetId }))
+
+        return new Response(JSON.stringify({ relations }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        console.error('关系推断失败:', error)
+        return new Response(JSON.stringify({ error: String(error) }), {
+          status: 500, headers: { 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
     // DELETE /api/delete-doc
     if (url.pathname === '/api/delete-doc' && req.method === 'DELETE') {
       try {

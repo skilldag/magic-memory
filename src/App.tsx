@@ -6,6 +6,7 @@ import { AnnotationPanel } from './components/AnnotationPanel'
 import { Toolbar } from './components/Toolbar'
 import { ExportModal } from './components/ExportModal'
 import { ImportModal } from './components/ImportModal'
+import { Toast } from './components/Toast'
 import { KnowledgeGraphView } from './components/KnowledgeGraphView'
 import { ClusterView } from './components/ClusterView'
 import { useDocumentStore } from './store/documentStore'
@@ -181,6 +182,8 @@ function App() {
           onImport={handleImportData}
         />
       )}
+
+      <Toast />
     </div>
   )
 }
