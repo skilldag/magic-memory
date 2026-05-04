@@ -288,6 +288,29 @@ useEffect(() => {
             />
           </div>
         )}
+        {/* 聚焦模式顶部悬浮条 — 当概念被选中时显示 */}
+        {selectedConcept && !processMode && (
+          <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-2 bg-white/80 backdrop-blur-sm border-b border-blue-200 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="text-sm font-medium text-gray-700">
+                聚焦: <span className="text-blue-600">{selectedConcept.title}</span>
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setSelectedConceptId(null)
+                useKnowledgeGraphStore.setState({ selectedConcept: null })
+              }}
+              className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 hover:text-gray-800 transition-colors"
+            >
+              <svg width={14} height={14} className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              退出聚焦
+            </button>
+          </div>
+        )}
         {showProjectList ? (
           <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 text-gray-500">
             <div className="max-w-md text-center space-y-6">
