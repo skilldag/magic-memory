@@ -26,6 +26,9 @@ interface KnowledgeGraphProps {
   onLinkCancel?: () => void
   // Precision focus: supply a set of node IDs to focus the graph to a specific subset
   focusedNodeIds?: string[]
+  // Container dimensions for adaptive layout
+  containerWidth?: number
+  containerHeight?: number
 }
 
 export function KnowledgeGraph({
@@ -36,6 +39,8 @@ export function KnowledgeGraph({
   linkMode = false,
   linkSource = null,
   focusedNodeIds,
+  containerWidth = 1200,
+  containerHeight = 800,
   onSelectConcept,
   onNavigate,
   onDoubleTapConcept,
@@ -534,7 +539,7 @@ export function KnowledgeGraph({
 
     cy.fit(neighborNodes.union(selectedNode), 60)
     wasFocusedRef.current = isFocusedNow
-  }, [selectedConcept, focusEnabled, focusedNodeIds])
+  }, [selectedConcept, focusEnabled, focusedNodeIds, structuralKey])
 
   useEffect(() => {
     const cy = cyRef.current

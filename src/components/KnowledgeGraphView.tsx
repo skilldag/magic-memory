@@ -399,6 +399,8 @@ useEffect(() => {
             concepts={concepts} edges={edges} selectedConcept={selectedConcept}
             focusEnabled={true}
             focusedNodeIds={focusedNodeIds}
+            containerWidth={containerSize?.width}
+            containerHeight={containerSize?.height}
             linkMode={linkMode}
             linkSource={linkSource}
             onSelectConcept={handleSelectConcept} onNavigate={handleNavigate}
