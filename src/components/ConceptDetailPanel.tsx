@@ -277,13 +277,7 @@ export function ConceptDetailPanel({
               <p className="text-xs text-gray-500 mt-0.5 truncate">别名: {concept.alias.join(' / ')}</p>
             )}
           </div>
-          <div className="flex items-center gap-1">
-            <button onClick={onDeselect} className="shrink-0 p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600" title="取消选择">
-              <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+
         </div>
         <div className="flex items-center gap-2 mt-2">
           <span className={`px-2 py-0.5 rounded text-xs font-medium ${
@@ -333,7 +327,7 @@ export function ConceptDetailPanel({
             <div className="space-y-3">
               <p className="text-sm text-gray-600">对 LLM 使用下面的 prompt，然后将生成的内容粘贴到下方输入框中：</p>
               <div className="p-3 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-700 whitespace-pre-wrap font-mono leading-relaxed select-all cursor-text">
-{`以 Unix man page 的严谨技术风格和 markdown 的文本格式，用"问题→解决该问题的子概念和解决过程→引出下一问题"的层层推导方式，解释 ${concept.title} 的核心原理。主体用树状缩进和简洁公式，语言精炼专业,一读就懂,容易记忆,容易联想和建模。使用中文。`}
+{`以 Unix man page 的严谨技术风格和 markdown 的文本格式，用"问题→解决该问题的子概念和解决过程→引出下一问题"的层层推导方式，解释 ${concept.title} 的核心原理。主体用树状缩进和简洁公式，语言精炼专业,一读就懂,容易记忆,容易联想和建模,最好有例子和命名说明。使用中文。`}
               </div>
               <textarea
                 className="w-full h-48 p-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
