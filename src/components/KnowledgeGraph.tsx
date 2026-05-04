@@ -7,6 +7,28 @@ import { LEVEL_COLORS, EDGE_COLORS } from '../constants/graph'
 
 cytoscape.use(fcose)
 
+interface AdaptiveParams {
+  idealEdgeLength: number
+  nodeRepulsion: number
+  gravity: number
+  padding: number
+  numIter: number
+}
+
+function calcAdaptiveLayoutParams(
+  containerWidth: number,
+  containerHeight: number,
+  nodeCount: number
+): AdaptiveParams {
+  const diagonal = Math.sqrt(containerWidth * containerWidth + containerHeight * containerHeight)
+  const idealEdgeLength = Math.max(60, Math.min(200, (diagonal / Math.sqrt(Math.max(nodeCount, 1))) * 1.2))
+  const nodeRepulsion = Math.max(8000, Math.min(50000, idealEdgeLength * nodeCount * 3))
+  const gravity = Math.max(0.02, Math.min(0.3, 100 / (nodeCount + 10)))
+  const padding = Math.max(20, Math.min(80, Math.min(containerWidth, containerHeight) * 0.06))
+  const numIter = Math.max(100, Math.min(800, nodeCount * 8))
+  return { idealEdgeLength, nodeRepulsion, gravity, padding, numIter }
+}
+
 interface KnowledgeGraphProps {
   concepts: Concept[]
   edges: ConceptEdge[]
@@ -100,6 +122,43 @@ export function KnowledgeGraph({
     cyRef.current.fit(undefined, 50)
     setZoomLevel(cyRef.current.zoom())
   }, [])
+
+  const handleSmartLayout = useCallback(() => {
+    const cy = cyRef.current
+    if (!cy) return
+    const count = concepts.length
+    if (count <= 1) {
+      cy.fit(undefined, 50)
+      setZoomLevel(cy.zoom())
+      return
+    }
+    const w = containerWidth || containerRef.current?.clientWidth || 1200
+    const h = containerHeight || containerRef.current?.clientHeight || 800
+    const params = calcAdaptiveLayoutParams(w, h, count)
+    try {
+      const layout = cy.layout({
+        name: 'fcose',
+        quality: 'default',
+        animate: true,
+        animationDuration: 400,
+        nodeRepulsion: params.nodeRepulsion,
+        idealEdgeLength: params.idealEdgeLength,
+        gravity: params.gravity,
+        numIter: params.numIter,
+        tile: true,
+        padding: params.padding,
+      } as cytoscape.LayoutOptions)
+      layout.one('layoutstop', () => {
+        cy.fit(undefined, params.padding)
+        setZoomLevel(cy.zoom())
+      })
+      layout.run()
+    } catch (e) {
+      console.warn('[KnowledgeGraph] smart layout failed:', e)
+      cy.fit(undefined, 50)
+      setZoomLevel(cy.zoom())
+    }
+  }, [concepts.length, containerWidth, containerHeight])
 
   // 初始化 Cytoscape（仅在首次数据到达时创建）
   useEffect(() => {
