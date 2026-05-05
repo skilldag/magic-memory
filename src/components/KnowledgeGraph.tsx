@@ -51,6 +51,8 @@ interface KnowledgeGraphProps {
   // Container dimensions for adaptive layout
   containerWidth?: number
   containerHeight?: number
+  // Exit focus mode callback
+  onExitFocus?: () => void
 }
 
 export function KnowledgeGraph({
@@ -72,7 +74,8 @@ export function KnowledgeGraph({
   onToggleLinkMode,
   onLinkStart,
   onLinkEnd,
-  onLinkCancel
+  onLinkCancel,
+  onExitFocus
 }: KnowledgeGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
@@ -625,16 +628,28 @@ export function KnowledgeGraph({
       )}
 
       {isReady && (
-        <button
-          onClick={handleSmartLayout}
-          className="absolute w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 text-gray-700"
-          style={{ top: '12px', right: '12px' }}
-          title="自适应布局"
-        >
-          <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-          </svg>
-        </button>
+        <div className="absolute flex flex-col gap-1" style={{ top: '12px', right: '12px' }}>
+          {selectedConcept && (
+            <button
+              onClick={onExitFocus}
+              className="w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 text-gray-700"
+              title="退出聚焦"
+            >
+              <svg width={14} height={14} className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+          <button
+            onClick={handleSmartLayout}
+            className="w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 text-gray-700"
+            title="自适应布局"
+          >
+            <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </button>
+        </div>
       )}
 
       {isReady && (
