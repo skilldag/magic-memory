@@ -625,7 +625,7 @@ export function KnowledgeGraph({
       )}
 
       {isReady && (
-        <div className="absolute top-3 right-3 flex flex-col gap-1">
+        <div className="absolute flex flex-col gap-1" style={{ top: '12px', right: '12px' }}>
           <button
             onClick={handleZoomIn}
             className="w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 text-gray-700 text-lg"
@@ -684,7 +684,7 @@ export function KnowledgeGraph({
         </button>
       )}
       
-      <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg shadow p-2.5 text-xs space-y-1.5">
+      <div className="absolute bg-white/90 backdrop-blur rounded-lg shadow p-2.5 text-xs space-y-1.5" style={{ bottom: '16px', left: '16px' }}>
         <div className="font-medium text-gray-700 mb-1">关系图例</div>
         <div className="flex items-center gap-2">
           <span className="w-3 h-0.5 bg-red-500" />
