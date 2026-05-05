@@ -22,10 +22,10 @@ function calcAdaptiveLayoutParams(
 ): AdaptiveParams {
   const diagonal = Math.sqrt(containerWidth * containerWidth + containerHeight * containerHeight)
   const idealEdgeLength = Math.max(60, Math.min(200, (diagonal / Math.sqrt(Math.max(nodeCount, 1))) * 1.2))
-  const nodeRepulsion = Math.max(8000, Math.min(50000, idealEdgeLength * nodeCount * 3))
-  const gravity = Math.max(0.02, Math.min(0.3, 100 / (nodeCount + 10)))
+  const nodeRepulsion = Math.max(12000, Math.min(80000, idealEdgeLength * nodeCount * 5))
+  const gravity = Math.max(0.02, Math.min(0.12, 50 / (nodeCount + 10)))
   const padding = Math.max(20, Math.min(80, Math.min(containerWidth, containerHeight) * 0.06))
-  const numIter = Math.max(100, Math.min(800, nodeCount * 8))
+  const numIter = Math.max(200, Math.min(1200, nodeCount * 15))
   return { idealEdgeLength, nodeRepulsion, gravity, padding, numIter }
 }
 
@@ -138,7 +138,7 @@ export function KnowledgeGraph({
     try {
       const layout = cy.layout({
         name: 'fcose',
-        quality: 'default',
+        quality: 'proof',
         animate: true,
         animationDuration: 400,
         nodeRepulsion: params.nodeRepulsion,
@@ -625,41 +625,16 @@ export function KnowledgeGraph({
       )}
 
       {isReady && (
-        <div className="absolute flex flex-col gap-1" style={{ top: '12px', right: '12px' }}>
-          <button
-            onClick={handleZoomIn}
-            className="w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 text-gray-700 text-lg"
-            title="放大"
-          >
-            +
-          </button>
-          <button
-            onClick={handleZoomOut}
-            className="w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 text-gray-700 text-lg"
-            title="缩小"
-          >
-            −
-          </button>
-          <button
-            onClick={handleFit}
-            className="w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 text-gray-700"
-            title="适应视图"
-          >
-            <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-            </svg>
-          </button>
-          <button
-            onClick={handleSmartLayout}
-            className="w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 text-gray-700"
-            title="自适应布局"
-          >
-            <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-            </svg>
-          </button>
-          <div className="text-center text-xs text-gray-400 mt-1">{Math.round(zoomLevel * 100)}%</div>
-        </div>
+        <button
+          onClick={handleSmartLayout}
+          className="absolute w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 text-gray-700"
+          style={{ top: '12px', right: '12px' }}
+          title="自适应布局"
+        >
+          <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        </button>
       )}
 
       {isReady && (
