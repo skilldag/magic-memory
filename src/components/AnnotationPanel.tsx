@@ -5,9 +5,10 @@ import type { Document } from '../types'
 interface AnnotationPanelProps {
   document: Document
   onClose: () => void
+  onNavigateToAnnotation?: (annotationId: string) => void
 }
 
-export function AnnotationPanel({ document, onClose }: AnnotationPanelProps) {
+export function AnnotationPanel({ document, onClose, onNavigateToAnnotation }: AnnotationPanelProps) {
   const {
     annotations,
     selectedAnnotation,
@@ -103,6 +104,17 @@ export function AnnotationPanel({ document, onClose }: AnnotationPanelProps) {
                     <span className="text-xs text-gray-500">
                       {new Date(annotation.createdAt).toLocaleDateString()}
                     </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        selectAnnotation(annotation)
+                        onNavigateToAnnotation?.(annotation.id)
+                      }}
+                      className="text-xs text-blue-500 hover:text-blue-700 ml-1"
+                      title="在文档中定位"
+                    >
+                      📍
+                    </button>
                   </div>
                   <select
                     value={annotation.status}

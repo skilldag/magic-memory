@@ -7,6 +7,7 @@ import {
   type AlignedEdgePair,
 } from '../utils/alignment'
 import { loadDocContent } from '../utils/docLoader'
+import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
 
 interface AlignmentPanelProps {
   concept: Concept
@@ -60,7 +61,10 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
   useEffect(() => {
     if (concept.content) { setOriginalContent(concept.content); return }
     setContentLoading(true)
-    loadDocContent(concept.path).then(c => {
+    const { projects, activeProjectId } = useKnowledgeGraphStore.getState()
+    const project = projects.find(p => p.id === activeProjectId)
+    const baseDir = project?.sourceDir || undefined
+    loadDocContent(concept.path, baseDir).then(c => {
       if (c) {
         const body = c.replace(/^---[\s\S]*?---\n*/, '').trim()
         setOriginalContent(body || c)

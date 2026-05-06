@@ -163,6 +163,16 @@ function App() {
           <AnnotationPanel
             document={selectedDoc}
             onClose={handleAnnotationPanelToggle}
+            onNavigateToAnnotation={(annotationId) => {
+              setTimeout(() => {
+                const mark = window.document.querySelector(`mark[data-ann-id="${annotationId}"]`)
+                if (mark) {
+                  mark.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  mark.classList.add('ann-selected')
+                  setTimeout(() => mark.classList.remove('ann-selected'), 1500)
+                }
+              }, 100)
+            }}
           />
         </div>
       )}

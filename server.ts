@@ -297,8 +297,15 @@ ${question}
     if (url.pathname === '/api/write-doc' && req.method === 'POST') {
       try {
         const body = await req.json()
-        const { path: filePath, content } = body
+        let { path: filePath, content, baseDir } = body
         if (!filePath || content === undefined) return new Response(JSON.stringify({ error: 'path and content required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+        // 如果有 baseDir（memo init 路径），则相对路径解析到 baseDir 下
+        if (baseDir && !filePath.startsWith('/')) {
+          filePath = join(baseDir, filePath.replace(/^\.\//, ''))
+        }
+        // 确保目标目录存在
+        const dir = dirname(filePath)
+        if (!existsSync(dir)) { mkdirSync(dir, { recursive: true }) }
         await Bun.write(filePath, content)
         // 同步更新服务端内存中的文档缓存
         const doc = documents.find(d => d.path === filePath)
@@ -306,7 +313,28 @@ ${question}
           const fmMatch = doc.content.match(/^---[\s\S]*?---\n/)
           doc.content = fmMatch ? fmMatch[0] + content : content
         }
-        return new Response(JSON.stringify({ success: true }), {
+        return new Response(JSON.stringify({ success: true, filePath }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
+    }
+
+    // GET /api/read-doc — 读取 .md 文件内容（支持 baseDir 解析）
+    if (url.pathname === '/api/read-doc' && req.method === 'GET') {
+      try {
+        const pathParam = url.searchParams.get('path') || ''
+        const baseDir = url.searchParams.get('baseDir') || ''
+        let resolvedPath = pathParam
+        if (baseDir && !pathParam.startsWith('/')) {
+          resolvedPath = join(baseDir, pathParam.replace(/^\.\//, ''))
+        }
+        if (!existsSync(resolvedPath)) {
+          return new Response(JSON.stringify({ error: 'File not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } })
+        }
+        const content = await readFile(resolvedPath, 'utf-8')
+        return new Response(JSON.stringify({ content }), {
           headers: { 'Content-Type': 'application/json' },
         })
       } catch (error) {
@@ -506,8 +534,12 @@ ${conceptListStr}
     if (url.pathname === '/api/delete-doc' && req.method === 'DELETE') {
       try {
         const body = await req.json()
-        const { path: filePath } = body
+        let { path: filePath, baseDir } = body
         if (!filePath) return new Response(JSON.stringify({ error: 'path required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+
+        if (baseDir && !filePath.startsWith('/')) {
+          filePath = join(baseDir, filePath.replace(/^\.\//, ''))
+        }
 
         try { await rm(filePath) } catch {}
 

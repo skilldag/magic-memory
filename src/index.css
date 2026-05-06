@@ -185,21 +185,45 @@ body {
 }
 
 /* Annotation highlight styles */
-.annotation-highlight {
-  background-color: rgba(59, 130, 246, 0.2);
-  border-bottom: 2px solid var(--color-primary);
+.ann-highlight {
   cursor: pointer;
-  transition: all 0.2s ease;
+  border-radius: 2px;
+  transition: background-color 0.15s, opacity 0.15s;
 }
-
-.annotation-highlight:hover {
-  background-color: rgba(59, 130, 246, 0.3);
-  border-bottom-width: 3px;
+.ann-highlight:hover { filter: brightness(0.9); }
+.ann-comment {
+  background-color: #dbeafe;
+  text-decoration: underline;
+  text-decoration-color: #3b82f6;
+  text-underline-offset: 2px;
 }
-
-.annotation-highlight.selected {
-  background-color: rgba(59, 130, 246, 0.4);
-  border-bottom-width: 3px;
+.ann-question {
+  background-color: #e9d5ff;
+  text-decoration: wavy underline;
+  text-decoration-color: #8b5cf6;
+  text-underline-offset: 2px;
+}
+.ann-suggestion {
+  background-color: #dcfce7;
+  text-decoration: dashed underline;
+  text-decoration-color: #10b981;
+  text-underline-offset: 2px;
+}
+.ann-correction {
+  background-color: #fee2e2;
+  text-decoration: solid underline;
+  text-decoration-color: #ef4444;
+  text-underline-offset: 2px;
+}
+.ann-resolved { opacity: 0.5; }
+.ann-selected {
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
+  animation: ann-flash 0.6s ease-in-out;
+}
+@keyframes ann-flash {
+  0%, 100% { outline-color: #3b82f6; }
+  50% { outline-color: #93c5fd; }
 }
 
 

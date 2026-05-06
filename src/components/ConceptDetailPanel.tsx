@@ -52,7 +52,10 @@ export function ConceptDetailPanel({
     }
     setDocContent(null)
     setDocLoading(true)
-    loadDocContent(concept.path).then(content => {
+    const { projects, activeProjectId } = useKnowledgeGraphStore.getState()
+    const project = projects.find(p => p.id === activeProjectId)
+    const baseDir = project?.sourceDir || undefined
+    loadDocContent(concept.path, baseDir).then(content => {
       if (content) setDocContent(content)
       setDocLoading(false)
     })
@@ -150,16 +153,22 @@ export function ConceptDetailPanel({
       if (!resp.ok) { alert('生成失败: ' + resp.statusText); return }
       const data = await resp.json()
       if (data.content) {
-        // 写入文档
+        const { projects, activeProjectId } = useKnowledgeGraphStore.getState()
+        const project = projects.find(p => p.id === activeProjectId)
+        const baseDir = project?.sourceDir || undefined
         const writeResp = await fetch('/api/write-doc', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: concept.path, content: data.content }),
+          body: JSON.stringify({ path: concept.path, content: data.content, baseDir }),
         })
         if (writeResp.ok) {
-          // 重新加载文档
-          const content = await loadDocContent(concept.path)
-          if (content) setDocContent(content)
+          const result = await writeResp.json()
+          // 如果服务器返回了实际路径，更新概念中的 path
+          if (result.filePath && result.filePath !== concept.path) {
+            updateConceptContent(concept.id, data.content)
+          }
+          const loaded = await loadDocContent(concept.path, baseDir)
+          if (loaded) setDocContent(loaded)
         }
       }
     } catch (e: any) {
@@ -184,16 +193,19 @@ export function ConceptDetailPanel({
     setImportLoading(true)
     setImportError(null)
     try {
+      const { projects, activeProjectId } = useKnowledgeGraphStore.getState()
+      const project = projects.find(p => p.id === activeProjectId)
+      const baseDir = project?.sourceDir || undefined
       const resp = await fetch('/api/write-doc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: concept.path, content: importContent }),
+        body: JSON.stringify({ path: concept.path, content: importContent, baseDir }),
       })
       if (!resp.ok) {
         setImportError('导入失败: ' + resp.statusText)
         return
       }
-      clearDocCache(concept.path)
+      clearDocCache(concept.path, baseDir)
       updateConceptContent(concept.id, importContent)
       const updatedConcept = useKnowledgeGraphStore.getState().concepts.find(c => c.id === concept.id)
       if (updatedConcept) {
