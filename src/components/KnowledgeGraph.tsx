@@ -638,6 +638,35 @@ export function KnowledgeGraph({
     })
 
     cy.fit(neighborNodes.union(selectedNode), 60)
+
+    if (neighborNodes.length > 0) {
+      const visibleCount = neighborNodes.length + 1
+      const w = containerWidth || containerRef.current?.clientWidth || 1200
+      const h = containerHeight || containerRef.current?.clientHeight || 800
+      const params = calcAdaptiveLayoutParams(w, h, visibleCount)
+      try {
+        const layout = cy.layout({
+          name: 'fcose',
+          quality: 'proof',
+          animate: true,
+          animationDuration: 400,
+          nodeRepulsion: params.nodeRepulsion,
+          idealEdgeLength: params.idealEdgeLength,
+          gravity: params.gravity,
+          numIter: params.numIter,
+          tile: true,
+          padding: params.padding,
+        } as cytoscape.LayoutOptions)
+        layout.one('layoutstop', () => {
+          cy.fit(neighborNodes.union(selectedNode), params.padding)
+          setZoomLevel(cy.zoom())
+        })
+        layout.run()
+      } catch (e) {
+        console.warn('[KnowledgeGraph] focus auto-layout failed:', e)
+      }
+    }
+
     wasFocusedRef.current = isFocusedNow
   }, [selectedConcept, focusEnabled, focusedNodeIds, structuralKey])
 
