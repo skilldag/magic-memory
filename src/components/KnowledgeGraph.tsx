@@ -709,7 +709,7 @@ export function KnowledgeGraph({
       )}
 
       {isReady && (
-        <div className="absolute flex flex-col gap-1" style={{ top: '12px', right: '12px' }}>
+        <div className="absolute flex flex-col gap-1" style={{ top: '48px', right: '12px' }}>
           {selectedConcept && (
             <button
               onClick={onExitFocus}
@@ -730,29 +730,26 @@ export function KnowledgeGraph({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
             </svg>
           </button>
+          <button
+            onClick={() => {
+              if (linkMode && linkSource) {
+                onLinkCancel?.()
+              } else {
+                onToggleLinkMode?.()
+              }
+            }}
+            className={`w-8 h-8 rounded shadow flex items-center justify-center transition-colors ${
+              linkMode 
+                ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+            title={linkMode ? '退出连线' : '连线模式'}
+          >
+            <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.979-1.101l1.101-1.102a4 4 0 005.657-5.656l-4-4z" />
+            </svg>
+          </button>
         </div>
-      )}
-
-      {isReady && (
-        <button
-          onClick={() => {
-            if (linkMode && linkSource) {
-              onLinkCancel?.()
-            } else {
-              onToggleLinkMode?.()
-            }
-          }}
-          className={`absolute top-3 right-[70px] w-8 h-8 rounded shadow flex items-center justify-center transition-colors ${
-            linkMode 
-              ? 'bg-blue-500 text-white hover:bg-blue-600' 
-              : 'bg-white text-gray-700 hover:bg-gray-100'
-          }`}
-          title={linkMode ? '退出连线' : '连线模式'}
-        >
-          <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.979-1.101l1.101-1.102a4 4 0 005.657-5.656l-4-4z" />
-          </svg>
-        </button>
       )}
       
       <div className="absolute bg-white/90 backdrop-blur rounded-lg shadow p-2.5 text-xs space-y-1.5" style={{ bottom: '16px', left: '16px' }}>
