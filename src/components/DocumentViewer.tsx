@@ -211,6 +211,8 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
     setDialogType(type)
     setDialogOpen(true)
     setPopoverPos(null)
+    setPreviewAnnotation(null)
+    setPreviewPos(null)
   }, [])
 
   const handleDialogSubmit = useCallback(async (data: {
