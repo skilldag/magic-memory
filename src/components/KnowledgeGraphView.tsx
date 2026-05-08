@@ -136,6 +136,7 @@ useEffect(() => {
       const c = concepts.find(c => c.id === conceptId)
       if (c) handleEnterProcess(c)
     }
+    ;(window as any).__store = useKnowledgeGraphStore
   }
 
   const handleExitProcess = () => {
@@ -420,6 +421,9 @@ useEffect(() => {
             onExitFocus={() => {
               setSelectedConceptId(null)
               useKnowledgeGraphStore.setState({ selectedConcept: null })
+            }}
+            onDeleteEdge={(edgeId) => {
+              useKnowledgeGraphStore.getState().removeEdge(edgeId)
             }}
           />
         )}

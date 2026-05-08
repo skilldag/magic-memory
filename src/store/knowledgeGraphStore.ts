@@ -50,6 +50,7 @@ interface KnowledgeGraphStore {
     metadataStatus?: 'ai-generated' | 'draft'
   }) => Concept
   removeConcept: (conceptId: string) => void
+  removeEdge: (edgeId: string) => void
   updateProcessState: (conceptId: string, state: Partial<ProcessState>) => void
 
   setConceptPanelMode: (mode: boolean) => void
@@ -381,6 +382,13 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
       const newRecords = new Map(get().reviewRecords)
       newRecords.delete(conceptId)
       set({ reviewRecords: newRecords })
+      get().persistToServer()
+    },
+
+    removeEdge: (edgeId) => {
+      set(state => ({
+        edges: state.edges.filter(e => e.id !== edgeId),
+      }))
       get().persistToServer()
     },
 

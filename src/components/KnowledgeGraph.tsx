@@ -53,6 +53,8 @@ interface KnowledgeGraphProps {
   containerHeight?: number
   // Exit focus mode callback
   onExitFocus?: () => void
+  // Edge deletion
+  onDeleteEdge?: (edgeId: string) => void
 }
 
 export function KnowledgeGraph({
@@ -75,19 +77,23 @@ export function KnowledgeGraph({
   onLinkStart,
   onLinkEnd,
   onLinkCancel,
-  onExitFocus
+  onExitFocus,
+  onDeleteEdge
 }: KnowledgeGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
   const onHoverConceptRef = useRef(onHoverConcept)
   const onHoverLeaveRef = useRef(onHoverLeave)
   const onDoubleTapConceptRef = useRef(onDoubleTapConcept)
+  const onDeleteEdgeRef = useRef(onDeleteEdge)
   onHoverConceptRef.current = onHoverConcept
   onHoverLeaveRef.current = onHoverLeave
   onDoubleTapConceptRef.current = onDoubleTapConcept
+  onDeleteEdgeRef.current = onDeleteEdge
   const lastBackgroundTapAtRef = useRef(0)
   const wasFocusedRef = useRef(false)
   const lastNodeTapRef = useRef({ id: '', time: 0 })
+  const hoveredEdgeIdRef = useRef<string | null>(null)
   const conceptsRef = useRef(concepts)
   const edgesRef = useRef(edges)
   conceptsRef.current = concepts
@@ -379,6 +385,38 @@ export function KnowledgeGraph({
       onHoverLeaveRef.current?.()
     })
 
+    // 边 hover 高亮
+    cy.on('mouseover', 'edge', (evt) => {
+      const edge = evt.target
+      hoveredEdgeIdRef.current = edge.id()
+      edge.style({
+        'width': 6,
+        'opacity': 1,
+        'line-color': '#f59e0b',
+        'target-arrow-color': '#f59e0b',
+        'z-compound-depth': 'top',
+      })
+    })
+
+    cy.on('mouseout', 'edge', () => {
+      hoveredEdgeIdRef.current = null
+      // 恢复样式由增量 effect 统一处理，避免逐个重置
+      const cy = cyRef.current
+      if (!cy) return
+      cy.edges().forEach(e => {
+        const edgeType = e.data('edgeType')
+        const color = EDGE_COLORS[edgeType as keyof typeof EDGE_COLORS] || '#d1d5db'
+        const baseWidth = edgeType === 'related' ? 1.5 : 3
+        const baseOpacity = edgeType === 'related' ? 0.5 : 0.9
+        e.style({
+          'width': baseWidth,
+          'opacity': baseOpacity,
+          'line-color': color,
+          'target-arrow-color': color,
+        })
+      })
+    })
+
     cy.on('tap', (evt) => {
       if (evt.target !== cy) return
       
@@ -616,6 +654,20 @@ export function KnowledgeGraph({
       })
     })
   }, [linkMode, linkSource])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return
+      const edgeId = hoveredEdgeIdRef.current
+      if (!edgeId) return
+      e.preventDefault()
+      onDeleteEdgeRef.current?.(edgeId)
+      hoveredEdgeIdRef.current = null
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   return (
     <div className="relative w-full h-full">
