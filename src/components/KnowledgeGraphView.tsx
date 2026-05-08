@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { KnowledgeGraph } from './KnowledgeGraph'
+import { GlobalSearch } from './GlobalSearch'
 import { ConceptDetailPanel } from './ConceptDetailPanel'
 import { SummaryPanel } from './SummaryPanel'
 import { ProcessCanvas } from './ProcessCanvas'
@@ -288,15 +289,23 @@ useEffect(() => {
             />
           </div>
         )}
-        {/* 聚焦模式顶部悬浮条 — 当概念被选中时显示 */}
-        {selectedConcept && !processMode && (
-          <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-2 bg-white/80 backdrop-blur-sm border-b border-blue-200 shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-sm font-medium text-gray-700">
-                聚焦: <span className="text-blue-600">{selectedConcept.title}</span>
-              </span>
-            </div>
+        {/* 顶部栏：搜索 + 聚焦信息 */}
+        {!processMode && (
+          <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm border-b border-blue-200 shadow-sm">
+            <GlobalSearch
+              concepts={concepts}
+              onSelect={(concept) => {
+                handleSelectConcept(concept)
+              }}
+            />
+            {selectedConcept && (
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-sm font-medium text-gray-700">
+                  聚焦: <span className="text-blue-600">{selectedConcept.title}</span>
+                </span>
+              </div>
+            )}
           </div>
         )}
         {showProjectList ? (
