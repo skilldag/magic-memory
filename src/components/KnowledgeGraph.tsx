@@ -62,6 +62,9 @@ interface KnowledgeGraphProps {
   relayoutKey?: number
   // Review records for badge rendering
   reviewRecords?: Map<string, ReviewRecord>
+  // Review mode toggle
+  reviewMode?: boolean
+  onToggleReviewMode?: () => void
 }
 
 export function KnowledgeGraph({
@@ -89,6 +92,8 @@ export function KnowledgeGraph({
   conceptMastery,
   relayoutKey,
   reviewRecords,
+  reviewMode = false,
+  onToggleReviewMode,
 }: KnowledgeGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
@@ -795,9 +800,14 @@ export function KnowledgeGraph({
         </div>
       )}
 
-      {isReady && badgePositions.size > 0 && (
+      {reviewMode && isReady && badgePositions.size > 0 && (
         <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }}>
           {Array.from(badgePositions.entries()).map(([id, pos]) => {
+            const cy = cyRef.current
+            if (cy) {
+              const node = cy.getElementById(id)
+              if (!node.length || node.style('display') === 'none') return null
+            }
             const badge = getReviewBadge(reviewRecords?.get(id))
             if (!badge.text) return null
             return (
@@ -841,6 +851,20 @@ export function KnowledgeGraph({
           >
             <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </button>
+          <button
+            onClick={onToggleReviewMode}
+            className={`w-8 h-8 rounded shadow flex items-center justify-center transition-colors ${
+              reviewMode
+                ? 'bg-amber-500 text-white hover:bg-amber-600'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+            title={reviewMode ? '关闭复习提示' : '复习提示'}
+          >
+            <svg width={16} height={16} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
+              <circle cx="12" cy="12" r="9" />
             </svg>
           </button>
           <button

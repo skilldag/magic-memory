@@ -27,6 +27,7 @@ export function SummaryPanel({ onNavigate, onPathFocus }: SummaryPanelProps) {
   const concepts = useKnowledgeGraphStore(s => s.concepts)
   const edges = useKnowledgeGraphStore(s => s.edges)
   const reviewRecords = useKnowledgeGraphStore(s => s.reviewRecords)
+  const viewMode = useKnowledgeGraphStore(s => s.viewMode)
   const [expandedSection, setExpandedSection] = useState<string | null>('roots')
   const [expandedPath, setExpandedPath] = useState<number | null>(null)
 
@@ -199,55 +200,57 @@ export function SummaryPanel({ onNavigate, onPathFocus }: SummaryPanelProps) {
           </div>
         </SectionCard>
 
-        <SectionCard
-          title="📅 复习待办"
-          count={dueConcepts.length}
-          expanded={expandedSection === 'review'}
-          onToggle={() => toggleSection('review')}
-        >
-          <div className="space-y-0.5">
-            {dueConcepts.map((d, i) => (
-              <button
-                key={d.concept.id}
-                className="flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-gray-50 rounded cursor-pointer w-full text-left"
-                onClick={() => onNavigate?.(d.concept.id)}
-              >
-                <span className="text-base shrink-0">{d.badge.text}</span>
-                <div className="flex-1 min-w-0">
-                  <span className="font-medium text-gray-700 truncate block">{d.concept.title}</span>
-                </div>
-                <span className={`shrink-0 text-[10px] ${
-                  d.badge.urgency === 0 ? 'text-red-500 font-medium' : 'text-gray-400'
-                }`}>
-                  {d.daysUntilReview <= 0 ? `过期 ${Math.abs(d.daysUntilReview)} 天` : `${d.daysUntilReview} 天后`}
-                </span>
-              </button>
-            ))}
-            {dueConcepts.length === 0 && (
-              <p className="text-xs text-gray-400 text-center py-2">暂无待复习概念</p>
-            )}
-          </div>
-          {onTrackCount.total > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-100">
-              <div className="flex items-center justify-between text-[10px] text-gray-500 mb-1">
-                <span>在轨率</span>
-                <span>{Math.round((onTrackCount.onTime / onTrackCount.total) * 100)}% ({onTrackCount.onTime}/{onTrackCount.total})</span>
-              </div>
-              <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${
-                    onTrackCount.onTime / onTrackCount.total >= 0.8
-                      ? 'bg-emerald-500'
-                      : onTrackCount.onTime / onTrackCount.total >= 0.5
-                      ? 'bg-amber-500'
-                      : 'bg-red-400'
-                  }`}
-                  style={{ width: `${(onTrackCount.onTime / onTrackCount.total) * 100}%` }}
-                />
-              </div>
+        {viewMode === 'review' && (
+          <SectionCard
+            title="📅 复习待办"
+            count={dueConcepts.length}
+            expanded={expandedSection === 'review'}
+            onToggle={() => toggleSection('review')}
+          >
+            <div className="space-y-0.5">
+              {dueConcepts.map((d, i) => (
+                <button
+                  key={d.concept.id}
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-gray-50 rounded cursor-pointer w-full text-left"
+                  onClick={() => onNavigate?.(d.concept.id)}
+                >
+                  <span className="text-base shrink-0">{d.badge.text}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium text-gray-700 truncate block">{d.concept.title}</span>
+                  </div>
+                  <span className={`shrink-0 text-[10px] ${
+                    d.badge.urgency === 0 ? 'text-red-500 font-medium' : 'text-gray-400'
+                  }`}>
+                    {d.daysUntilReview <= 0 ? `过期 ${Math.abs(d.daysUntilReview)} 天` : `${d.daysUntilReview} 天后`}
+                  </span>
+                </button>
+              ))}
+              {dueConcepts.length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-2">暂无待复习概念</p>
+              )}
             </div>
-          )}
-        </SectionCard>
+            {onTrackCount.total > 0 && (
+              <div className="mt-2 pt-2 border-t border-gray-100">
+                <div className="flex items-center justify-between text-[10px] text-gray-500 mb-1">
+                  <span>在轨率</span>
+                  <span>{Math.round((onTrackCount.onTime / onTrackCount.total) * 100)}% ({onTrackCount.onTime}/{onTrackCount.total})</span>
+                </div>
+                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      onTrackCount.onTime / onTrackCount.total >= 0.8
+                        ? 'bg-emerald-500'
+                        : onTrackCount.onTime / onTrackCount.total >= 0.5
+                        ? 'bg-amber-500'
+                        : 'bg-red-400'
+                    }`}
+                    style={{ width: `${(onTrackCount.onTime / onTrackCount.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </SectionCard>
+        )}
       </div>
     </div>
   )

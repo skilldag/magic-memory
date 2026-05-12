@@ -9,7 +9,6 @@ import {
   getDependencyChain,
   getRelationReason,
   getReviewRecordFor,
-  getReviewBadge,
 } from '../utils/knowledgeGraph'
 import { generateReferenceFlow, diffFlows, getGapConceptIds, generateGenericChain } from '../utils/processComparison'
 import { loadDocContent, clearDocCache } from '../utils/docLoader'
@@ -61,11 +60,6 @@ export function ConceptDetailPanel({
       setDocLoading(false)
     })
   }, [action, concept.id, concept.path, concept.content])
-
-  useEffect(() => {
-    const badge = getReviewBadge(reviewRecords.get(concept.id))
-    setAction(badge.text === '🔥' || badge.text === '今日' ? 'align' : 'read')
-  }, [concept.id])
 
   const updateProcessState = useKnowledgeGraphStore(s => s.updateProcessState)
   // Questions feature removed
