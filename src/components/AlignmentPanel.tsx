@@ -113,7 +113,7 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
       </div>
 
       <textarea value={userText}
-        onChange={e => { setUserText(e.target.value); setHasAligned(false); setResult(null) }}
+        onChange={e => { setUserText(e.target.value) }}
         placeholder={`用你自己的话描述对「${concept.title}」的理解...`} rows={5}
         className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y bg-white" />
       <div className="flex items-center justify-between">
