@@ -434,7 +434,7 @@ useEffect(() => {
             }}
           />
         )}
-        {hoverConcept && selectedConceptRef.current && (
+        {hoverConcept && selectedConcept && (
           <div className="absolute z-30" style={{ left: 0, top: 0, pointerEvents: 'none' }}>
             <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => { setActionConcept(hoverConcept.concept); setShowBatchLinkDialog(true); setHoverConcept(null); void generateBatchSuggestions(hoverConcept.concept) }}
               className="absolute flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg hover:shadow-xl hover:from-blue-600 hover:to-blue-800 transition-all cursor-pointer select-none font-bold"
