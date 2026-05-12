@@ -55,6 +55,7 @@ export function KnowledgeGraphView() {
   const [linkMode, setLinkMode] = useState(false)
   const [linkSource, setLinkSource] = useState<string | null>(null)
   const [focusedNodeIds, setFocusedNodeIds] = useState<string[] | undefined>(undefined)
+  const [relayoutKey, setRelayoutKey] = useState(0)
   const { containerRef: graphContainerRef, size: containerSize } = useContainerSize<HTMLDivElement>()
   const selectedConceptRef = useRef<Concept | null>(null)
   const preventHideRef = useRef(false)
@@ -110,6 +111,9 @@ useEffect(() => {
       document.removeEventListener('mouseup', handleMouseUp)
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
+      if (selectedConceptRef.current) {
+        setRelayoutKey(k => k + 1)
+      }
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -399,6 +403,7 @@ useEffect(() => {
             focusedNodeIds={focusedNodeIds}
             containerWidth={containerSize?.width}
             containerHeight={containerSize?.height}
+            relayoutKey={selectedConcept ? relayoutKey : 0}
             linkMode={linkMode}
             linkSource={linkSource}
             onSelectConcept={handleSelectConcept} onNavigate={handleNavigate}

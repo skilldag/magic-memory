@@ -55,6 +55,8 @@ interface KnowledgeGraphProps {
   onExitFocus?: () => void
   // Edge deletion
   onDeleteEdge?: (edgeId: string) => void
+  // Increment to trigger adaptive re-layout (e.g. after panel resize)
+  relayoutKey?: number
 }
 
 export function KnowledgeGraph({
@@ -78,7 +80,8 @@ export function KnowledgeGraph({
   onLinkEnd,
   onLinkCancel,
   onExitFocus,
-  onDeleteEdge
+  onDeleteEdge,
+  relayoutKey,
 }: KnowledgeGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
@@ -168,6 +171,15 @@ export function KnowledgeGraph({
       setZoomLevel(cy.zoom())
     }
   }, [concepts.length, containerWidth, containerHeight])
+
+  const handleSmartLayoutRef = useRef(handleSmartLayout)
+  handleSmartLayoutRef.current = handleSmartLayout
+
+  useEffect(() => {
+    if (relayoutKey && relayoutKey > 0) {
+      handleSmartLayoutRef.current()
+    }
+  }, [relayoutKey])
 
   // 初始化 Cytoscape（仅在首次数据到达时创建）
   useEffect(() => {
