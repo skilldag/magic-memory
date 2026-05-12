@@ -3,7 +3,7 @@ import cytoscape, { Core, ElementDefinition } from 'cytoscape'
 // @ts-expect-error cytoscape-fcose has no types
 import fcose from 'cytoscape-fcose'
 import type { Concept, ConceptEdge } from '../types'
-import { LEVEL_COLORS, EDGE_COLORS } from '../constants/graph'
+import { MASTERY_COLORS, EDGE_COLORS, getMasteryColor } from '../constants/graph'
 
 cytoscape.use(fcose)
 
@@ -55,6 +55,8 @@ interface KnowledgeGraphProps {
   onExitFocus?: () => void
   // Edge deletion
   onDeleteEdge?: (edgeId: string) => void
+  // Mastery data for node coloring: conceptId → score
+  conceptMastery?: Map<string, { score: number }>
   // Increment to trigger adaptive re-layout (e.g. after panel resize)
   relayoutKey?: number
 }
@@ -81,6 +83,7 @@ export function KnowledgeGraph({
   onLinkCancel,
   onExitFocus,
   onDeleteEdge,
+  conceptMastery,
   relayoutKey,
 }: KnowledgeGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -99,8 +102,10 @@ export function KnowledgeGraph({
   const hoveredEdgeIdRef = useRef<string | null>(null)
   const conceptsRef = useRef(concepts)
   const edgesRef = useRef(edges)
+  const conceptMasteryRef = useRef(conceptMastery)
   conceptsRef.current = concepts
   edgesRef.current = edges
+  conceptMasteryRef.current = conceptMastery
   const initialLayoutDoneRef = useRef(false)
   const linkModeRef = useRef(linkMode)
   const linkSourceRef = useRef(linkSource)
@@ -194,7 +199,8 @@ export function KnowledgeGraph({
           id: c.id,
           label: c.title,
           level: c.level,
-          category: c.category
+          category: c.category,
+          mastery: conceptMastery?.get(c.id)?.score,
         }
       })),
       ...edges.map(e => ({
@@ -218,7 +224,7 @@ export function KnowledgeGraph({
             'label': 'data(label)',
             'width': 50,
             'height': 50,
-            'background-color': '#3b82f6',
+            'background-color': '#d1d5db',
             'color': '#374151',
             'font-size': '10px',
             'text-valign': 'bottom',
@@ -231,23 +237,10 @@ export function KnowledgeGraph({
           }
         },
         {
-          selector: 'node[level="1"]',
-          style: { 'background-color': LEVEL_COLORS[1] }
-        },
-        {
-          selector: 'node[level="2"]',
-          style: { 'background-color': LEVEL_COLORS[2] }
-        },
-        {
-          selector: 'node[level="3"]',
-          style: { 'background-color': LEVEL_COLORS[3] }
-        },
-        {
           selector: 'node:selected',
           style: {
             'border-width': 4,
             'border-color': '#f59e0b',
-            'background-color': '#f59e0b'
           }
         },
         {
@@ -491,7 +484,8 @@ export function KnowledgeGraph({
             id: c.id,
             label: c.title,
             level: c.level,
-            category: c.category
+            category: c.category,
+            mastery: conceptMasteryRef.current?.get(c.id)?.score,
           }
         })
       }
@@ -545,6 +539,13 @@ export function KnowledgeGraph({
     const cy = cyRef.current
     if (!cy) return
 
+    // Sync latest mastery data to all nodes before applying styles
+    cy.nodes().forEach(n => {
+      const id = n.id()
+      const score = conceptMastery?.get(id)?.score
+      n.data('mastery', score)
+    })
+
     // NEW: precision focus mode based on a list of node IDs
     if (focusedNodeIds && focusedNodeIds.length > 0) {
       const focusSet = new Set<string>(focusedNodeIds)
@@ -560,7 +561,7 @@ export function KnowledgeGraph({
           'height': isFirst ? 72 : 60,
           'border-width': isFirst ? 5 : 3,
           'border-color': isFirst ? '#f59e0b' : '#fff',
-          'background-color': isFirst ? '#f59e0b' : (LEVEL_COLORS[Number(n.data('level'))] || '#3b82f6'),
+          'background-color': getMasteryColor(n.data('mastery')),
           'opacity': 1,
         })
       })
@@ -595,7 +596,7 @@ export function KnowledgeGraph({
           'height': 50,
           'border-width': isSelected ? 4 : 2,
           'border-color': isSelected ? '#f59e0b' : '#fff',
-          'background-color': isSelected ? '#f59e0b' : (LEVEL_COLORS[Number(n.data('level'))] || '#3b82f6'),
+          'background-color': getMasteryColor(n.data('mastery')),
           'opacity': 1
         })
       })
@@ -632,7 +633,7 @@ export function KnowledgeGraph({
         'height': isSelected ? 72 : 60,
         'border-width': isSelected ? 5 : 3,
         'border-color': isSelected ? '#f59e0b' : '#fff',
-        'background-color': isSelected ? '#f59e0b' : (LEVEL_COLORS[Number(n.data('level'))] || '#3b82f6'),
+        'background-color': getMasteryColor(n.data('mastery')),
         'opacity': 1
       })
     })
@@ -680,7 +681,7 @@ export function KnowledgeGraph({
     }
 
     wasFocusedRef.current = isFocusedNow
-  }, [selectedConcept, focusEnabled, focusedNodeIds, structuralKey])
+  }, [selectedConcept, focusEnabled, focusedNodeIds, structuralKey, conceptMastery])
 
   useEffect(() => {
     const cy = cyRef.current
@@ -779,18 +780,26 @@ export function KnowledgeGraph({
           <span className="text-gray-600">相关 (related)</span>
         </div>
         <div className="border-t border-gray-200 my-1.5" />
-        <div className="font-medium text-gray-700 mb-1">级别颜色</div>
+        <div className="font-medium text-gray-700 mb-1">掌握程度</div>
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: LEVEL_COLORS[1] }} />
-          <span className="text-gray-600">Level 1 - 基础</span>
+          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: MASTERY_COLORS.unaligned }} />
+          <span className="text-gray-600">未对齐</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: LEVEL_COLORS[2] }} />
-          <span className="text-gray-600">Level 2 - 中级</span>
+          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: MASTERY_COLORS.weak }} />
+          <span className="text-gray-600">薄弱 (&lt;40%)</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: LEVEL_COLORS[3] }} />
-          <span className="text-gray-600">Level 3 - 高级</span>
+          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: MASTERY_COLORS.partial }} />
+          <span className="text-gray-600">部分掌握 (40-70%)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: MASTERY_COLORS.good }} />
+          <span className="text-gray-600">良好 (70-90%)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: MASTERY_COLORS.mastered }} />
+          <span className="text-gray-600">精通 (&gt;90%)</span>
         </div>
       </div>
     </div>

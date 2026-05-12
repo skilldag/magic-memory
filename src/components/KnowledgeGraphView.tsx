@@ -33,6 +33,7 @@ export function KnowledgeGraphView() {
   const conceptPanelMode = useKnowledgeGraphStore(s => s.conceptPanelMode)
   const setConceptPanelMode = useKnowledgeGraphStore(s => s.setConceptPanelMode)
 
+  const conceptMastery = useKnowledgeGraphStore(s => s.conceptMastery)
   const storeSelectedConcept = useKnowledgeGraphStore(s => s.selectedConcept)
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null)
   const selectedConcept = useMemo(() => {
@@ -401,6 +402,7 @@ useEffect(() => {
             concepts={concepts} edges={edges} selectedConcept={selectedConcept}
             focusEnabled={true}
             focusedNodeIds={focusedNodeIds}
+            conceptMastery={conceptMastery}
             containerWidth={containerSize?.width}
             containerHeight={containerSize?.height}
             relayoutKey={selectedConcept ? relayoutKey : 0}

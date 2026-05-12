@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain, ProcessState } from '../types'
+import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain, ProcessState, MasteryRecord } from '../types'
+import type { GraphAlignmentResult } from '../utils/alignment'
 import { useToastStore } from './toastStore'
 
 const GS_URL = 'http://localhost:4321'
@@ -57,6 +58,18 @@ interface KnowledgeGraphStore {
   setLinkMode: (mode: boolean) => void
   setLinkSource: (source: string | null) => void
   updateConceptContent: (conceptId: string, content: string) => void
+  conceptMastery: Map<string, MasteryRecord>
+  updateMastery: (conceptId: string, score: number) => void
+  alignmentDrafts: Map<string, {
+    userText: string
+    hasAligned: boolean
+    result: GraphAlignmentResult | null
+  }>
+  setAlignmentDraft: (conceptId: string, draft: {
+    userText: string
+    hasAligned: boolean
+    result: GraphAlignmentResult | null
+  }) => void
   persistToServer: () => Promise<void>
 }
 
@@ -68,6 +81,8 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
     selectedConcept: null,
     reviewRecords: new Map(),
     annotations: [],
+    conceptMastery: new Map(),
+    alignmentDrafts: new Map(),
     isLoading: false,
     loadingProgress: 0,
     error: null,
@@ -113,6 +128,9 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
           return {
             concepts: newConcepts,
             edges: data.edges || [],
+            conceptMastery: data.mastery
+              ? new Map(Object.entries(data.mastery).map(([k, v]) => [k, v as MasteryRecord]))
+              : state.conceptMastery,
             selectedConcept: preserved,
             isLoading: false,
             loadingProgress: 100,
@@ -188,6 +206,27 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
       } catch {}
     },
 
+    updateMastery: (conceptId, score) => {
+      const { conceptMastery } = get()
+      const existing = conceptMastery.get(conceptId)
+      const record: MasteryRecord = {
+        conceptId,
+        score,
+        lastAligned: new Date().toISOString(),
+        alignmentCount: (existing?.alignmentCount ?? 0) + 1,
+      }
+      const newMap = new Map(conceptMastery)
+      newMap.set(conceptId, record)
+      set({ conceptMastery: newMap })
+    },
+
+    setAlignmentDraft: (conceptId, draft) => {
+      const { alignmentDrafts } = get()
+      const newMap = new Map(alignmentDrafts)
+      newMap.set(conceptId, draft)
+      set({ alignmentDrafts: newMap })
+    },
+
     getRelated: (conceptId) => {
       const { concepts, edges } = get()
       const relatedIds = edges
@@ -257,13 +296,13 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
     },
 
     persistToServer: async () => {
-      const { activeProjectId, concepts, edges } = get()
+      const { activeProjectId, concepts, edges, conceptMastery } = get()
       if (!activeProjectId) return
       try {
         const resp = await fetch(`${GS_URL}/api/projects/${activeProjectId}/graph`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ concepts, edges }),
+          body: JSON.stringify({ concepts, edges, mastery: Object.fromEntries(conceptMastery) }),
         })
         if (resp.status === 404) {
           // Project not yet registered on GS — register it with current data
@@ -276,6 +315,7 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
               sourceDir: '',
               concepts,
               edges,
+              mastery: Object.fromEntries(conceptMastery),
             }),
           })
           if (!regResp.ok) {
@@ -347,15 +387,7 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
       }))
 
       const { addEdge: addEdgeFn } = get()
-      if (input.relationType === 'leads_to') {
-        addEdgeFn(source.id, concept.id, 'leads_to')
-        addEdgeFn(concept.id, source.id, 'depends_on')
-      } else if (input.relationType === 'depends_on') {
-        addEdgeFn(concept.id, source.id, 'leads_to')
-        addEdgeFn(source.id, concept.id, 'depends_on')
-      } else {
-        addEdgeFn(source.id, concept.id, 'related')
-      }
+      addEdgeFn(source.id, concept.id, input.relationType)
 
       get().persistToServer()
       return concept

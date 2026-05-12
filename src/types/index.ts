@@ -186,6 +186,13 @@ export interface UserAnnotation {
   status: 'open' | 'resolved'
 }
 
+export interface MasteryRecord {
+  conceptId: string
+  score: number          // 0-100 composite mastery score
+  lastAligned: string    // ISO date string of last alignment
+  alignmentCount: number // how many times alignment was run
+}
+
 export interface SuggestionItem {
   title: string
   problem: string

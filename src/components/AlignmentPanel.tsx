@@ -51,12 +51,21 @@ function EdgeRow({ edge }: { edge: AlignedEdgePair }) {
 }
 
 export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPanelProps) {
-  const [userText, setUserText] = useState('')
-  const [result, setResult] = useState<GraphAlignmentResult | null>(null)
-  const [hasAligned, setHasAligned] = useState(false)
+  const alignmentDrafts = useKnowledgeGraphStore(s => s.alignmentDrafts)
+  const setAlignmentDraft = useKnowledgeGraphStore(s => s.setAlignmentDraft)
+  const draft = alignmentDrafts.get(concept.id)
+
+  const [userText, setUserText] = useState(draft?.userText ?? '')
+  const [result, setResult] = useState<GraphAlignmentResult | null>(draft?.result ?? null)
+  const [hasAligned, setHasAligned] = useState(draft?.hasAligned ?? false)
   const [originalContent, setOriginalContent] = useState<string | null>(null)
   const [contentLoading, setContentLoading] = useState(false)
   const [showTab, setShowTab] = useState<'nodes' | 'edges'>('nodes')
+
+  // Sync alignment draft to store cache on every change
+  useEffect(() => {
+    setAlignmentDraft(concept.id, { userText, hasAligned, result })
+  }, [userText, hasAligned, result, concept.id, setAlignmentDraft])
 
   useEffect(() => {
     if (concept.content) { setOriginalContent(concept.content); return }
@@ -78,7 +87,12 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
     const r = compareTexts(userText, originalContent, allConcepts, concept.id)
     setResult(r)
     setHasAligned(true)
-  }, [userText, originalContent, allConcepts])
+    const { stats } = r
+    const score = Math.round(
+      (stats.nodeCoverage || 0) * 0.6 + (stats.nodePrecision || 0) * 0.4
+    )
+    useKnowledgeGraphStore.getState().updateMastery(concept.id, score)
+  }, [userText, originalContent, allConcepts, concept.id])
 
   return (
     <div className="px-5 py-4 space-y-4">
@@ -134,6 +148,13 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
                   : <span className="text-amber-700 font-medium"> 没有术语共现，关键词可能不同。</span>}
               </p>
             </div>
+          </div>
+
+          <div className="p-2.5 rounded-lg border border-blue-200 bg-blue-50/50 flex items-center justify-between">
+            <span className="text-xs text-blue-800 font-medium">本次掌握分</span>
+            <span className="text-sm font-bold text-blue-700">
+              {Math.round((result.stats.nodeCoverage || 0) * 0.6 + (result.stats.nodePrecision || 0) * 0.4)}/100
+            </span>
           </div>
 
           {result.fuzzyMatches.length > 0 && (
