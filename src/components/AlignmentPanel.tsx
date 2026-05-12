@@ -92,6 +92,12 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
       (stats.nodeCoverage || 0) * 0.6 + (stats.nodePrecision || 0) * 0.4
     )
     useKnowledgeGraphStore.getState().updateMastery(concept.id, score)
+    const coverage = stats.nodeCoverage || 0
+    let quality: number
+    if (coverage > 80) quality = 4
+    else if (coverage > 50) quality = 3
+    else quality = 2
+    useKnowledgeGraphStore.getState().startReview(concept.id, quality)
   }, [userText, originalContent, allConcepts, concept.id])
 
   return (
