@@ -2,8 +2,9 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import cytoscape, { Core, ElementDefinition } from 'cytoscape'
 // @ts-expect-error cytoscape-fcose has no types
 import fcose from 'cytoscape-fcose'
-import type { Concept, ConceptEdge } from '../types'
+import type { Concept, ConceptEdge, ReviewRecord } from '../types'
 import { MASTERY_COLORS, EDGE_COLORS, getMasteryColor } from '../constants/graph'
+import { getReviewBadge } from '../utils/knowledgeGraph'
 
 cytoscape.use(fcose)
 
@@ -59,6 +60,8 @@ interface KnowledgeGraphProps {
   conceptMastery?: Map<string, { score: number }>
   // Increment to trigger adaptive re-layout (e.g. after panel resize)
   relayoutKey?: number
+  // Review records for badge rendering
+  reviewRecords?: Map<string, ReviewRecord>
 }
 
 export function KnowledgeGraph({
@@ -85,6 +88,7 @@ export function KnowledgeGraph({
   onDeleteEdge,
   conceptMastery,
   relayoutKey,
+  reviewRecords,
 }: KnowledgeGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
@@ -103,9 +107,11 @@ export function KnowledgeGraph({
   const conceptsRef = useRef(concepts)
   const edgesRef = useRef(edges)
   const conceptMasteryRef = useRef(conceptMastery)
+  const reviewRecordsRef = useRef(reviewRecords)
   conceptsRef.current = concepts
   edgesRef.current = edges
   conceptMasteryRef.current = conceptMastery
+  reviewRecordsRef.current = reviewRecords
   const initialLayoutDoneRef = useRef(false)
   const linkModeRef = useRef(linkMode)
   const linkSourceRef = useRef(linkSource)
@@ -113,6 +119,7 @@ export function KnowledgeGraph({
   linkSourceRef.current = linkSource
   const [isReady, setIsReady] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(1)
+  const [badgePositions, setBadgePositions] = useState<Map<string, { x: number; y: number }>>(new Map())
 
   // 结构签名：仅当节点 ID 集或边结构变化时变更——纯 content 编辑不触发布局
   const structuralKey = useMemo(
@@ -201,6 +208,8 @@ export function KnowledgeGraph({
           level: c.level,
           category: c.category,
           mastery: conceptMastery?.get(c.id)?.score,
+          badge: getReviewBadge(reviewRecords?.get(c.id)).text,
+          badgeColor: getReviewBadge(reviewRecords?.get(c.id)).color,
         }
       })),
       ...edges.map(e => ({
@@ -304,6 +313,17 @@ export function KnowledgeGraph({
       fastLayout.one('layoutstop', () => {
         cy.fit(undefined, 50)
         setZoomLevel(cy.zoom())
+        setTimeout(() => {
+          const positions = new Map<string, { x: number; y: number }>()
+          cy.nodes().forEach(n => {
+            const badgeText = n.data('badge')
+            if (!badgeText) return
+            const pos = n.renderedPosition()
+            const bb = n.renderedBoundingBox()
+            positions.set(n.id(), { x: pos.x + bb.w / 2, y: pos.y - bb.h / 2 })
+          })
+          setBadgePositions(positions)
+        }, 150)
       })
       fastLayout.run()
     } catch (e) {
@@ -330,6 +350,17 @@ export function KnowledgeGraph({
             tile: true,
             padding: 80
           } as cytoscape.LayoutOptions)
+          refineLayout.one('layoutstop', () => {
+            const positions = new Map<string, { x: number; y: number }>()
+            cy.nodes().forEach(n => {
+              const badgeText = n.data('badge')
+              if (!badgeText) return
+              const pos = n.renderedPosition()
+              const bb = n.renderedBoundingBox()
+              positions.set(n.id(), { x: pos.x + bb.w / 2, y: pos.y - bb.h / 2 })
+            })
+            setBadgePositions(positions)
+          })
           refineLayout.run()
         } catch (e) {
           console.warn('[KnowledgeGraph] refine layout skipped:', e)
@@ -337,9 +368,28 @@ export function KnowledgeGraph({
       }, { timeout: 3000 })
     }
 
+    const updateBadgePositions = () => {
+      const positions = new Map<string, { x: number; y: number }>()
+      cy.nodes().forEach(n => {
+        const id = n.id()
+        const badgeText = n.data('badge')
+        if (!badgeText) return
+        const pos = n.renderedPosition()
+        const bb = n.renderedBoundingBox()
+        positions.set(id, {
+          x: pos.x + bb.w / 2,
+          y: pos.y - bb.h / 2,
+        })
+      })
+      setBadgePositions(positions)
+    }
+
     cy.on('zoom', () => {
       setZoomLevel(cy.zoom())
+      updateBadgePositions()
     })
+    cy.on('pan', () => updateBadgePositions())
+    cy.on('dragfree', 'node', () => updateBadgePositions())
     
     cy.on('tap', 'node', (evt) => {
       const nodeId = evt.target.id()
@@ -451,6 +501,17 @@ export function KnowledgeGraph({
     cyRef.current = cy
     setIsReady(true)
     initialLayoutDoneRef.current = true
+    setTimeout(() => {
+      const positions = new Map<string, { x: number; y: number }>()
+      cy.nodes().forEach(n => {
+        const badgeText = n.data('badge')
+        if (!badgeText) return
+        const pos = n.renderedPosition()
+        const bb = n.renderedBoundingBox()
+        positions.set(n.id(), { x: pos.x + bb.w / 2, y: pos.y - bb.h / 2 })
+      })
+      setBadgePositions(positions)
+    }, 100)
     
     return () => {
       cy.destroy()
@@ -486,6 +547,8 @@ export function KnowledgeGraph({
             level: c.level,
             category: c.category,
             mastery: conceptMasteryRef.current?.get(c.id)?.score,
+            badge: getReviewBadge(reviewRecordsRef.current?.get(c.id)).text,
+            badgeColor: getReviewBadge(reviewRecordsRef.current?.get(c.id)).color,
           }
         })
       }
@@ -698,6 +761,17 @@ export function KnowledgeGraph({
   }, [linkMode, linkSource])
 
   useEffect(() => {
+    const cy = cyRef.current
+    if (!cy) return
+    cy.nodes().forEach(n => {
+      const id = n.id()
+      const badge = getReviewBadge(reviewRecords?.get(id))
+      n.data('badge', badge.text)
+      n.data('badgeColor', badge.color)
+    })
+  }, [reviewRecords])
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Delete' && e.key !== 'Backspace') return
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return
@@ -718,6 +792,32 @@ export function KnowledgeGraph({
       {!isReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
           <div className="text-gray-500">加载知识图中...</div>
+        </div>
+      )}
+
+      {isReady && badgePositions.size > 0 && (
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }}>
+          {Array.from(badgePositions.entries()).map(([id, pos]) => {
+            const badge = getReviewBadge(reviewRecords?.get(id))
+            if (!badge.text) return null
+            return (
+              <div
+                key={id}
+                className="absolute flex items-center justify-center rounded-full text-[9px] font-bold text-white leading-none"
+                style={{
+                  left: pos.x,
+                  top: pos.y,
+                  width: 22,
+                  height: 22,
+                  backgroundColor: badge.color,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                  transform: 'translate(-50%, -50%)',
+                }}
+              >
+                {badge.text}
+              </div>
+            )
+          })}
         </div>
       )}
 
