@@ -12,6 +12,7 @@ import { AddConceptDialog } from './AddConceptDialog'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
 import type { ProjectInfo } from '../store/knowledgeGraphStore'
 import { generateGenericChain } from '../utils/processComparison'
+import { getDueConcepts } from '../utils/knowledgeGraph'
 import type { Concept, SuggestionItem } from '../types'
 import { useContainerSize } from '../hooks/useContainerSize'
 
@@ -24,6 +25,10 @@ export function KnowledgeGraphView() {
   const isLoading = useKnowledgeGraphStore(s => s.isLoading)
   const loadingProgress = useKnowledgeGraphStore(s => s.loadingProgress)
   const reviewRecords = useKnowledgeGraphStore(s => s.reviewRecords)
+  const dueConcepts = useMemo(
+    () => getDueConcepts(concepts, reviewRecords).filter(d => d.badge.urgency <= 1),
+    [concepts, reviewRecords]
+  )
   const createConceptWithEdges = useKnowledgeGraphStore(s => s.createConceptWithEdges)
   const selectConcept = useKnowledgeGraphStore(s => s.selectConcept)
   // Skeleton and questions features removed
@@ -57,6 +62,7 @@ export function KnowledgeGraphView() {
   const [linkSource, setLinkSource] = useState<string | null>(null)
   const [focusedNodeIds, setFocusedNodeIds] = useState<string[] | undefined>(undefined)
   const [relayoutKey, setRelayoutKey] = useState(0)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
   const { containerRef: graphContainerRef, size: containerSize } = useContainerSize<HTMLDivElement>()
   const selectedConceptRef = useRef<Concept | null>(null)
   const preventHideRef = useRef(false)
@@ -314,6 +320,36 @@ useEffect(() => {
             )}
           </div>
         )}
+        {!processMode && dueConcepts.length > 0 && !bannerDismissed && (
+          <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-amber-50 border-b border-amber-200 z-10">
+            <span className="text-sm">📅</span>
+            <span className="text-sm text-amber-800">
+              <strong>{dueConcepts.length}</strong> 个概念需要复习
+              {dueConcepts[0] && ` · 最长的已过期 ${Math.abs(dueConcepts[0].daysUntilReview)} 天`}
+            </span>
+            <button
+              onClick={() => {
+                const first = dueConcepts[0]
+                if (first) {
+                  const concept = concepts.find(c => c.id === first.concept.id)
+                  if (concept) handleSelectConcept(concept)
+                }
+              }}
+              className="ml-auto px-3 py-1 text-xs font-medium text-amber-800 bg-amber-200/50 rounded-md hover:bg-amber-300/50 transition-colors"
+            >
+              查看待复习 →
+            </button>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              className="w-5 h-5 flex items-center justify-center text-amber-400 hover:text-amber-600 transition-colors"
+              title="关闭"
+            >
+              <svg width={12} height={12} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
         {showProjectList ? (
           <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 text-gray-500">
             <div className="max-w-md text-center space-y-6">
@@ -406,6 +442,7 @@ useEffect(() => {
             containerWidth={containerSize?.width}
             containerHeight={containerSize?.height}
             relayoutKey={selectedConcept ? relayoutKey : 0}
+            reviewRecords={reviewRecords}
             linkMode={linkMode}
             linkSource={linkSource}
             onSelectConcept={handleSelectConcept} onNavigate={handleNavigate}
