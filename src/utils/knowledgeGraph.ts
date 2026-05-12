@@ -58,6 +58,64 @@ export function getRelationReason(current: Concept, other: Concept, edgeType: st
   return '它与当前概念在同一主题中互补，可并行理解。'
 }
 
+export type ReviewBadgeType = {
+  text: string       // "🔥" | "今日" | "New" | "✓" | "Xd"
+  color: string      // Badge background color hex
+  urgency: number    // 0=overdue, 1=today, 2=1-7d, 4=mastered, 5=none, 6=hidden
+}
+
+export function getReviewBadge(record: ReviewRecord | undefined): ReviewBadgeType {
+  if (!record) {
+    return { text: 'New', color: '#6b7280', urgency: 5 }
+  }
+  const now = Date.now()
+  const nextReview = new Date(record.next_review).getTime()
+  const diffDays = Math.ceil((nextReview - now) / (1000 * 60 * 60 * 24))
+  const lastReviewed = new Date(record.last_reviewed).getTime()
+  const hoursSinceReview = (now - lastReviewed) / (1000 * 60 * 60)
+
+  // Just reviewed (< 1h ago) → no badge
+  if (hoursSinceReview < 1) {
+    return { text: '', color: 'transparent', urgency: 6 }
+  }
+  // Overdue
+  if (diffDays <= 0) {
+    return { text: '🔥', color: '#ef4444', urgency: 0 }
+  }
+  // Due today
+  if (diffDays <= 1) {
+    return { text: '今日', color: '#f59e0b', urgency: 1 }
+  }
+  // Due within 7 days
+  if (diffDays <= 7) {
+    return { text: `${diffDays}d`, color: '#3b82f6', urgency: 2 }
+  }
+  // Mastered (interval > 21)
+  if (record.interval > 21) {
+    return { text: '✓', color: '#10b981', urgency: 4 }
+  }
+  // Well-ahead, no badge
+  return { text: '', color: 'transparent', urgency: 6 }
+}
+
+export function getDueConcepts(
+  concepts: Concept[],
+  records: Map<string, ReviewRecord>
+): { concept: Concept; badge: ReviewBadgeType; daysUntilReview: number }[] {
+  const now = Date.now()
+  const result: { concept: Concept; badge: ReviewBadgeType; daysUntilReview: number }[] = []
+  for (const c of concepts) {
+    const r = records.get(c.id)
+    if (!r) continue
+    const badge = getReviewBadge(r)
+    if (badge.urgency <= 2) {
+      const diff = Math.ceil((new Date(r.next_review).getTime() - now) / (1000 * 60 * 60 * 24))
+      result.push({ concept: c, badge, daysUntilReview: diff })
+    }
+  }
+  return result.sort((a, b) => a.badge.urgency - b.badge.urgency || a.daysUntilReview - b.daysUntilReview)
+}
+
 export function getReviewRecordFor(conceptId: string, records: Map<string, ReviewRecord>) {
   const record = records.get(conceptId)
   if (!record) return null
