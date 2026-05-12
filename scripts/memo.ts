@@ -14,7 +14,7 @@
 import { buildGraphFromDir, registerProject, removeProject, listProjects, saveGraph } from '../server/graphBuilder';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
-import { existsSync, readFileSync, writeFileSync, unlinkSync, openSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, unlinkSync, openSync, readdirSync } from 'fs';
 
 const GLOBAL_SERVICE_PORT = 4321;
 const GLOBAL_SERVICE_URL = `http://localhost:${GLOBAL_SERVICE_PORT}`;
@@ -112,6 +112,27 @@ async function cmdRemove(projectId: string) {
   log(`✓ 项目已删除: ${projectId}`);
 }
 
+function killProjectVites() {
+  const projectDir = join(import.meta.dir, '..');
+  const result = Bun.spawnSync(['ps', 'aux'], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const stdout = result.stdout.toString();
+  const lines = stdout.split('\n');
+  for (const line of lines) {
+    if (!line.includes('vite')) continue;
+    if (!line.includes(projectDir)) continue;
+    if (line.includes('grep')) continue;
+    const parts = line.trim().split(/\s+/);
+    const pid = parseInt(parts[1]);
+    if (isNaN(pid)) continue;
+    try { process.kill(pid, 'SIGTERM'); log(`停止旧 Vite (PID: ${pid})`); } catch {}
+  }
+  for (let i = 0; i < 15; i++) {
+    const check = Bun.spawnSync(['lsof', '-i', `:${FRONTEND_PORT}`, '-P', '-n'], { stdio: ['ignore', 'pipe', 'pipe'] });
+    if (!check.stdout.toString().includes('LISTEN')) break;
+    Bun.sleepSync(200);
+  }
+}
+
 function cmdServerStart() {
   const state = loadState();
   if (state.gs && isRunning(state.gs)) {
@@ -131,6 +152,7 @@ function cmdServerStart() {
   gs.unref();
 
   log(`启动前端页面 (端口 ${FRONTEND_PORT})...`);
+  killProjectVites();
   const devNull = openSync('/dev/null', 'w');
   const frontend = Bun.spawn(['node', join(projectDir, 'node_modules', 'vite', 'bin', 'vite.js'), '--port', String(FRONTEND_PORT)], {
     cwd: projectDir,

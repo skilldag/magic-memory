@@ -197,7 +197,7 @@ export function ConceptDetailPanel({
       const { projects, activeProjectId } = useKnowledgeGraphStore.getState()
       const project = projects.find(p => p.id === activeProjectId)
       const baseDir = project?.sourceDir || undefined
-      const resp = await fetch('/api/write-doc', {
+        const resp = await fetch('/api/write-doc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path: concept.path, content: importContent, baseDir }),
