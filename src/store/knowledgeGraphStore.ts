@@ -237,6 +237,7 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
       const newMap = new Map(conceptMastery)
       newMap.set(conceptId, record)
       set({ conceptMastery: newMap })
+      get().persistToServer()
     },
 
     setAlignmentDraft: (conceptId, draft) => {
