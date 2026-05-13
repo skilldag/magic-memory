@@ -154,12 +154,9 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
 
     setResult(effectiveResult)
     setHasAligned(true)
-    const { stats } = effectiveResult
-    const score = Math.round(
-      (stats.nodeCoverage || 0) * 0.6 + (stats.nodePrecision || 0) * 0.4
-    )
+    const score = computeScore(effectiveResult)
     useKnowledgeGraphStore.getState().updateMastery(concept.id, score)
-    const coverage = stats.nodeCoverage || 0
+    const coverage = effectiveResult.stats.nodeCoverage || 0
     let quality: number
     if (coverage > 80) quality = 4
     else if (coverage > 50) quality = 3
@@ -167,16 +164,18 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
     useKnowledgeGraphStore.getState().startReview(concept.id, quality)
   }, [userText, originalContent, allConcepts, concept.id, ignoredTerms])
 
+  const computeScore = (r: GraphAlignmentResult) =>
+    Math.round((r.stats.nodeCoverage || 0) * 0.6 + (r.stats.nodePrecision || 0) * 0.4)
+
   const handleIgnoreNode = useCallback((node: AlignedNodePair) => {
-    setIgnoredTerms(prev => {
-      if (prev.includes(node.label)) return prev
-      const next = [...prev, node.label]
-      if (result) {
-        setResult(recomputeStats(result, next))
-      }
-      return next
-    })
-  }, [result])
+    if (!result) return
+    if (ignoredTerms.includes(node.label)) return
+    const next = [...ignoredTerms, node.label]
+    setIgnoredTerms(next)
+    const updated = recomputeStats(result, next)
+    setResult(updated)
+    useKnowledgeGraphStore.getState().updateMastery(concept.id, computeScore(updated))
+  }, [result, ignoredTerms, concept.id])
 
   const handleDeleteNode = useCallback((node: AlignedNodePair) => {
     setDeleteConfirm(node)
@@ -195,22 +194,18 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
         ? recomputeStats(r, ignoredTerms)
         : r
       setResult(effectiveResult)
-      const score = Math.round(
-        (effectiveResult.stats.nodeCoverage || 0) * 0.6 + (effectiveResult.stats.nodePrecision || 0) * 0.4
-      )
-      useKnowledgeGraphStore.getState().updateMastery(concept.id, score)
+      useKnowledgeGraphStore.getState().updateMastery(concept.id, computeScore(effectiveResult))
     }
   }, [deleteConfirm, originalContent, concept.id, userText, allConcepts, ignoredTerms, updateConceptContent])
 
   const restoreIgnored = useCallback((term: string) => {
-    setIgnoredTerms(prev => {
-      const next = prev.filter(t => t !== term)
-      if (result) {
-        setResult(recomputeStats(result, next))
-      }
-      return next
-    })
-  }, [result])
+    if (!result) return
+    const next = ignoredTerms.filter(t => t !== term)
+    setIgnoredTerms(next)
+    const updated = recomputeStats(result, next)
+    setResult(updated)
+    useKnowledgeGraphStore.getState().updateMastery(concept.id, computeScore(updated))
+  }, [result, ignoredTerms, concept.id])
 
   return (
     <div className="px-5 py-4 space-y-4">
