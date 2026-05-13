@@ -7,6 +7,7 @@ import {
   type AlignedNodePair,
   type AlignedEdgePair,
 } from '../utils/alignment'
+import { matchKeyConcepts } from '../utils/semanticMatch'
 import { loadDocContent } from '../utils/docLoader'
 import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
 
@@ -124,6 +125,8 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
   const [showTab, setShowTab] = useState<'nodes' | 'edges'>('nodes')
   const [showIgnored, setShowIgnored] = useState(true)
   const [deleteConfirm, setDeleteConfirm] = useState<AlignedNodePair | null>(null)
+  const [semanticEnabled, setSemanticEnabled] = useState(false)
+  const [semanticLoading, setSemanticLoading] = useState(false)
 
   useEffect(() => {
     setAlignmentDraft(concept.id, { userText, hasAligned, result, ignoredTerms })
@@ -144,6 +147,36 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
     })
   }, [concept.id, concept.path, concept.content])
 
+  const applySemanticResults = useCallback(
+    (result: GraphAlignmentResult, matchedLabels: string[]): GraphAlignmentResult => {
+      const matchedSet = new Set(matchedLabels)
+      const updatedNodes = result.nodes.map(n => {
+        if (n.status === 'missing' && matchedSet.has(n.label)) {
+          return { ...n, status: 'matched' as const, inUser: true }
+        }
+        return n
+      })
+      const matchedCount = updatedNodes.filter(n => n.status === 'matched').length
+      const missingCount = updatedNodes.filter(n => n.status === 'missing').length
+      const extraCount = updatedNodes.filter(n => n.status === 'extra').length
+      return {
+        ...result,
+        nodes: updatedNodes,
+        stats: {
+          ...result.stats,
+          matchedNodeCount: matchedCount,
+          missingNodeCount: missingCount,
+          extraNodeCount: extraCount,
+          nodeCoverage: result.originalNodeCount > 0
+            ? Math.round((matchedCount / result.originalNodeCount) * 100) : 0,
+          nodePrecision: (matchedCount + extraCount) > 0
+            ? Math.round((matchedCount / (matchedCount + extraCount)) * 100) : 0,
+        },
+      }
+    },
+    []
+  )
+
   const handleAlign = useCallback(() => {
     if (!userText.trim() || !originalContent) return
     const r = compareTexts(userText, originalContent, allConcepts, concept.id)
@@ -162,7 +195,34 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
     else if (coverage > 50) quality = 3
     else quality = 2
     useKnowledgeGraphStore.getState().startReview(concept.id, quality)
-  }, [userText, originalContent, allConcepts, concept.id, ignoredTerms])
+
+    if (semanticEnabled) {
+      setSemanticLoading(true)
+      const missingLabels = r.nodes
+        .filter(n => n.status === 'missing')
+        .map(n => n.label)
+      if (missingLabels.length > 0) {
+        matchKeyConcepts(userText, missingLabels).then(semResults => {
+          const matchedLabels = semResults
+            .filter(s => s.matched)
+            .map(s => s.label)
+          if (matchedLabels.length > 0) {
+            setResult(prev => {
+              if (!prev) return prev
+              const updated = applySemanticResults(prev, matchedLabels)
+              useKnowledgeGraphStore.getState().updateMastery(concept.id, computeScore(updated))
+              return updated
+            })
+          }
+          setSemanticLoading(false)
+        }).catch(() => {
+          setSemanticLoading(false)
+        })
+      } else {
+        setSemanticLoading(false)
+      }
+    }
+  }, [userText, originalContent, allConcepts, concept.id, ignoredTerms, semanticEnabled, applySemanticResults])
 
   const computeScore = (r: GraphAlignmentResult) =>
     Math.round((r.stats.nodeCoverage || 0) * 0.6 + (r.stats.nodePrecision || 0) * 0.4)
@@ -224,7 +284,19 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
         placeholder={`用你自己的话描述对「${concept.title}」的理解...`} rows={5}
         className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y bg-white" />
       <div className="flex items-center justify-between">
-        <p className="text-[10px] text-gray-400">{userText.trim() ? `${userText.trim().length} 字` : ''}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-[10px] text-gray-400">{userText.trim() ? `${userText.trim().length} 字` : ''}</p>
+          <label className="flex items-center gap-1 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={semanticEnabled}
+              onChange={e => setSemanticEnabled(e.target.checked)}
+              className="w-3 h-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-[10px] text-gray-400">语义匹配</span>
+            {semanticLoading && <span className="text-[10px] text-blue-500 animate-pulse">加载模型中...</span>}
+          </label>
+        </div>
         <button onClick={handleAlign} disabled={!userText.trim() || !originalContent}
           className="px-4 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
           执行图对齐</button>
