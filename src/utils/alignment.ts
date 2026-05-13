@@ -72,9 +72,9 @@ function parseKeyConcepts(text: string): string[] {
       continue
     }
     if (inSection) {
-      if (trimmed.startsWith('#') || (trimmed === '' && concepts.length > 0)) break
+      if (trimmed.startsWith('#') || trimmed.startsWith('``') || (trimmed === '' && concepts.length > 0)) break
       if (trimmed) {
-        concepts.push(...trimmed.split(/\s+/))
+        concepts.push(...trimmed.split(/\s+/).filter(t => !t.includes('`')))
       }
     }
   }
