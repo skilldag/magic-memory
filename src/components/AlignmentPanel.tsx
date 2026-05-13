@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import type { Concept } from '../types'
 import {
   compareTexts,
+  removeKeyConceptFromContent,
   type GraphAlignmentResult,
   type AlignedNodePair,
   type AlignedEdgePair,
@@ -15,12 +16,24 @@ interface AlignmentPanelProps {
   onNavigate: (conceptId: string) => void
 }
 
-function NodeRow({ node }: { node: AlignedNodePair }) {
+interface NodeRowProps {
+  node: AlignedNodePair
+  showActions?: boolean
+  onIgnore?: (node: AlignedNodePair) => void
+  onDelete?: (node: AlignedNodePair) => void
+}
+
+function NodeRow({ node, showActions, onIgnore, onDelete }: NodeRowProps) {
   const dot = { matched: 'bg-emerald-500', missing: 'bg-amber-500', extra: 'bg-gray-400' }
   const bg  = { matched: 'border-emerald-200 bg-emerald-50/50', missing: 'border-amber-200 bg-amber-50', extra: 'border-gray-200 bg-gray-50' }
   const lb  = { matched: '已理解', missing: '未提及', extra: '多余' }
+  const [hovered, setHovered] = useState(false)
   return (
-    <div className={`rounded-lg border p-2.5 text-xs ${bg[node.status]}`}>
+    <div
+      className={`rounded-lg border p-2.5 text-xs ${bg[node.status]}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="flex items-center gap-1.5">
         <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${dot[node.status]}`} />
         <span className="font-medium truncate">{node.label}</span>
@@ -30,6 +43,28 @@ function NodeRow({ node }: { node: AlignedNodePair }) {
           node.status === 'missing' ? 'bg-amber-100 text-amber-700' :
           'bg-gray-100 text-gray-500'
         }`}>{lb[node.status]}</span>
+        {hovered && showActions && (
+          <div className="flex items-center gap-0.5 ml-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); onIgnore?.(node) }}
+              className="p-0.5 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors"
+              title="临时忽略此条目"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete?.(node) }}
+              className="p-0.5 rounded hover:bg-red-100 text-gray-400 hover:text-red-500 transition-colors"
+              title="从原文永久删除"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -50,22 +85,49 @@ function EdgeRow({ edge }: { edge: AlignedEdgePair }) {
   )
 }
 
+function recomputeStats(
+  result: GraphAlignmentResult,
+  ignoredTerms: string[]
+): GraphAlignmentResult {
+  const visible = result.nodes.filter(n => !ignoredTerms.includes(n.label))
+  const matchedCount = visible.filter(n => n.status === 'matched').length
+  const missingCount = visible.filter(n => n.status === 'missing').length
+  const extraCount = visible.filter(n => n.status === 'extra').length
+
+  return {
+    ...result,
+    stats: {
+      ...result.stats,
+      matchedNodeCount: matchedCount,
+      missingNodeCount: missingCount,
+      extraNodeCount: extraCount,
+      nodeCoverage: result.originalNodeCount > 0
+        ? Math.round((matchedCount / result.originalNodeCount) * 100) : 0,
+      nodePrecision: visible.length > 0
+        ? Math.round((matchedCount / visible.length) * 100) : 0,
+    },
+  }
+}
+
 export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPanelProps) {
   const alignmentDrafts = useKnowledgeGraphStore(s => s.alignmentDrafts)
   const setAlignmentDraft = useKnowledgeGraphStore(s => s.setAlignmentDraft)
+  const updateConceptContent = useKnowledgeGraphStore(s => s.updateConceptContent)
   const draft = alignmentDrafts.get(concept.id)
 
   const [userText, setUserText] = useState(draft?.userText ?? '')
   const [result, setResult] = useState<GraphAlignmentResult | null>(draft?.result ?? null)
   const [hasAligned, setHasAligned] = useState(draft?.hasAligned ?? false)
+  const [ignoredTerms, setIgnoredTerms] = useState<string[]>(draft?.ignoredTerms ?? [])
   const [originalContent, setOriginalContent] = useState<string | null>(null)
   const [contentLoading, setContentLoading] = useState(false)
   const [showTab, setShowTab] = useState<'nodes' | 'edges'>('nodes')
+  const [showIgnored, setShowIgnored] = useState(true)
+  const [deleteConfirm, setDeleteConfirm] = useState<AlignedNodePair | null>(null)
 
-  // Sync alignment draft to store cache on every change
   useEffect(() => {
-    setAlignmentDraft(concept.id, { userText, hasAligned, result })
-  }, [userText, hasAligned, result, concept.id, setAlignmentDraft])
+    setAlignmentDraft(concept.id, { userText, hasAligned, result, ignoredTerms })
+  }, [userText, hasAligned, result, ignoredTerms, concept.id, setAlignmentDraft])
 
   useEffect(() => {
     if (concept.content) { setOriginalContent(concept.content); return }
@@ -85,9 +147,14 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
   const handleAlign = useCallback(() => {
     if (!userText.trim() || !originalContent) return
     const r = compareTexts(userText, originalContent, allConcepts, concept.id)
-    setResult(r)
+
+    const effectiveResult = ignoredTerms.length > 0
+      ? recomputeStats(r, ignoredTerms)
+      : r
+
+    setResult(effectiveResult)
     setHasAligned(true)
-    const { stats } = r
+    const { stats } = effectiveResult
     const score = Math.round(
       (stats.nodeCoverage || 0) * 0.6 + (stats.nodePrecision || 0) * 0.4
     )
@@ -98,7 +165,52 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
     else if (coverage > 50) quality = 3
     else quality = 2
     useKnowledgeGraphStore.getState().startReview(concept.id, quality)
-  }, [userText, originalContent, allConcepts, concept.id])
+  }, [userText, originalContent, allConcepts, concept.id, ignoredTerms])
+
+  const handleIgnoreNode = useCallback((node: AlignedNodePair) => {
+    setIgnoredTerms(prev => {
+      if (prev.includes(node.label)) return prev
+      const next = [...prev, node.label]
+      if (result) {
+        setResult(recomputeStats(result, next))
+      }
+      return next
+    })
+  }, [result])
+
+  const handleDeleteNode = useCallback((node: AlignedNodePair) => {
+    setDeleteConfirm(node)
+  }, [])
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteConfirm || !originalContent) return
+    const newContent = removeKeyConceptFromContent(originalContent, deleteConfirm.label)
+    if (!newContent) return
+    updateConceptContent(concept.id, newContent)
+    setOriginalContent(newContent)
+    setDeleteConfirm(null)
+    if (userText.trim()) {
+      const r = compareTexts(userText, newContent, allConcepts, concept.id)
+      const effectiveResult = ignoredTerms.length > 0
+        ? recomputeStats(r, ignoredTerms)
+        : r
+      setResult(effectiveResult)
+      const score = Math.round(
+        (effectiveResult.stats.nodeCoverage || 0) * 0.6 + (effectiveResult.stats.nodePrecision || 0) * 0.4
+      )
+      useKnowledgeGraphStore.getState().updateMastery(concept.id, score)
+    }
+  }, [deleteConfirm, originalContent, concept.id, userText, allConcepts, ignoredTerms, updateConceptContent])
+
+  const restoreIgnored = useCallback((term: string) => {
+    setIgnoredTerms(prev => {
+      const next = prev.filter(t => t !== term)
+      if (result) {
+        setResult(recomputeStats(result, next))
+      }
+      return next
+    })
+  }, [result])
 
   return (
     <div className="px-5 py-4 space-y-4">
@@ -174,11 +286,11 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
             </div>
           )}
 
-          {result.stats.missingNodeCount > 0 && (
+          {result.nodes.filter(n => n.status === 'missing' && !ignoredTerms.includes(n.label)).length > 0 && (
             <div className="p-3 rounded-lg border border-amber-200 bg-amber-50/50">
               <h4 className="text-xs font-semibold text-amber-800 mb-2">原文有但你的描述中未出现的术语</h4>
               <div className="flex flex-wrap gap-1.5">
-                {result.nodes.filter(n => n.status === 'missing').map(n => (
+                {result.nodes.filter(n => n.status === 'missing' && !ignoredTerms.includes(n.label)).map(n => (
                   <button key={n.nodeId}
                     onClick={() => n.isKnownConcept ? onNavigate(n.nodeId) : null}
                     className={`px-2 py-0.5 text-[10px] font-medium bg-white border rounded-full transition-colors ${
@@ -193,10 +305,49 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
             </div>
           )}
 
+          {ignoredTerms.length > 0 && (
+            <div className="p-3 rounded-lg border border-gray-200 bg-gray-50">
+              <button
+                onClick={() => setShowIgnored(!showIgnored)}
+                className="flex items-center gap-1.5 w-full text-left"
+              >
+                <svg
+                  width={10} height={10}
+                  className={`text-gray-400 transition-transform ${showIgnored ? 'rotate-90' : ''}`}
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+                <h4 className="text-xs font-semibold text-gray-500">已忽略 ({ignoredTerms.length})</h4>
+              </button>
+              {showIgnored && (
+                <div className="mt-2 space-y-1">
+                  {result.nodes
+                    .filter(n => ignoredTerms.includes(n.label))
+                    .map(n => (
+                      <div key={n.nodeId} className="flex items-center justify-between px-2 py-1 rounded bg-white border border-gray-100">
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-300" />
+                          <span className="text-xs text-gray-500">{n.label}</span>
+                        </div>
+                        <button
+                          onClick={() => restoreIgnored(n.label)}
+                          className="text-[10px] text-blue-500 hover:text-blue-700 font-medium"
+                        >
+                          恢复
+                        </button>
+                      </div>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-2 border-b border-gray-100 pb-2">
             <button onClick={() => setShowTab('nodes')}
               className={`px-3 py-1 text-xs font-medium rounded transition-colors ${showTab === 'nodes' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}>
-              节点详情（{result.nodes.length}）</button>
+              节点详情（{result.nodes.length - ignoredTerms.length}）</button>
             <button onClick={() => setShowTab('edges')}
               className={`px-3 py-1 text-xs font-medium rounded transition-colors ${showTab === 'edges' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}>
               边详情（{result.edges.length}）</button>
@@ -204,8 +355,19 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
 
           {showTab === 'nodes' && (
             <div className="space-y-1.5">
-              {result.nodes.sort((a, b) => ({ matched: 0, missing: 1, extra: 2 }[a.status] - { matched: 0, missing: 1, extra: 2 }[b.status]))
-                .map(n => <NodeRow key={n.nodeId} node={n} />)}
+              {result.nodes
+                .filter(n => !ignoredTerms.includes(n.label))
+                .sort((a, b) => ({ matched: 0, missing: 1, extra: 2 }[a.status] - { matched: 0, missing: 1, extra: 2 }[b.status]))
+                .map(n => (
+                  <NodeRow
+                    key={n.nodeId}
+                    node={n}
+                    showActions={n.status === 'missing'}
+                    onIgnore={handleIgnoreNode}
+                    onDelete={handleDeleteNode}
+                  />
+                ))
+              }
             </div>
           )}
           {showTab === 'edges' && (
@@ -215,6 +377,25 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
                 .map((e, i) => <EdgeRow key={`${e.sourceId}-${e.targetId}-${i}`} edge={e} />)}
             </div>
           )}
+        </div>
+      )}
+
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-white rounded-xl shadow-xl p-5 max-w-sm mx-4" onClick={e => e.stopPropagation()}>
+            <h4 className="text-sm font-semibold text-gray-900 mb-2">确认永久删除</h4>
+            <p className="text-xs text-gray-600 mb-4">
+              确定从原文 KEY CONCEPTS 段落中永久删除「<span className="font-medium text-gray-900">{deleteConfirm.label}</span>」吗？此操作会修改文档内容。
+            </p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setDeleteConfirm(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">
+                取消
+              </button>
+              <button onClick={confirmDelete} className="px-3 py-1.5 text-xs font-medium text-white bg-red-500 rounded-lg hover:bg-red-600">
+                确认删除
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
