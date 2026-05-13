@@ -22,9 +22,10 @@ interface NodeRowProps {
   showActions?: boolean
   onIgnore?: (node: AlignedNodePair) => void
   onDelete?: (node: AlignedNodePair) => void
+  onMarkMatched?: (node: AlignedNodePair) => void
 }
 
-function NodeRow({ node, showActions, onIgnore, onDelete }: NodeRowProps) {
+function NodeRow({ node, showActions, onIgnore, onDelete, onMarkMatched }: NodeRowProps) {
   const dot = { matched: 'bg-emerald-500', missing: 'bg-amber-500', extra: 'bg-gray-400' }
   const bg  = { matched: 'border-emerald-200 bg-emerald-50/50', missing: 'border-amber-200 bg-amber-50', extra: 'border-gray-200 bg-gray-50' }
   const lb  = { matched: '已理解', missing: '未提及', extra: '多余' }
@@ -46,6 +47,15 @@ function NodeRow({ node, showActions, onIgnore, onDelete }: NodeRowProps) {
         }`}>{lb[node.status]}</span>
         {hovered && showActions && (
           <div className="flex items-center gap-0.5 ml-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); onMarkMatched?.(node) }}
+              className="p-0.5 rounded hover:bg-emerald-100 text-gray-400 hover:text-emerald-600 transition-colors"
+              title="标记为已理解"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
             <button
               onClick={(e) => { e.stopPropagation(); onIgnore?.(node) }}
               className="p-0.5 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors"
@@ -88,11 +98,13 @@ function EdgeRow({ edge }: { edge: AlignedEdgePair }) {
 
 function recomputeStats(
   result: GraphAlignmentResult,
-  ignoredTerms: string[]
+  ignoredTerms: string[],
+  manuallyMatched: string[] = []
 ): GraphAlignmentResult {
+  const matchedSet = new Set(manuallyMatched)
   const visible = result.nodes.filter(n => !ignoredTerms.includes(n.label))
-  const matchedCount = visible.filter(n => n.status === 'matched').length
-  const missingCount = visible.filter(n => n.status === 'missing').length
+  const matchedCount = visible.filter(n => n.status === 'matched' || matchedSet.has(n.label)).length
+  const missingCount = visible.filter(n => n.status === 'missing' && !matchedSet.has(n.label)).length
   const extraCount = visible.filter(n => n.status === 'extra').length
 
   return {
@@ -120,6 +132,7 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
   const [result, setResult] = useState<GraphAlignmentResult | null>(draft?.result ?? null)
   const [hasAligned, setHasAligned] = useState(draft?.hasAligned ?? false)
   const [ignoredTerms, setIgnoredTerms] = useState<string[]>(draft?.ignoredTerms ?? [])
+  const [manuallyMatched, setManuallyMatched] = useState<string[]>(draft?.manuallyMatched ?? [])
   const [originalContent, setOriginalContent] = useState<string | null>(null)
   const [contentLoading, setContentLoading] = useState(false)
   const [showTab, setShowTab] = useState<'nodes' | 'edges'>('nodes')
@@ -129,8 +142,8 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
   const [semanticLoading, setSemanticLoading] = useState(false)
 
   useEffect(() => {
-    setAlignmentDraft(concept.id, { userText, hasAligned, result, ignoredTerms })
-  }, [userText, hasAligned, result, ignoredTerms, concept.id, setAlignmentDraft])
+    setAlignmentDraft(concept.id, { userText, hasAligned, result, ignoredTerms, manuallyMatched })
+  }, [userText, hasAligned, result, ignoredTerms, manuallyMatched, concept.id, setAlignmentDraft])
 
   useEffect(() => {
     if (concept.content) { setOriginalContent(concept.content); return }
@@ -181,8 +194,8 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
     if (!userText.trim() || !originalContent) return
     const r = compareTexts(userText, originalContent, allConcepts, concept.id)
 
-    const effectiveResult = ignoredTerms.length > 0
-      ? recomputeStats(r, ignoredTerms)
+    const effectiveResult = ignoredTerms.length > 0 || manuallyMatched.length > 0
+      ? recomputeStats(r, ignoredTerms, manuallyMatched)
       : r
 
     setResult(effectiveResult)
@@ -232,10 +245,10 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
     if (ignoredTerms.includes(node.label)) return
     const next = [...ignoredTerms, node.label]
     setIgnoredTerms(next)
-    const updated = recomputeStats(result, next)
+    const updated = recomputeStats(result, next, manuallyMatched)
     setResult(updated)
     useKnowledgeGraphStore.getState().updateMastery(concept.id, computeScore(updated))
-  }, [result, ignoredTerms, concept.id])
+  }, [result, ignoredTerms, manuallyMatched, concept.id])
 
   const handleDeleteNode = useCallback((node: AlignedNodePair) => {
     setDeleteConfirm(node)
@@ -250,22 +263,32 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
     setDeleteConfirm(null)
     if (userText.trim()) {
       const r = compareTexts(userText, newContent, allConcepts, concept.id)
-      const effectiveResult = ignoredTerms.length > 0
-        ? recomputeStats(r, ignoredTerms)
+      const effectiveResult = ignoredTerms.length > 0 || manuallyMatched.length > 0
+        ? recomputeStats(r, ignoredTerms, manuallyMatched)
         : r
       setResult(effectiveResult)
       useKnowledgeGraphStore.getState().updateMastery(concept.id, computeScore(effectiveResult))
     }
   }, [deleteConfirm, originalContent, concept.id, userText, allConcepts, ignoredTerms, updateConceptContent])
 
+  const handleMarkMatched = useCallback((node: AlignedNodePair) => {
+    if (!result) return
+    if (manuallyMatched.includes(node.label)) return
+    const next = [...manuallyMatched, node.label]
+    setManuallyMatched(next)
+    const updated = recomputeStats(result, ignoredTerms, next)
+    setResult(updated)
+    useKnowledgeGraphStore.getState().updateMastery(concept.id, computeScore(updated))
+  }, [result, manuallyMatched, ignoredTerms, concept.id])
+
   const restoreIgnored = useCallback((term: string) => {
     if (!result) return
     const next = ignoredTerms.filter(t => t !== term)
     setIgnoredTerms(next)
-    const updated = recomputeStats(result, next)
+    const updated = recomputeStats(result, next, manuallyMatched)
     setResult(updated)
     useKnowledgeGraphStore.getState().updateMastery(concept.id, computeScore(updated))
-  }, [result, ignoredTerms, concept.id])
+  }, [result, ignoredTerms, manuallyMatched, concept.id])
 
   return (
     <div className="px-5 py-4 space-y-4">
@@ -353,11 +376,11 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
             </div>
           )}
 
-          {result.nodes.filter(n => n.status === 'missing' && !ignoredTerms.includes(n.label)).length > 0 && (
+          {result.nodes.filter(n => n.status === 'missing' && !ignoredTerms.includes(n.label) && !manuallyMatched.includes(n.label)).length > 0 && (
             <div className="p-3 rounded-lg border border-amber-200 bg-amber-50/50">
               <h4 className="text-xs font-semibold text-amber-800 mb-2">原文有但你的描述中未出现的术语</h4>
               <div className="flex flex-wrap gap-1.5">
-                {result.nodes.filter(n => n.status === 'missing' && !ignoredTerms.includes(n.label)).map(n => (
+                {result.nodes.filter(n => n.status === 'missing' && !ignoredTerms.includes(n.label) && !manuallyMatched.includes(n.label)).map(n => (
                   <button key={n.nodeId}
                     onClick={() => n.isKnownConcept ? onNavigate(n.nodeId) : null}
                     className={`px-2 py-0.5 text-[10px] font-medium bg-white border rounded-full transition-colors ${
@@ -425,15 +448,22 @@ export function AlignmentPanel({ concept, allConcepts, onNavigate }: AlignmentPa
               {result.nodes
                 .filter(n => !ignoredTerms.includes(n.label))
                 .sort((a, b) => ({ matched: 0, missing: 1, extra: 2 }[a.status] - { matched: 0, missing: 1, extra: 2 }[b.status]))
-                .map(n => (
-                  <NodeRow
-                    key={n.nodeId}
-                    node={n}
-                    showActions={n.status === 'missing'}
-                    onIgnore={handleIgnoreNode}
-                    onDelete={handleDeleteNode}
-                  />
-                ))
+                .map(n => {
+                  const isManuallyMatched = manuallyMatched.includes(n.label)
+                  const displayNode = isManuallyMatched && n.status === 'missing'
+                    ? { ...n, status: 'matched' as const }
+                    : n
+                  return (
+                    <NodeRow
+                      key={n.nodeId}
+                      node={displayNode}
+                      showActions={!isManuallyMatched && n.status === 'missing'}
+                      onMarkMatched={handleMarkMatched}
+                      onIgnore={handleIgnoreNode}
+                      onDelete={handleDeleteNode}
+                    />
+                  )
+                })
               }
             </div>
           )}

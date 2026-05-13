@@ -65,12 +65,14 @@ interface KnowledgeGraphStore {
     hasAligned: boolean
     result: GraphAlignmentResult | null
     ignoredTerms: string[]
+    manuallyMatched: string[]
   }>
   setAlignmentDraft: (conceptId: string, draft: {
     userText: string
     hasAligned: boolean
     result: GraphAlignmentResult | null
     ignoredTerms: string[]
+    manuallyMatched: string[]
   }) => void
   persistToServer: () => Promise<void>
 }
