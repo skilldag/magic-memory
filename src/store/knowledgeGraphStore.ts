@@ -4,6 +4,21 @@ import type { GraphAlignmentResult } from '../utils/alignment'
 import { useToastStore } from './toastStore'
 
 const GS_URL = 'http://localhost:4321'
+const DRAFT_STORAGE_KEY = 'magic-memory-alignment-drafts'
+
+function loadDraftsFromStorage() {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY)
+    if (raw) return new Map(JSON.parse(raw))
+  } catch {}
+  return new Map()
+}
+
+function saveDraftsToStorage(drafts: Map<string, unknown>) {
+  try {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify([...drafts]))
+  } catch {}
+}
 
 export interface ProjectInfo {
   id: string
@@ -86,7 +101,7 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
     reviewRecords: new Map(),
     annotations: [],
     conceptMastery: new Map(),
-    alignmentDrafts: new Map(),
+    alignmentDrafts: loadDraftsFromStorage(),
     isLoading: false,
     loadingProgress: 0,
     error: null,
@@ -229,6 +244,7 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
       const newMap = new Map(alignmentDrafts)
       newMap.set(conceptId, draft)
       set({ alignmentDrafts: newMap })
+      saveDraftsToStorage(newMap)
     },
 
     getRelated: (conceptId) => {
