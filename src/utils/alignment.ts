@@ -139,6 +139,7 @@ export function compareTexts(
 
   // 2. 先提取用户输入中的术语，后面多次复用
   const userTerms = extractTerms(userText)
+  const userTextFlat = userText.replace(/\s+/g, '')
 
   // 3. 匹配：精确子串匹配 + charJaccard 模糊近似
   const matchedLabels = new Set<string>()
@@ -154,9 +155,11 @@ export function compareTexts(
 
     if (isEnglish) {
       found = new RegExp(escapeRegex(kc), 'i').test(userText)
+      if (!found && kc.length >= 2) {
+        found = userTextFlat.includes(kc)
+      }
     } else {
-      // 精确子串匹配（快路径）
-      found = userText.includes(kc)
+      found = userText.includes(kc) || userTextFlat.includes(kc)
       if (!found && kc.length >= 2) {
         // 模糊近似：在用户术语中找 charJaccard 最高的
         let bestScore = 0
