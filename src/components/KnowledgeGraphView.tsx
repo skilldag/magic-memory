@@ -65,6 +65,7 @@ export function KnowledgeGraphView() {
   const [focusedNodeIds, setFocusedNodeIds] = useState<string[] | undefined>(undefined)
   const [relayoutKey, setRelayoutKey] = useState(0)
   const [bannerDismissed, setBannerDismissed] = useState(false)
+  const [focusDepth, setFocusDepth] = useState<number>(1)
   const { containerRef: graphContainerRef, size: containerSize } = useContainerSize<HTMLDivElement>()
   const selectedConceptRef = useRef<Concept | null>(null)
   const preventHideRef = useRef(false)
@@ -318,6 +319,27 @@ useEffect(() => {
                 <span className="text-sm font-medium text-gray-700">
                   聚焦: <span className="text-blue-600">{selectedConcept.title}</span>
                 </span>
+                <div className="flex items-center gap-1 ml-1 shrink-0">
+                  <span className="text-[11px] text-gray-400 mr-0.5">深度</span>
+                  {[
+                    { value: 1, label: '1' },
+                    { value: 2, label: '2' },
+                    { value: 3, label: '3' },
+                    { value: Infinity, label: '∞' },
+                  ].map(d => (
+                    <button
+                      key={d.label}
+                      onClick={() => setFocusDepth(d.value)}
+                      className={`w-6 h-6 rounded text-xs font-medium transition-colors ${
+                        focusDepth === d.value
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -439,6 +461,7 @@ useEffect(() => {
           <KnowledgeGraph
             concepts={concepts} edges={edges} selectedConcept={selectedConcept}
             focusEnabled={true}
+            focusDepth={focusDepth}
             focusedNodeIds={focusedNodeIds}
             conceptMastery={conceptMastery}
             containerWidth={containerSize?.width}

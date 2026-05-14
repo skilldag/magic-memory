@@ -30,6 +30,32 @@ function calcAdaptiveLayoutParams(
   return { idealEdgeLength, nodeRepulsion, gravity, padding, numIter }
 }
 
+function getNodesAtDepth(
+  cy: Core,
+  centerNodeId: string,
+  depth: number
+): string[] {
+  const visited = new Set<string>([centerNodeId])
+  let current = [centerNodeId]
+
+  for (let level = 0; level < depth; level++) {
+    const next: string[] = []
+    for (const id of current) {
+      const node = cy.getElementById(id)
+      if (!node.length) continue
+      node.connectedEdges().connectedNodes().forEach(n => {
+        if (!visited.has(n.id())) {
+          visited.add(n.id())
+          next.push(n.id())
+        }
+      })
+    }
+    current = next
+  }
+
+  return [...visited]
+}
+
 interface KnowledgeGraphProps {
   concepts: Concept[]
   edges: ConceptEdge[]
@@ -65,6 +91,8 @@ interface KnowledgeGraphProps {
   // Review mode toggle
   reviewMode?: boolean
   onToggleReviewMode?: () => void
+  // Focus depth: number of levels of related nodes to show (default 1, Infinity = all)
+  focusDepth?: number
 }
 
 export function KnowledgeGraph({
@@ -94,6 +122,7 @@ export function KnowledgeGraph({
   reviewRecords,
   reviewMode = false,
   onToggleReviewMode,
+  focusDepth = 1,
 }: KnowledgeGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
@@ -688,9 +717,17 @@ export function KnowledgeGraph({
     }
 
     const selectedNode = cy.getElementById(selectedConcept.id)
-    const connectedEdges = selectedNode.connectedEdges()
-    const neighborNodes = connectedEdges.connectedNodes()
-    const relatedNodeIds = new Set([selectedConcept.id, ...neighborNodes.map(n => n.id())])
+
+    let relatedNodeIds: Set<string>
+    if (focusDepth === Infinity) {
+      relatedNodeIds = new Set(cy.nodes().map(n => n.id()))
+    } else {
+      const focusIds = getNodesAtDepth(cy, selectedConcept.id, focusDepth)
+      relatedNodeIds = new Set(focusIds)
+    }
+    const neighborNodes = cy.nodes().filter(
+      n => relatedNodeIds.has(n.id()) && n.id() !== selectedConcept.id
+    )
 
     cy.nodes().forEach(n => {
       const isSelected = n.id() === selectedConcept.id
@@ -749,7 +786,7 @@ export function KnowledgeGraph({
     }
 
     wasFocusedRef.current = isFocusedNow
-  }, [selectedConcept, focusEnabled, focusedNodeIds, structuralKey, conceptMastery])
+  }, [selectedConcept, focusEnabled, focusedNodeIds, structuralKey, conceptMastery, focusDepth])
 
   useEffect(() => {
     const cy = cyRef.current
