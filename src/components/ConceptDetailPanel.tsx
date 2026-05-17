@@ -183,6 +183,7 @@ export function ConceptDetailPanel({
   const [importedContent, setImportedContent] = useState<string | null>(null)
 
   useEffect(() => {
+    setAction('read')
     setImportContent('')
     setImportLoading(false)
     setImportError(null)
