@@ -747,11 +747,23 @@ export function KnowledgeGraph({
       const sourceVisible = relatedNodeIds.has(e.data('source'))
       const targetVisible = relatedNodeIds.has(e.data('target'))
       const isVisible = sourceVisible && targetVisible
-      const touchesSelected = e.data('source') === selectedConcept.id || e.data('target') === selectedConcept.id
+
+      const isIncoming = e.data('target') === selectedConcept.id && e.data('source') !== selectedConcept.id
+      const isOutgoing = e.data('source') === selectedConcept.id && e.data('target') !== selectedConcept.id
+      const touchesSelected = isIncoming || isOutgoing
+
+      let color: string | undefined
+      if (isIncoming) {
+        color = '#eab308'
+      } else if (isOutgoing) {
+        color = '#10b981'
+      }
+
       e.style({
         'display': isVisible ? 'element' : 'none',
         'opacity': isVisible ? 1 : 0,
-        'width': touchesSelected ? 4 : 2
+        'width': touchesSelected ? 4 : 2,
+        ...(color ? { 'line-color': color, 'target-arrow-color': color } : {}),
       })
     })
 
