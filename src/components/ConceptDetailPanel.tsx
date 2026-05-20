@@ -55,7 +55,10 @@ export function ConceptDetailPanel({
     const { projects, activeProjectId } = useKnowledgeGraphStore.getState()
     const project = projects.find(p => p.id === activeProjectId)
     const baseDir = project?.sourceDir || undefined
+    const conceptIdAtCall = concept.id
     loadDocContent(concept.path, baseDir).then(content => {
+      // Guard against stale async result — if concept changed while loading, ignore
+      if (useKnowledgeGraphStore.getState().selectedConcept?.id !== conceptIdAtCall) return
       if (content) setDocContent(content)
       setDocLoading(false)
     })
@@ -209,6 +212,7 @@ export function ConceptDetailPanel({
       }
       clearDocCache(concept.path, baseDir)
       updateConceptContent(concept.id, importContent)
+      useKnowledgeGraphStore.getState().persistToServer()
       const updatedConcept = useKnowledgeGraphStore.getState().concepts.find(c => c.id === concept.id)
       if (updatedConcept) {
         useKnowledgeGraphStore.getState().selectConcept(updatedConcept)
