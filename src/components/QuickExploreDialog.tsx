@@ -14,7 +14,7 @@ export function QuickExploreDialog({ sourceConcept, onClose }: QuickExploreDialo
   const [submitting, setSubmitting] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
 
-  const EXPLORE_SERVER = 'http://localhost:4321'
+  
   const canSubmit = question.trim().length > 0
 
   const handleSubmit = async () => {
@@ -23,7 +23,7 @@ export function QuickExploreDialog({ sourceConcept, onClose }: QuickExploreDialo
     setAiError(null)
 
     try {
-      const resp = await fetch(`${EXPLORE_SERVER}/api/explore`, {
+      const resp = await fetch('/api/explore', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(30000),

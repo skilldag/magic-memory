@@ -295,8 +295,9 @@ ${question}
 
     // POST /api/write-doc — 写入 .md 文件
     if (url.pathname === '/api/write-doc' && req.method === 'POST') {
+      let body: any = {};
       try {
-        const body = await req.json()
+        body = await req.json()
         let { path: filePath, content, baseDir } = body
         if (!filePath || content === undefined) return new Response(JSON.stringify({ error: 'path and content required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
         // 如果有 baseDir（memo init 路径），则相对路径解析到 baseDir 下
@@ -317,6 +318,7 @@ ${question}
           headers: { 'Content-Type': 'application/json' },
         })
       } catch (error) {
+        console.error('/api/write-doc failed:', error, 'body:', JSON.stringify(body).slice(0, 200))
         return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } })
       }
     }

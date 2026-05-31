@@ -207,7 +207,12 @@ export function ConceptDetailPanel({
         body: JSON.stringify({ path: concept.path, content: importContent, baseDir }),
       })
       if (!resp.ok) {
-        setImportError('导入失败: ' + resp.statusText)
+        let detail = resp.statusText
+        try {
+          const errBody = await resp.json()
+          if (errBody.error) detail = errBody.error
+        } catch {}
+        setImportError('导入失败: ' + detail)
         return
       }
       clearDocCache(concept.path, baseDir)

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 
 interface SelectionPopoverProps {
   position: { x: number; y: number }
@@ -10,11 +10,17 @@ interface SelectionPopoverProps {
 
 export function SelectionPopover({
   position,
+  selectedText,
   onAddAnnotation,
   onConceptElevation,
   onClose,
 }: SelectionPopoverProps) {
   const popoverRef = useRef<HTMLDivElement>(null)
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(selectedText)
+    onClose()
+  }, [selectedText, onClose])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -66,11 +72,11 @@ export function SelectionPopover({
         💬 评论
       </button>
       <button
-        onClick={() => onAddAnnotation('question')}
+        onClick={handleCopy}
         className="px-2 py-1 text-xs font-medium text-purple-700 bg-purple-50 rounded hover:bg-purple-100 transition-colors whitespace-nowrap"
-        title="提出问题"
+        title="复制选中文本"
       >
-        ❓ 提问
+        📋 复制
       </button>
       <button
         onClick={() => onAddAnnotation('correction')}

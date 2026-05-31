@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Project, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain } from '../types';
 import { saveHandle, loadHandle, deleteHandle, ensurePermission } from '../utils/handleStorage';
 
-const GS_URL = 'http://localhost:4321';
+const GS_URL = '';
 
 interface ProjectStore {
   projects: Project[];

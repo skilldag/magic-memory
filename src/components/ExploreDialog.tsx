@@ -61,7 +61,7 @@ export function ExploreDialog({ sourceConcept, onClose }: ExploreDialogProps) {
   const [questionHistory, setQuestionHistory] = useState<ExploreQuestionHistoryItem[]>(() => loadQuestionHistory())
   const [derivedQuestions, setDerivedQuestions] = useState<string[]>([])
 
-  const EXPLORE_SERVER = 'http://localhost:4321'
+  
 
   const canSubmit = title.trim() || problem.trim()
   const conceptQuestionHistory = useMemo(
@@ -118,7 +118,7 @@ export function ExploreDialog({ sourceConcept, onClose }: ExploreDialogProps) {
     let aiData: any = null
 
     try {
-      const resp = await fetch(`${EXPLORE_SERVER}/api/explore`, {
+      const resp = await fetch('/api/explore', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(30000),

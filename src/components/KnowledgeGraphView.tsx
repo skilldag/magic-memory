@@ -207,7 +207,7 @@ useEffect(() => {
 
     for (const p of prompts) {
       try {
-        const resp = await fetch('http://localhost:4321/api/explore', {
+        const resp = await fetch('/api/explore', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

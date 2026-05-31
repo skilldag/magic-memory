@@ -8,9 +8,8 @@ import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
 import type { Document, Annotation } from '../types'
 import { SelectionPopover } from './SelectionPopover'
 import { AnnotationDialog } from './AnnotationDialog'
-import type { AnnotationType } from './AnnotationDialog'
 import { AnnotationPreview } from './AnnotationPreview'
-
+import type { AnnotationType } from './AnnotationDialog'
 marked.use(markedKatexExtension({ throwOnError: false }))
 
 interface DocumentViewerProps {
@@ -29,9 +28,8 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogType, setDialogType] = useState<AnnotationType>('comment')
-
   const [previewAnnotation, setPreviewAnnotation] = useState<Annotation | null>(null)
-  const [previewPos, setPreviewPos] = useState<{ x: number; y: number } | null>(null)
+  const [previewPosition, setPreviewPosition] = useState<{ x: number; y: number } | null>(null)
 
   const viewerRef = useRef<HTMLDivElement>(null)
   const {
@@ -211,8 +209,6 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
     setDialogType(type)
     setDialogOpen(true)
     setPopoverPos(null)
-    setPreviewAnnotation(null)
-    setPreviewPos(null)
   }, [])
 
   const handleDialogSubmit = useCallback(async (data: {
@@ -300,9 +296,9 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
     onConceptElevated?.()
   }, [selectedText, selectedConcept, createConceptWithEdges, selectConcept, onConceptElevated])
 
-  const handleAnnotationClick = useCallback((annotation: Annotation, rect: DOMRect) => {
+  const handleAnnotationPreview = useCallback((annotation: Annotation, rect: DOMRect) => {
     setPreviewAnnotation(annotation)
-    setPreviewPos({
+    setPreviewPosition({
       x: rect.left + rect.width / 2,
       y: rect.top,
     })
@@ -311,7 +307,7 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
   const handleViewDetails = useCallback((annotation: Annotation) => {
     selectAnnotation(annotation)
     setPreviewAnnotation(null)
-    setPreviewPos(null)
+    setPreviewPosition(null)
   }, [selectAnnotation])
 
   const handleClosePopover = useCallback(() => {
@@ -321,11 +317,6 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
     window.getSelection()?.removeAllRanges()
   }, [])
 
-  const handleClosePreview = useCallback(() => {
-    setPreviewAnnotation(null)
-    setPreviewPos(null)
-  }, [])
-
   const handleViewerClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement
     if (target.tagName === 'MARK' && target.dataset.annId) {
@@ -333,10 +324,10 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
       const ann = docAnnotations.find(a => a.id === annId)
       if (ann) {
         const rect = target.getBoundingClientRect()
-        handleAnnotationClick(ann, rect)
+        handleAnnotationPreview(ann, rect)
       }
     }
-  }, [docAnnotations, handleAnnotationClick])
+  }, [docAnnotations, handleAnnotationPreview])
 
   return (
     <div className="h-full flex flex-col">
@@ -389,14 +380,18 @@ export function DocumentViewer({ document, onConceptElevated }: DocumentViewerPr
         />
       )}
 
-      {previewAnnotation && previewPos && (
+      {previewAnnotation && previewPosition && (
         <AnnotationPreview
           annotation={previewAnnotation}
-          position={previewPos}
+          position={previewPosition}
           onViewDetails={handleViewDetails}
-          onClose={handleClosePreview}
+          onClose={() => {
+            setPreviewAnnotation(null)
+            setPreviewPosition(null)
+          }}
         />
       )}
+
     </div>
   )
 }

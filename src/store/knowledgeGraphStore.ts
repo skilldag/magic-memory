@@ -3,7 +3,7 @@ import type { Concept, ConceptEdge, ReviewRecord, UserAnnotation, ProcessChain, 
 import type { GraphAlignmentResult } from '../utils/alignment'
 import { useToastStore } from './toastStore'
 
-const GS_URL = 'http://localhost:4321'
+const GS_URL = ''
 const DRAFT_STORAGE_KEY = 'magic-memory-alignment-drafts'
 
 function loadDraftsFromStorage() {
@@ -133,14 +133,13 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
         set({ loadingProgress: 60 })
         const data = await resp.json()
         set(state => {
-          const currentSelectedId = state.selectedConcept?.id
-          const currentContent = state.selectedConcept?.content
+          const contentMap = new Map(state.concepts.filter(c => c.content).map(c => [c.id, c.content]))
           const newConcepts = (data.concepts || []).map((c: any) => {
-            if (c.id === currentSelectedId && currentContent) {
-              return { ...c, content: currentContent }
-            }
+            const existingContent = contentMap.get(c.id)
+            if (existingContent) return { ...c, content: existingContent }
             return c
           })
+          const currentSelectedId = state.selectedConcept?.id
           const preserved = currentSelectedId
             ? newConcepts.find((c: any) => c.id === currentSelectedId) ?? null
             : null
