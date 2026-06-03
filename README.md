@@ -111,11 +111,12 @@ Magic Memory 是一个**交互式知识图谱学习系统**，围绕三个核心
 ### 📦 多项目管理 CLI
 
 ```bash
-memo init ./docs     # 扫描目录构建图谱
-memo list            # 列出项目
-memo remove <id>     # 删除项目
-memo server start    # 启动服务
-memo server stop     # 停止服务
+memo init ./docs           # 扫描目录构建图谱并注册
+memo list                  # 列出已注册项目
+memo remove <id>           # 删除项目
+memo server start          # 启动后端服务 + Web UI（端口 4321 + 3000）
+memo server stop           # 停止所有服务
+memo server status         # 查看服务运行状态
 ```
 
 ---
@@ -162,19 +163,15 @@ memo server stop     # 停止服务
 
 ### 前置依赖
 
-- **Node.js** ≥ 18（运行前端）
-- **Bun**（运行 CLI 和后端，[安装](https://bun.sh/docs/installation)）
+- **Node.js** ≥ 18
+- **Bun** — [安装](https://bun.sh/docs/installation)：`curl -fsSL https://bun.sh/install | bash`
 
-### 安装 CLI 工具（任意目录使用）
+### 安装
+
+全局安装（任意目录使用 `memo` 命令）：
 
 ```bash
-# 全局安装 memo 命令
 npm install -g magic-memory
-
-# 之后可在任意目录使用
-memo init ./my-docs
-memo server start
-memo list
 ```
 
 或从源码安装：
@@ -182,22 +179,32 @@ memo list
 ```bash
 git clone <repo> && cd magic-memory
 npm install
-npm install -g .      # 注册 memo 命令到全局
+npm install -g .
 ```
 
-### 启动 Web UI
+### 使用
 
 ```bash
-# 项目目录下
+# 1. 初始化项目 — 扫描文档目录，构建知识图谱
+memo init ~/notes/my-vllm-study
+
+# 2. 启动完整服务（后端 + Web UI）
+memo server start
+# → Web UI: http://localhost:3000
+# → API:    http://localhost:4321
+
+# 3. 管理多个项目
+memo list
+memo remove <project-id>
+```
+
+首次使用也可在 Web UI 中点 **"添加项目"** 选择目录。
+
+### 开发模式（项目目录下）
+
+```bash
 npm install
 npm run dev            # http://localhost:3000
-```
-
-首次使用，在 Web UI 中点 **"添加项目"** 选择 Markdown 文档目录，或直接用 CLI：
-
-```bash
-memo init /path/to/your/docs
-memo server start      # 启动后端服务
 ```
 
 ### 学习流程
