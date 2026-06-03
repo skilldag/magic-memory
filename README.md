@@ -111,11 +111,11 @@ Magic Memory 是一个**交互式知识图谱学习系统**，围绕三个核心
 ### 📦 多项目管理 CLI
 
 ```bash
-memo init ./docs      # 扫描目录构建图谱
-memo list             # 列出项目
-memo remove <id>      # 删除项目
-memo server start     # 启动服务
-memo server stop      # 停止服务
+npm run memo -- init ./docs     # 扫描目录构建图谱
+npm run memo -- list            # 列出项目
+npm run memo -- remove <id>     # 删除项目
+npm run memo -- server start    # 启动服务
+npm run memo -- server stop     # 停止服务
 ```
 
 ---
@@ -160,15 +160,37 @@ memo server stop      # 停止服务
 
 ## 快速开始
 
-```bash
-npm install
-npm run dev            # http://localhost:3000
+### 前置依赖
 
-# 或一键启动（需要 Bun）
-bun run scripts/memo.ts server start
+- **Node.js** ≥ 18（运行前端）
+- **Bun**（运行 CLI 工具和后端服务，[安装](https://bun.sh/docs/installation)）
+
+### 安装与启动
+
+```bash
+# 1. 安装 JS 依赖
+npm install
+
+# 2. 启动前端（开发模式）
+npm run dev
+# → 浏览器打开 http://localhost:3000
+
+# 3. （可选）启动后端服务和 CLI
+npm run memo -- server start
+# → API: http://localhost:4321
 ```
 
 首次使用，点 **"添加项目"** 选择 Markdown 文档目录，系统自动构建图谱。
+
+### CLI 命令（需要 Bun）
+
+```bash
+npm run memo -- init ./docs     # 扫描目录构建图谱
+npm run memo -- list            # 列出已注册项目
+npm run memo -- server start    # 启动完整服务
+npm run memo -- server stop     # 停止服务
+npm run memo -- server status   # 查看服务状态
+```
 
 ### 学习流程
 
