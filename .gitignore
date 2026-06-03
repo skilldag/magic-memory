@@ -26,3 +26,9 @@ data/
 
 # Redundant lock file (npm is primary)
 bun.lock
+
+# Code review graph
+.code-review-graph/
+
+# ORT WebAssembly files (downloaded at runtime)
+public/ort-wasm/
