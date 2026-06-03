@@ -168,17 +168,14 @@ memo server status         # 查看服务运行状态
 
 ### 安装
 
-全局安装（任意目录使用 `memo` 命令）：
-
 ```bash
-npm install -g magic-memory
-```
+# 克隆仓库
+git clone <repo-url> && cd magic-memory
 
-或从源码安装：
-
-```bash
-git clone <repo> && cd magic-memory
+# 安装依赖
 npm install
+
+# 注册 memo 命令到全局（任意目录可用）
 npm install -g .
 ```
 
