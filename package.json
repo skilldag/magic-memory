@@ -2,6 +2,9 @@
   "name": "magic-memory",
   "version": "0.1.0",
   "private": true,
+  "bin": {
+    "memo": "./scripts/memo-shim.cjs"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",

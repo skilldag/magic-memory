@@ -111,11 +111,11 @@ Magic Memory 是一个**交互式知识图谱学习系统**，围绕三个核心
 ### 📦 多项目管理 CLI
 
 ```bash
-npm run memo -- init ./docs     # 扫描目录构建图谱
-npm run memo -- list            # 列出项目
-npm run memo -- remove <id>     # 删除项目
-npm run memo -- server start    # 启动服务
-npm run memo -- server stop     # 停止服务
+memo init ./docs     # 扫描目录构建图谱
+memo list            # 列出项目
+memo remove <id>     # 删除项目
+memo server start    # 启动服务
+memo server stop     # 停止服务
 ```
 
 ---
@@ -163,33 +163,41 @@ npm run memo -- server stop     # 停止服务
 ### 前置依赖
 
 - **Node.js** ≥ 18（运行前端）
-- **Bun**（运行 CLI 工具和后端服务，[安装](https://bun.sh/docs/installation)）
+- **Bun**（运行 CLI 和后端，[安装](https://bun.sh/docs/installation)）
 
-### 安装与启动
+### 安装 CLI 工具（任意目录使用）
 
 ```bash
-# 1. 安装 JS 依赖
-npm install
+# 全局安装 memo 命令
+npm install -g magic-memory
 
-# 2. 启动前端（开发模式）
-npm run dev
-# → 浏览器打开 http://localhost:3000
-
-# 3. （可选）启动后端服务和 CLI
-npm run memo -- server start
-# → API: http://localhost:4321
+# 之后可在任意目录使用
+memo init ./my-docs
+memo server start
+memo list
 ```
 
-首次使用，点 **"添加项目"** 选择 Markdown 文档目录，系统自动构建图谱。
-
-### CLI 命令（需要 Bun）
+或从源码安装：
 
 ```bash
-npm run memo -- init ./docs     # 扫描目录构建图谱
-npm run memo -- list            # 列出已注册项目
-npm run memo -- server start    # 启动完整服务
-npm run memo -- server stop     # 停止服务
-npm run memo -- server status   # 查看服务状态
+git clone <repo> && cd magic-memory
+npm install
+npm install -g .      # 注册 memo 命令到全局
+```
+
+### 启动 Web UI
+
+```bash
+# 项目目录下
+npm install
+npm run dev            # http://localhost:3000
+```
+
+首次使用，在 Web UI 中点 **"添加项目"** 选择 Markdown 文档目录，或直接用 CLI：
+
+```bash
+memo init /path/to/your/docs
+memo server start      # 启动后端服务
 ```
 
 ### 学习流程
