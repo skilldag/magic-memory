@@ -13,10 +13,18 @@
 
 ### 安装
 
+#### 方式一：从 npm 安装（推荐）
+
+```bash
+npm install -g magic-memory
+```
+
+#### 方式二：从源码安装
+
 ```bash
 git clone <repo-url> && cd magic-memory
 npm install
-npm install -g .          # 注册 memo 命令到全局，之后任意目录可用
+npm install -g .
 ```
 
 ### 使用
