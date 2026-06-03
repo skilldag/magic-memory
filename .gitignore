@@ -14,6 +14,7 @@ magic-memory/dist/
 # Debug screenshots, images, and temp files
 screenshots/
 *.png
+!assets/*.png
 *.log
 import-debug-01-before.md
 screenshot.mjs

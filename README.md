@@ -4,19 +4,53 @@
 
 ---
 
-## 项目概述
+## 快速开始
 
-Magic Memory 是一个**交互式知识图谱学习系统**，围绕三个核心环节构建学习闭环：
+### 前置依赖
 
+- **Node.js** ≥ 18
+- **Bun** — [安装](https://bun.sh/docs/installation)：`curl -fsSL https://bun.sh/install | bash`
+
+### 安装
+
+```bash
+git clone <repo-url> && cd magic-memory
+npm install
+npm install -g .          # 注册 memo 命令到全局，之后任意目录可用
 ```
-  📥 AI 从文档提取/生成概念节点   →   🧩 知识图谱可视化
-              ↓                                ↓
-  📊 用户自述 → KEY CONCEPTS 对齐评估   →   🔁 SM-2 间隔复习
+
+### 使用
+
+```bash
+# 1. 初始化项目 — 扫描文档目录，自动构建知识图谱
+memo init ~/notes/my-project
+
+# 2. 启动完整服务
+memo server start
+# → Web UI: http://localhost:3000
+# → API:    http://localhost:4321
+
+# 3. 首次使用，点 Web UI 中的"添加项目"选择文档目录，或直接用 CLI
+# 4. 在知识图谱中单击概念节点 → 阅读文档 → 对齐评估 → 复习提醒
 ```
 
-- **🤖 AI 生成节点**：从文档 `KEY CONCEPTS` 解析概念，AI 推荐提炼新概念并自动建链
-- **📊 对齐评估**：用户自述 vs 原文 KEY CONCEPTS 自动对比，计算覆盖率和掌握度
-- **🔁 SM-2 复习**：每次对齐完成后触发 SM-2 排期，图谱显示复习徽章和掌握度颜色
+### CLI 命令一览
+
+```bash
+memo init <path>         # 扫描目录构建图谱并注册
+memo list                # 列出已注册项目
+memo remove <id>         # 删除项目
+memo server start        # 启动后端服务 + Web UI
+memo server stop         # 停止所有服务
+memo server status       # 查看服务运行状态
+```
+
+### 开发模式
+
+```bash
+npm install
+npm run dev            # http://localhost:3000
+```
 
 ---
 
@@ -24,7 +58,9 @@ Magic Memory 是一个**交互式知识图谱学习系统**，围绕三个核心
 
 ### 🧩 交互式知识图谱
 
-由 **Cytoscape.js** 渲染的关系图谱，支持全维度交互：
+由 **Cytoscape.js** 渲染的关系图谱，概念节点按掌握度着色，支持全维度交互：
+
+![知识图谱](assets/screenshot-knowledge-graph.png)
 
 | 交互 | 行为 |
 |------|------|
@@ -32,30 +68,29 @@ Magic Memory 是一个**交互式知识图谱学习系统**，围绕三个核心
 | 右键菜单 | 手动建链、AI 探索、聚焦视图 |
 | 悬停节点 | 预览概念摘要 |
 | 拖拽连线 | 连线模式下手动建立关系 |
-| 图例 | 关系类型（依赖/引出/相关）+ 掌握度色阶 |
+| 搜索框 | 输入概念名即时定位 |
 
-图谱控制：
+图谱控制：**自适应布局** / **聚焦模式**（BFS 展开关联层，深度 1-3 级可调）/ **复习模式**（显示待复习节点徽章）
 
-- **全局搜索** — 输入概念名即时定位
-- **自适应布局** — 一键自动排列
-- **聚焦模式 (Focus View)** — BFS 展开关联层，深度可调 (1-3 层)
-- **焦点链路着色** — 黄色入边 / 绿色出边，直观展示流向
-- **复习模式** — 切换后图谱显示待复习节点徽章
+---
 
 ### 🤖 AI 概念生成与建链
 
 | 功能 | 说明 |
 |------|------|
-| **KEY CONCEPTS 解析** | 从文档中 `# KEY CONCEPTS` 章节自动提取概念创建节点 |
+| **KEY CONCEPTS 解析** | 从文档 `# KEY CONCEPTS` 章节自动提取概念，创建节点 |
 | **AI 建议建链** | 选中节点后 AI 分析 `problem` 字段，推荐关联概念 |
-| **一键批量建链** | `BatchLinkDialog` 展示 AI 推荐列表，勾选即建 |
-| **探索模式** | `ExploreDialog` — 从节点出发，AI 生成延伸问题并提炼为新概念 |
-| **快捷探索** | `QuickExploreDialog` — 选中文本一键创建节点并关联 |
-| **连接模式** | 工具栏切换连线模式，手动拖拽建链 |
+| **一键批量建链** | 勾选 AI 推荐列表，确认即建 |
+| **探索模式** | 从节点出发，AI 生成延伸问题并提炼为新概念 |
+| **快捷探索** | 选中文本一键创建节点并关联 |
+
+![全局搜索](assets/search.png)
+
+---
 
 ### 📊 理解度对齐评估 (Alignment)
 
-**核心机制** — 用户阅读后用自己的话描述，系统自动对比原文：
+阅读文档后用自己的话描述，系统自动对比原文 `KEY CONCEPTS`：
 
 ```
   原文 KEY CONCEPTS              用户自述             对齐结果
@@ -66,38 +101,40 @@ Magic Memory 是一个**交互式知识图谱学习系统**，围绕三个核心
   └─────────────────┘         └──────────────┘
 ```
 
+- **三级匹配策略**：精确子串 → charJaccard 模糊 → **transformers.js 语义匹配**（浏览器端 `all-MiniLM-L6-v2`）
 - **图谱级对比**：同时对比节点（概念覆盖）和边（关系理解）
-- **三级匹配策略**：精确子串 → charJaccard 模糊 → **transformers.js 语义匹配**
-- **浏览器端语义模型**：`all-MiniLM-L6-v2`，无后端依赖
 - **手动干预**：标记已理解 / 忽略 / 从原文删除
 - **掌握度评分**：综合对齐次数、覆盖率、手动标记，0-100 分
 - **颜色反馈**：图谱节点背景色随掌握度变化（灰→黄→绿→蓝）
 
+![对齐评估](assets/alignment-panel.png)
+
+---
+
 ### 🔁 SM-2 间隔复习系统
 
-每次对齐完成后自动触发：
+每次对齐完成后自动触发 SM-2 算法排期下次复习：
 
-```
-  用户完成对齐
-      ↓
-  评估理解质量 (0-5) ──→ SM-2 算法 ──→ 更新 ease_factor
-                                       计算 interval
-                                       设定 next_review
-                                           ↓
-  图谱显示复习徽章 ←───────────── 到期概念入队
-  SummaryPanel 复习队列             横幅提醒
-```
+- 图谱节点右上角显示复习徽章：**🔥**(逾期) / **今日** / **N天** / **New** / **✓**
+- **SummaryPanel** 按 urgency 排序展示待复习队列
+- 浏览器横幅提醒待复习数量和最久逾期天数
+- 图谱颜色随复习进度变化
 
-- **复习徽章**：🔥(逾期) / 今日 / N天 / New / ✓
-- **复习队列**：`SummaryPanel` 按 urgency 排序展示待复习列表
-- **提醒横幅**：待复习数量和最久逾期天数
-- **掌握度色阶**：图谱颜色随复习进度变化
+![聚类视图](assets/cluster-view.png)
+
+![添加/删除概念](assets/add-remove.png)
+
+---
 
 ### 📚 文档阅读与标注
 
 - **Markdown 渲染**：kaTeX 公式 + highlight.js 代码高亮 + mermaid 图表
 - **注释系统**：评论 / 问题 / 建议 / 纠正，行内触发 + 悬停预览
 - **分类筛选**：按 Foundation / Model / Attention 等分类浏览
+
+![文档视图](assets/screenshot-document-view.png)
+
+---
 
 ### 🧭 分析面板
 
@@ -108,15 +145,32 @@ Magic Memory 是一个**交互式知识图谱学习系统**，围绕三个核心
 | **AlignmentPanel** | 当前概念对齐结果详情 |
 | **ClusterView** | Louvain 社区聚类可视化 |
 
-### 📦 多项目管理 CLI
+---
 
-```bash
-memo init ./docs           # 扫描目录构建图谱并注册
-memo list                  # 列出已注册项目
-memo remove <id>           # 删除项目
-memo server start          # 启动后端服务 + Web UI（端口 4321 + 3000）
-memo server stop           # 停止所有服务
-memo server status         # 查看服务运行状态
+## 项目结构
+
+```
+magic-memory/
+├── src/
+│   ├── components/           # 27 个 React 组件
+│   │   ├── KnowledgeGraph.tsx    # 图谱主组件 (Cytoscape)
+│   │   ├── AlignmentPanel.tsx    # KEY CONCEPTS 对齐
+│   │   ├── SummaryPanel.tsx      # 摘要 + 复习队列
+│   │   ├── ExploreDialog.tsx     # AI 探索
+│   │   ├── BatchLinkDialog.tsx   # 批量建链
+│   │   └── ...
+│   ├── store/                # Zustand 状态管理
+│   │   └── knowledgeGraphStore.ts  # 核心: 概念/掌握度/复习/对齐
+│   ├── utils/                # 核心算法
+│   │   ├── alignment.ts      # KEY CONCEPTS 对齐
+│   │   ├── semanticMatch.ts  # transformers.js 语义匹配
+│   │   ├── knowledgeGraph.ts # SM-2 调度 + 复习徽章
+│   │   └── graphAnalysis.ts  # 图谱分析
+│   └── types/
+├── server/                   # Bun API (端口 4321)
+├── scripts/                  # CLI: memo / cluster
+├── tests/                    # Vitest
+└── docs/                     # 知识文档
 ```
 
 ---
@@ -156,87 +210,6 @@ memo server status         # 查看服务运行状态
 | **后端** | Bun + TypeScript |
 | **测试** | Vitest |
 | **NLP** | jieba |
-
----
-
-## 快速开始
-
-### 前置依赖
-
-- **Node.js** ≥ 18
-- **Bun** — [安装](https://bun.sh/docs/installation)：`curl -fsSL https://bun.sh/install | bash`
-
-### 安装
-
-```bash
-# 克隆仓库
-git clone <repo-url> && cd magic-memory
-
-# 安装依赖
-npm install
-
-# 注册 memo 命令到全局（任意目录可用）
-npm install -g .
-```
-
-### 使用
-
-```bash
-# 1. 初始化项目 — 扫描文档目录，构建知识图谱
-memo init ~/notes/my-vllm-study
-
-# 2. 启动完整服务（后端 + Web UI）
-memo server start
-# → Web UI: http://localhost:3000
-# → API:    http://localhost:4321
-
-# 3. 管理多个项目
-memo list
-memo remove <project-id>
-```
-
-首次使用也可在 Web UI 中点 **"添加项目"** 选择目录。
-
-### 开发模式（项目目录下）
-
-```bash
-npm install
-npm run dev            # http://localhost:3000
-```
-
-### 学习流程
-
-```
-阅读文档 → 用自己的话描述 → 对齐评估 → 接收复习提醒 → 间隔复习
-```
-
----
-
-## 项目结构
-
-```
-magic-memory/
-├── src/
-│   ├── components/       # 27 个组件
-│   │   ├── KnowledgeGraph.tsx    # 图谱主组件 (Cytoscape)
-│   │   ├── AlignmentPanel.tsx    # KEY CONCEPTS 对齐
-│   │   ├── SummaryPanel.tsx      # 摘要 + 复习队列
-│   │   ├── ExploreDialog.tsx     # AI 探索
-│   │   ├── BatchLinkDialog.tsx   # 批量建链
-│   │   └── ...
-│   ├── store/            # Zustand 状态
-│   │   └── knowledgeGraphStore.ts  # 核心: 概念/掌握度/复习/对齐
-│   ├── utils/            # 核心算法
-│   │   ├── alignment.ts         # KEY CONCEPTS 对齐
-│   │   ├── semanticMatch.ts     # transformers.js 语义匹配
-│   │   ├── knowledgeGraph.ts    # SM-2 调度 + 复习徽章
-│   │   └── graphAnalysis.ts     # 图谱分析
-│   └── types/
-├── server/               # Bun API (端口 4321)
-├── scripts/              # CLI: memo / cluster
-├── tests/                # Vitest
-└── docs/                 # 知识文档
-```
 
 ---
 
