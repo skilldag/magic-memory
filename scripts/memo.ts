@@ -210,10 +210,8 @@ function cmdServerStatus() {
   if (feRunning) console.log(`  Web: http://localhost:${FRONTEND_PORT}`);
 }
 
-async function main() {
-  const args = process.argv.slice(2);
-  if (args.length === 0) {
-    console.log(`
+function printHelp() {
+  console.log(`
   memo — 知识图谱项目管理
 
   用法:
@@ -225,10 +223,16 @@ async function main() {
     server restart   重启全局服务
     server status    查看全局服务状态
 `);
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const cmd = args[0];
+
+  if (args.length === 0 || cmd === '-h' || cmd === '--help' || cmd === 'help') {
+    printHelp();
     return;
   }
-
-  const cmd = args[0];
 
   switch (cmd) {
     case 'init':
@@ -246,6 +250,18 @@ async function main() {
       break;
 
     case 'server':
+      if (!args[1] || args[1] === '-h' || args[1] === '--help' || args[1] === 'help') {
+        console.log(`
+  memo server — 管理全局服务
+
+  用法:
+    start      启动全局服务 (端口 ${GLOBAL_SERVICE_PORT})
+    stop       停止全局服务
+    restart    重启全局服务
+    status     查看服务状态
+`);
+        return;
+      }
       switch (args[1]) {
         case 'start': cmdServerStart(); break;
         case 'stop': cmdServerStop(); break;
