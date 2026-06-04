@@ -3,6 +3,7 @@ import { DocumentViewer } from './DocumentViewer'
 
 import { ComparisonPanel } from './ComparisonPanel'
 import { AlignmentPanel } from './AlignmentPanel'
+import { CodeReferences } from './CodeReferences'
 import { DependencyChainSVG } from './DependencyChainSVG'
 import {
   getRelatedConcepts,
@@ -26,7 +27,7 @@ interface ConceptDetailPanelProps {
   onEnterProcess?: (concept: Concept) => void
 }
 
-type ActionKey = 'import' | 'compare' | 'read' | 'align'
+type ActionKey = 'import' | 'compare' | 'read' | 'align' | 'code'
 
 export function ConceptDetailPanel({
   concept,
@@ -40,6 +41,8 @@ export function ConceptDetailPanel({
   const [action, setAction] = useState<ActionKey>('read')
   const [docContent, setDocContent] = useState<string | null>(null)
   const [docLoading, setDocLoading] = useState(false)
+  const projects = useKnowledgeGraphStore(s => s.projects)
+  const activeProjectId = useKnowledgeGraphStore(s => s.activeProjectId)
   const chains = useKnowledgeGraphStore(s => s.chains)
   const updateConceptContent = useKnowledgeGraphStore(s => s.updateConceptContent)
 
@@ -273,6 +276,7 @@ export function ConceptDetailPanel({
 
   const actions: { key: ActionKey; label: string; desc: string }[] = [
     { key: 'read', label: '查阅文档', desc: '查看完整说明' },
+    { key: 'code', label: '关联代码', desc: concept.codeRefs?.length ? `${concept.codeRefs.length} 处引用` : '查看代码引用' },
     { key: 'import', label: '导入文档', desc: '从剪贴板粘贴导入文档内容' },
     { key: 'align', label: '语义对齐', desc: '用自由文本对齐图谱，诊断知识缺口' },
     { key: 'compare', label: '对照验证', desc: processState?.filled ? '查看对比结果' : '先完成梳理' },
@@ -390,6 +394,19 @@ export function ConceptDetailPanel({
             allConcepts={concepts}
             onNavigate={onNavigate}
           />
+        )}
+
+        {action === 'code' && (
+          concept.codeRefs && concept.codeRefs.length > 0 ? (
+            <CodeReferences
+              codeRefs={concept.codeRefs}
+              sourceDir={projects.find(p => p.id === activeProjectId)?.sourceDir || ''}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <p className="text-sm">暂无关联代码</p>
+            </div>
+          )
         )}
 
         {action === 'compare' && (
