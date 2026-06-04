@@ -86,6 +86,7 @@ export interface Concept {
     role: string
   }
   elements?: ConceptElement[]
+  codeRefs?: CodeReference[]
 
   // 层级
   hierarchy?: {
@@ -112,6 +113,14 @@ export interface ConceptEdge {
   target: string         // 概念ID
   type: 'depends_on' | 'leads_to' | 'related'
   label?: string
+}
+
+export interface CodeReference {
+  file: string
+  lineStart?: number
+  lineEnd?: number
+  snippet?: string
+  description?: string
 }
 
 export interface KnowledgeGraph {

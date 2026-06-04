@@ -24,6 +24,7 @@ export interface ProjectInfo {
   id: string
   name: string
   sourceDir: string
+  sourceType?: 'doc' | 'repo'
   createdAt: string
   conceptCount: number
   edgeCount: number
