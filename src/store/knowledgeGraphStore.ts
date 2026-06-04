@@ -156,7 +156,7 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
           }
         })
       } catch (e: any) {
-        set({ error: e.message, isLoading: false, loadingProgress: 0 })
+        set({ concepts: [], edges: [], error: e.message, isLoading: false, loadingProgress: 0 })
       }
     },
 
