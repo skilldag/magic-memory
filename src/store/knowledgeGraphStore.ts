@@ -181,7 +181,7 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
       }
       await state.fetchProjects()
       const { projects } = get()
-      if (projects.length > 0) {
+      if (projects.length === 1) {
         await get().loadProjectGraph(projects[0].id)
         try {
           const storedId = sessionStorage.getItem('magic-memory-selected-concept')
