@@ -23,6 +23,7 @@ import {
   removeProject,
   saveGraph,
   loadGraph,
+  getProjectDir,
 } from "./graphBuilder";
 
 import type { ProjectMeta, Concept, ConceptEdge } from "./graphBuilder";
@@ -411,6 +412,7 @@ async function handleCreateProject(req: Request): Promise<Response> {
     const projectId = body.id || `proj_${Date.now()}`;
     const meta: ProjectMeta = {
       id: projectId, name: body.name, sourceDir: body.sourceDir,
+      sourceType: 'doc',
       createdAt: new Date().toISOString(),
       conceptCount: body.concepts?.length || 0,
       edgeCount: body.edges?.length || 0,
@@ -452,6 +454,50 @@ async function handleUpdateGraph(projectId: string, req: Request): Promise<Respo
     }
     await saveGraph(projectId, body.concepts, body.edges);
     return json({ success: true, conceptCount: body.concepts.length, edgeCount: body.edges.length });
+  } catch (error: any) {
+    return jsonError(error.message);
+  }
+}
+
+// ── Repo project docs ──
+
+async function handleListProjectDocs(projectId: string): Promise<Response> {
+  try {
+    const docsDir = join(getProjectDir(projectId), 'docs');
+    if (!existsSync(docsDir)) return json([]);
+    const files = await readdir(docsDir);
+    const docs = files.filter(f => f.endsWith('.md')).map(f => ({
+      id: f.replace('.md', ''),
+      title: f.replace('.md', ''),
+    }));
+    return json(docs);
+  } catch (error: any) {
+    return jsonError(error.message);
+  }
+}
+
+async function handleGetProjectDoc(projectId: string, docId: string): Promise<Response> {
+  try {
+    const docPath = join(getProjectDir(projectId), 'docs', docId + '.md');
+    if (!existsSync(docPath)) return jsonError('Document not found', 404);
+    const content = await readFile(docPath, 'utf-8');
+    return json({ id: docId, content });
+  } catch (error: any) {
+    return jsonError(error.message);
+  }
+}
+
+async function handleWriteProjectDoc(projectId: string, req: Request): Promise<Response> {
+  try {
+    const body = await req.json() as { docId: string; content: string };
+    if (!body.docId || body.content === undefined) {
+      return jsonError('docId and content required', 400);
+    }
+    const docsDir = join(getProjectDir(projectId), 'docs');
+    if (!existsSync(docsDir)) mkdirSync(docsDir, { recursive: true });
+    const docPath = join(docsDir, body.docId + '.md');
+    await writeFile(docPath, body.content, 'utf-8');
+    return json({ success: true });
   } catch (error: any) {
     return jsonError(error.message);
   }
@@ -504,6 +550,14 @@ Bun.serve({
 
     const projectMatch = url.pathname.match(/^\/api\/projects\/([^\/]+)$/);
     if (projectMatch && method === "DELETE") return handleDeleteProject(projectMatch[1])
+
+    // Project docs
+    const docListMatch = url.pathname.match(/^\/api\/projects\/([^\/]+)\/docs$/);
+    if (docListMatch && method === 'GET') return handleListProjectDocs(docListMatch[1]);
+    if (docListMatch && method === 'POST') return handleWriteProjectDoc(docListMatch[1], req);
+
+    const docGetMatch = url.pathname.match(/^\/api\/projects\/([^\/]+)\/docs\/([^\/]+)$/);
+    if (docGetMatch && method === 'GET') return handleGetProjectDoc(docGetMatch[1], docGetMatch[2]);
 
     return jsonError("Not Found", 404);
   },
