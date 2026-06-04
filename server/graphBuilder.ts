@@ -1,5 +1,5 @@
 import { readdir, readFile, writeFile, rm } from 'fs/promises';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { homedir } from 'os';
 
@@ -51,6 +51,7 @@ export interface ProjectMeta {
   id: string;
   name: string;
   sourceDir: string;
+  sourceType: 'doc' | 'repo';
   createdAt: string;
   conceptCount: number;
   edgeCount: number;
@@ -58,7 +59,22 @@ export interface ProjectMeta {
 
 const MAGIC_MEMORY_DIR = join(homedir(), '.magic-memory');
 const PROJECTS_DIR = join(MAGIC_MEMORY_DIR, 'projects');
-const PROJECT_LIST_FILE = join(PROJECTS_DIR, 'project-list.json');
+const LEGACY_PROJECT_LIST_FILE = join(PROJECTS_DIR, 'project-list.json');
+const NEW_PROJECT_LIST_FILE = join(MAGIC_MEMORY_DIR, 'project-list.json');
+
+function getProjectDir(projectId: string): string {
+  const newPath = join(MAGIC_MEMORY_DIR, projectId);
+  const legacyPath = join(PROJECTS_DIR, projectId);
+  if (existsSync(newPath)) return newPath;
+  if (existsSync(legacyPath)) return legacyPath;
+  return newPath;
+}
+
+function getProjectListFile(): string {
+  if (existsSync(NEW_PROJECT_LIST_FILE)) return NEW_PROJECT_LIST_FILE;
+  if (existsSync(LEGACY_PROJECT_LIST_FILE)) return LEGACY_PROJECT_LIST_FILE;
+  return NEW_PROJECT_LIST_FILE;
+}
 
 function ensureDir(dir: string) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
@@ -331,14 +347,14 @@ export async function saveGraph(
   concepts: Concept[],
   edges: ConceptEdge[],
 ): Promise<void> {
-  const projectDir = join(PROJECTS_DIR, projectId);
+  const projectDir = getProjectDir(projectId);
   ensureDir(projectDir);
   await writeFile(join(projectDir, 'concepts.json'), JSON.stringify(concepts, null, 2));
   await writeFile(join(projectDir, 'edges.json'), JSON.stringify(edges, null, 2));
 }
 
 export async function loadGraph(projectId: string): Promise<BuildResult | null> {
-  const projectDir = join(PROJECTS_DIR, projectId);
+  const projectDir = getProjectDir(projectId);
   const conceptsPath = join(projectDir, 'concepts.json');
   const edgesPath = join(projectDir, 'edges.json');
   if (!existsSync(conceptsPath) || !existsSync(edgesPath)) return null;
@@ -349,13 +365,15 @@ export async function loadGraph(projectId: string): Promise<BuildResult | null> 
 }
 
 export async function listProjects(): Promise<ProjectMeta[]> {
-  ensureDir(PROJECTS_DIR);
-  if (!existsSync(PROJECT_LIST_FILE)) return [];
-  return JSON.parse(await readFile(PROJECT_LIST_FILE, 'utf-8'));
+  const listFile = getProjectListFile();
+  ensureDir(dirname(listFile));
+  if (!existsSync(listFile)) return [];
+  return JSON.parse(await readFile(listFile, 'utf-8'));
 }
 
 export async function registerProject(meta: ProjectMeta): Promise<void> {
-  ensureDir(PROJECTS_DIR);
+  const listFile = getProjectListFile();
+  ensureDir(dirname(listFile));
   const list = await listProjects();
   const idx = list.findIndex((p) => p.id === meta.id);
   if (idx >= 0) {
@@ -363,17 +381,18 @@ export async function registerProject(meta: ProjectMeta): Promise<void> {
   } else {
     list.push(meta);
   }
-  await writeFile(PROJECT_LIST_FILE, JSON.stringify(list, null, 2));
+  await writeFile(listFile, JSON.stringify(list, null, 2));
 }
 
 export async function removeProject(projectId: string): Promise<void> {
+  const listFile = getProjectListFile();
   const list = (await listProjects()).filter((p) => p.id !== projectId);
-  await writeFile(PROJECT_LIST_FILE, JSON.stringify(list, null, 2));
+  await writeFile(listFile, JSON.stringify(list, null, 2));
 
-  const projectDir = join(PROJECTS_DIR, projectId);
+  const projectDir = getProjectDir(projectId);
   if (existsSync(projectDir)) {
     await rm(projectDir, { recursive: true, force: true });
   }
 }
 
-export { MAGIC_MEMORY_DIR, PROJECTS_DIR, PROJECT_LIST_FILE };
+export { MAGIC_MEMORY_DIR, PROJECTS_DIR, LEGACY_PROJECT_LIST_FILE, NEW_PROJECT_LIST_FILE, getProjectDir, getProjectListFile };
