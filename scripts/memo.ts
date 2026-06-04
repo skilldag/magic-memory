@@ -79,6 +79,165 @@ async function cmdInit(sourceDir: string) {
   log(`\n启动 Web UI 后可在界面上看到此项目`);
 }
 
+async function cmdInitRepo(sourceDir: string) {
+  const resolvedDir = sourceDir.startsWith('/') ? sourceDir : join(process.cwd(), sourceDir);
+
+  if (!existsSync(join(resolvedDir, '.git'))) {
+    error(`不是 Git 仓库: ${resolvedDir}`);
+    error('请确保路径是一个 Git 仓库（包含 .git 目录）');
+    process.exit(1);
+  }
+
+  const name = resolvedDir.split('/').pop() || 'untitled';
+  const projectId = `proj_${Date.now()}`;
+
+  log(`注册仓库项目: ${name}`);
+  log(`  路径: ${resolvedDir}`);
+
+  const { getProjectDir, registerProject } = await import('../server/graphBuilder');
+  const { join: joinPath } = await import('path');
+  const { mkdirSync } = await import('fs');
+  const projectDir = getProjectDir(projectId);
+  if (!existsSync(projectDir)) {
+    mkdirSync(projectDir, { recursive: true });
+  }
+  const docsDir = joinPath(projectDir, 'docs');
+  if (!existsSync(docsDir)) {
+    mkdirSync(docsDir, { recursive: true });
+  }
+
+  await registerProject({
+    id: projectId,
+    name,
+    sourceDir: resolvedDir,
+    sourceType: 'repo',
+    createdAt: new Date().toISOString(),
+    conceptCount: 0,
+    edgeCount: 0,
+  });
+
+  log(`✓ 项目已注册: ${projectId}`);
+  log(`  名称: ${name}`);
+  log(`  类型: repo`);
+  log(`\n启动 Web UI 后可在界面上看到此项目`);
+  log(`使用 memo add-concept ${projectId} --name "概念名" --file "path/to/file" --lines 42-85 添加概念`);
+}
+
+interface AddConceptArgs {
+  name: string;
+  file: string;
+  lines?: string;
+  desc?: string;
+  doc?: string;
+  dependsOn?: string[];
+}
+
+function parseAddConceptArgs(): AddConceptArgs {
+  const args = process.argv.slice(2);
+  const result: AddConceptArgs = { name: '', file: '' };
+  for (let i = 2; i < args.length; i++) {
+    switch (args[i]) {
+      case '--name': result.name = args[++i] || ''; break;
+      case '--file': result.file = args[++i] || ''; break;
+      case '--lines': result.lines = args[++i] || ''; break;
+      case '--desc': result.desc = args[++i] || ''; break;
+      case '--doc': result.doc = args[++i] || ''; break;
+      case '--depends-on': {
+        if (!result.dependsOn) result.dependsOn = [];
+        result.dependsOn.push(args[++i] || '');
+        break;
+      }
+    }
+  }
+  return result;
+}
+
+async function cmdAddConcept(projectId: string) {
+  const opts = parseAddConceptArgs();
+  if (!opts.name) { error('--name 是必填参数'); process.exit(1); }
+  if (!opts.file) { error('--file 是必填参数'); process.exit(1); }
+
+  const { loadGraph, saveGraph, registerProject, listProjects, getProjectDir } = await import('../server/graphBuilder');
+  const { join: joinPath } = await import('path');
+  const { existsSync, readFileSync, writeFileSync } = await import('fs');
+
+  const graph = await loadGraph(projectId);
+  if (!graph) {
+    error(`项目 ${projectId} 不存在`);
+    process.exit(1);
+  }
+
+  const projects = await listProjects();
+  const project = projects.find(p => p.id === projectId);
+  if (!project) { error(`项目 ${projectId} 未找到`); process.exit(1); }
+
+  const codeFilePath = joinPath(project.sourceDir, opts.file);
+  if (!existsSync(codeFilePath)) {
+    error(`文件不存在: ${codeFilePath}`);
+    process.exit(1);
+  }
+
+  let lineStart: number | undefined;
+  let lineEnd: number | undefined;
+  if (opts.lines) {
+    const parts = opts.lines.split('-');
+    lineStart = parseInt(parts[0], 10);
+    if (parts.length > 1) lineEnd = parseInt(parts[1], 10);
+  }
+
+  const allLines = readFileSync(codeFilePath, 'utf-8').split('\n');
+  const snippetStart = lineStart ? Math.max(0, lineStart - 1) : 0;
+  const snippetEnd = lineEnd ? Math.min(lineEnd, snippetStart + 20) : Math.min(snippetStart + 20, allLines.length);
+  const snippet = allLines.slice(snippetStart, snippetEnd).join('\n');
+
+  const conceptId = opts.name.toLowerCase().replace(/[\s\/]+/g, '-');
+
+  if (graph.concepts.some(c => c.id === conceptId)) {
+    error(`概念 "${opts.name}" 已存在 (ID: ${conceptId})`);
+    process.exit(1);
+  }
+
+  const newConcept = {
+    id: conceptId,
+    title: opts.name,
+    level: 1,
+    category: '',
+    problem: '',
+    gap_anticipate: '',
+    depends_on: opts.dependsOn || [],
+    leads_to: [],
+    related: [],
+    codeRefs: [{
+      file: opts.file,
+      lineStart,
+      lineEnd,
+      snippet,
+      description: opts.desc || '',
+    }],
+    tags: [],
+    path: joinPath('docs', conceptId + '.md'),
+    lastModified: new Date().toISOString(),
+  };
+
+  graph.concepts.push(newConcept);
+
+  await saveGraph(projectId, graph.concepts, graph.edges);
+
+  await registerProject({ ...project, conceptCount: graph.concepts.length, edgeCount: graph.edges.length });
+
+
+  if (opts.doc) {
+    const projectDir = getProjectDir(projectId);
+    const docPath = joinPath(projectDir, 'docs', conceptId + '.md');
+    writeFileSync(docPath, opts.doc, 'utf-8');
+    log(`文档已创建: ${docPath}`);
+  }
+
+  log(`✓ 概念已添加: ${opts.name} (${conceptId})`);
+  log(`  代码引用: ${opts.file}${opts.lines ? ` L${opts.lines}` : ''}`);
+  log(`  概念总数: ${graph.concepts.length}`);
+}
+
 async function cmdList() {
   const resp = await fetch(`${GLOBAL_SERVICE_URL}/api/projects`);
   if (!resp.ok) {
@@ -215,9 +374,11 @@ function printHelp() {
   memo — 知识图谱项目管理
 
   用法:
-    init <path>      扫描目录构建图谱并注册到全局服务
-    list             列出已注册项目
-    remove <id>      删除项目
+    init <path>             扫描目录构建图谱并注册到全局服务
+    init-repo <path>        注册 Git 仓库项目
+    add-concept <id>        从代码位置添加概念
+    list                    列出已注册项目
+    remove <id>             删除项目
     server start     启动全局服务 (端口 ${GLOBAL_SERVICE_PORT})
     server stop      停止全局服务
     server restart   重启全局服务
@@ -238,6 +399,16 @@ async function main() {
     case 'init':
       if (!args[1]) { error('请指定文档目录路径'); process.exit(1); }
       await cmdInit(args[1]);
+      break;
+
+    case 'init-repo':
+      if (!args[1]) { error('请指定仓库路径'); process.exit(1); }
+      await cmdInitRepo(args[1]);
+      break;
+
+    case 'add-concept':
+      if (!args[1]) { error('请指定项目 ID'); process.exit(1); }
+      await cmdAddConcept(args[1]);
       break;
 
     case 'list':
