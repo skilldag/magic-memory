@@ -89,12 +89,26 @@ async function cmdInitRepo(sourceDir: string) {
   }
 
   const name = resolvedDir.split('/').pop() || 'untitled';
+
+  const { listProjects, getProjectDir, registerProject } = await import('../server/graphBuilder');
+
+  // Check for existing project with same sourceDir
+  const existing = (await listProjects()).find(
+    p => p.sourceDir === resolvedDir && p.sourceType === 'repo'
+  );
+  if (existing) {
+    log(`✓ 项目已存在: ${existing.id}`);
+    log(`  名称: ${existing.name}`);
+    log(`  路径: ${resolvedDir}`);
+    log(`使用 memo add-concept ${existing.id} --name "概念名" --file "path/to/file" 添加概念`);
+    return;
+  }
+
   const projectId = `proj_${Date.now()}`;
 
   log(`注册仓库项目: ${name}`);
   log(`  路径: ${resolvedDir}`);
 
-  const { getProjectDir, registerProject } = await import('../server/graphBuilder');
   const { join: joinPath } = await import('path');
   const { mkdirSync } = await import('fs');
   const projectDir = getProjectDir(projectId);
