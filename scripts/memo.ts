@@ -161,15 +161,14 @@ async function cmdAddConcept(projectId: string) {
   const { join: joinPath } = await import('path');
   const { existsSync, readFileSync, writeFileSync } = await import('fs');
 
-  const graph = await loadGraph(projectId);
-  if (!graph) {
-    error(`项目 ${projectId} 不存在`);
-    process.exit(1);
-  }
-
   const projects = await listProjects();
   const project = projects.find(p => p.id === projectId);
   if (!project) { error(`项目 ${projectId} 未找到`); process.exit(1); }
+
+  let graph = await loadGraph(projectId);
+  if (!graph) {
+    graph = { concepts: [], edges: [] };
+  }
 
   const codeFilePath = joinPath(project.sourceDir, opts.file);
   if (!existsSync(codeFilePath)) {
