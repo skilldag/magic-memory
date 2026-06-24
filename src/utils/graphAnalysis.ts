@@ -483,6 +483,97 @@ function computeStats(
 /**
  * 将分析结果格式化为可读的文本报告
  */
+/**
+ * Compute hierarchical depth levels for concepts based on depends_on edges.
+ *
+ * Uses topological sort on the depends_on dependency graph.
+ * - depth 0 = L1 (foundation concepts, no dependencies)
+ * - depth 1 = L2 (depends on L1)
+ * - depth 2 = L3 (depends on L2)
+ *
+ * Also treats leads_to edges as reversed depends_on (A leads_to B ⇔ B depends_on A).
+ * Related edges are ignored.
+ * Circular dependencies are handled gracefully.
+ *
+ * @returns Map<conceptId, depth>
+ */
+export function computeDepthLevels(
+  concepts: Concept[],
+  edges: ConceptEdge[],
+): Map<string, number> {
+  if (concepts.length === 0) return new Map()
+
+  // Build depends_on graph and reverse index
+  const depGraph = new Map<string, Set<string>>()  // node → its dependencies
+  const dependents = new Map<string, Set<string>>() // node → nodes that depend on it
+
+  for (const c of concepts) {
+    depGraph.set(c.id, new Set())
+    dependents.set(c.id, new Set())
+  }
+
+  for (const e of edges) {
+    if (e.type === 'related') continue
+
+    let source: string, target: string
+    if (e.type === 'depends_on') {
+      source = e.source
+      target = e.target
+    } else if (e.type === 'leads_to') {
+      // A leads_to B ⇔ B depends_on A
+      source = e.target
+      target = e.source
+    } else {
+      continue
+    }
+
+    if (source === target) continue
+    depGraph.get(source)?.add(target)
+    dependents.get(target)?.add(source)
+  }
+
+  // Kahn's algorithm for topological sort + depth propagation
+  const depth = new Map<string, number>()
+  const queue: string[] = []
+
+  // Initialize: nodes with no dependencies get depth 0
+  for (const [id, deps] of depGraph) {
+    if (deps.size === 0) {
+      depth.set(id, 0)
+      queue.push(id)
+    }
+  }
+
+  // Process queue
+  while (queue.length > 0) {
+    const node = queue.shift()!
+    const nodeDepth = depth.get(node)!
+
+    for (const dep of (dependents.get(node) ?? [])) {
+      const allDepsResolved = [...(depGraph.get(dep) ?? [])]
+        .every(d => depth.has(d))
+
+      if (allDepsResolved && !depth.has(dep)) {
+        const maxDepDepth = Math.max(
+          0,
+          ...([...(depGraph.get(dep) ?? [])]).map(d => depth.get(d) ?? 0)
+        )
+        depth.set(dep, maxDepDepth + 1)
+        queue.push(dep)
+      }
+    }
+  }
+
+  // Handle remaining nodes (circular deps or disconnected)
+  for (const c of concepts) {
+    if (!depth.has(c.id)) {
+      depth.set(c.id, 0)
+    }
+  }
+
+  return depth
+}
+
 export function formatAnalysisToString(analysis: GraphAnalysis): string {
   const lines: string[] = []
 
