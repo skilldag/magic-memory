@@ -41,6 +41,8 @@ interface KnowledgeGraphStore {
   loadingProgress: number
   error: string | null
   viewMode: 'explore' | 'review'
+  levelFilter: number | 'all'
+  setLevelFilter: (level: number | 'all') => void
 
   conceptPanelMode: boolean
   linkMode: boolean
@@ -107,6 +109,7 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
     loadingProgress: 0,
     error: null,
     viewMode: 'explore',
+    levelFilter: 'all' as number | 'all',
     conceptPanelMode: true,
     linkMode: false,
     linkSource: null,
@@ -356,6 +359,10 @@ export const useKnowledgeGraphStore = create<KnowledgeGraphStore>()(
 
     setViewMode: (mode) => {
       set({ viewMode: mode })
+    },
+
+    setLevelFilter: (level) => {
+      set({ levelFilter: level })
     },
 
     addConcept: (input) => {
