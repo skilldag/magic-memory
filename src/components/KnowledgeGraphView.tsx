@@ -13,6 +13,7 @@ import { useKnowledgeGraphStore } from '../store/knowledgeGraphStore'
 import type { ProjectInfo } from '../store/knowledgeGraphStore'
 import { generateGenericChain } from '../utils/processComparison'
 import { getDueConcepts } from '../utils/knowledgeGraph'
+import { computeDepthLevels } from '../utils/graphAnalysis'
 import type { Concept, SuggestionItem } from '../types'
 import { useContainerSize } from '../hooks/useContainerSize'
 
@@ -40,7 +41,13 @@ export function KnowledgeGraphView() {
   const conceptPanelMode = useKnowledgeGraphStore(s => s.conceptPanelMode)
   const setConceptPanelMode = useKnowledgeGraphStore(s => s.setConceptPanelMode)
 
+  const conceptDepthLevels = useMemo(
+    () => computeDepthLevels(concepts, edges),
+    [concepts, edges]
+  )
   const conceptMastery = useKnowledgeGraphStore(s => s.conceptMastery)
+  const levelFilter = useKnowledgeGraphStore(s => s.levelFilter)
+  const setLevelFilter = useKnowledgeGraphStore(s => s.setLevelFilter)
   const storeSelectedConcept = useKnowledgeGraphStore(s => s.selectedConcept)
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null)
   const selectedConcept = useMemo(() => {
@@ -493,6 +500,9 @@ useEffect(() => {
               setSelectedConceptId(null)
               useKnowledgeGraphStore.setState({ selectedConcept: null })
             }}
+            levelFilter={levelFilter}
+            conceptDepthLevels={conceptDepthLevels}
+            onLevelFilterChange={setLevelFilter}
             onDeleteEdge={(edgeId) => {
               useKnowledgeGraphStore.getState().removeEdge(edgeId)
             }}
