@@ -93,6 +93,11 @@ interface KnowledgeGraphProps {
   onToggleReviewMode?: () => void
   // Focus depth: number of levels of related nodes to show (default 1, Infinity = all)
   focusDepth?: number
+  // Level filter: 0 = L1, 1 = L2, 2 = L3, 'all' = show all
+  levelFilter?: number | 'all'
+  // Map<conceptId, depth> computed from depends_on edges
+  conceptDepthLevels?: Map<string, number>
+  onLevelFilterChange?: (level: number | 'all') => void
 }
 
 export function KnowledgeGraph({
@@ -123,6 +128,9 @@ export function KnowledgeGraph({
   reviewMode = false,
   onToggleReviewMode,
   focusDepth = 1,
+  levelFilter = 'all' as number | 'all',
+  conceptDepthLevels,
+  onLevelFilterChange,
 }: KnowledgeGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
@@ -687,23 +695,42 @@ export function KnowledgeGraph({
     if (!selectedConcept || !focusEnabled) {
       cy.nodes().forEach(n => {
         const isSelected = selectedConcept && n.id() === selectedConcept.id
+        const nodeDepth = conceptDepthLevels?.get(n.id()) ?? 0
+
+        let opacity = 1
+        if (levelFilter !== 'all' && conceptDepthLevels) {
+          opacity = nodeDepth > levelFilter ? 0.15 : 1
+        }
+
+        const sizeByDepth = nodeDepth === 0 ? 56 : nodeDepth === 1 ? 50 : 44
+
         n.style({
           'display': 'element',
-          'width': 50,
-          'height': 50,
-          'border-width': isSelected ? 4 : 2,
+          'width': sizeByDepth,
+          'height': sizeByDepth,
+          'border-width': isSelected ? 4 : (nodeDepth === 0 ? 3 : 2),
           'border-color': isSelected ? '#f59e0b' : '#fff',
           'background-color': getMasteryColor(n.data('mastery')),
-          'opacity': 1
+          'opacity': opacity,
         })
       })
 
       cy.edges().forEach(e => {
         const sourceSelected = selectedConcept && e.data('source') === selectedConcept.id
         const targetSelected = selectedConcept && e.data('target') === selectedConcept.id
+
+        let edgeOpacity = !selectedConcept || sourceSelected || targetSelected ? 1 : 0.15
+        if (levelFilter !== 'all' && conceptDepthLevels) {
+          const srcDepth = conceptDepthLevels.get(e.data('source')) ?? 0
+          const tgtDepth = conceptDepthLevels.get(e.data('target')) ?? 0
+          if (srcDepth > levelFilter || tgtDepth > levelFilter) {
+            edgeOpacity = 0.05
+          }
+        }
+
         e.style({
           'display': 'element',
-          'opacity': !selectedConcept || sourceSelected || targetSelected ? 1 : 0.15,
+          'opacity': edgeOpacity,
           'width': !selectedConcept || sourceSelected || targetSelected ? 3 : 1
         })
       })
@@ -732,10 +759,24 @@ export function KnowledgeGraph({
     cy.nodes().forEach(n => {
       const isSelected = n.id() === selectedConcept.id
       const isRelated = relatedNodeIds.has(n.id())
+
+      let nodeDisplay = 'none'
+      if (isRelated) {
+        if (levelFilter !== 'all' && conceptDepthLevels) {
+          const nodeDepth = conceptDepthLevels.get(n.id()) ?? 0
+          nodeDisplay = nodeDepth <= levelFilter ? 'element' : 'none'
+        } else {
+          nodeDisplay = 'element'
+        }
+      }
+
+      const nodeDepth = conceptDepthLevels?.get(n.id()) ?? 0
+      const sizeByDepth = isSelected ? 72 : (nodeDepth === 0 ? 66 : nodeDepth === 1 ? 60 : 54)
+
       n.style({
-        'display': isRelated ? 'element' : 'none',
-        'width': isSelected ? 72 : 60,
-        'height': isSelected ? 72 : 60,
+        'display': nodeDisplay,
+        'width': sizeByDepth,
+        'height': sizeByDepth,
         'border-width': isSelected ? 5 : 3,
         'border-color': isSelected ? '#f59e0b' : '#fff',
         'background-color': getMasteryColor(n.data('mastery')),
@@ -798,7 +839,7 @@ export function KnowledgeGraph({
     }
 
     wasFocusedRef.current = isFocusedNow
-  }, [selectedConcept, focusEnabled, focusedNodeIds, structuralKey, conceptMastery, focusDepth])
+  }, [selectedConcept, focusEnabled, focusedNodeIds, structuralKey, conceptMastery, focusDepth, levelFilter, conceptDepthLevels])
 
   useEffect(() => {
     const cy = cyRef.current
@@ -877,6 +918,44 @@ export function KnowledgeGraph({
               </div>
             )
           })}
+        </div>
+      )}
+
+      {isReady && (
+        <div className="absolute flex flex-col gap-1" style={{ top: '48px', left: '12px' }}>
+          <div className="bg-white/90 backdrop-blur rounded-lg shadow px-2.5 py-2 text-xs">
+            <div className="font-medium text-gray-700 mb-1.5">层级筛选</div>
+            <div className="flex gap-1">
+              {[
+                { value: 0, label: 'L1' },
+                { value: 1, label: 'L2' },
+                { value: 2, label: 'L3' },
+                { value: 'all' as const, label: '全部' },
+              ].map(d => {
+                const isActive = levelFilter === d.value
+                return (
+                  <button
+                    key={d.label}
+                    onClick={() => onLevelFilterChange?.(d.value)}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                      isActive
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                )
+              })}
+            </div>
+            {levelFilter !== 'all' && conceptDepthLevels && (
+              <div className="text-[10px] text-gray-400 mt-1">
+                depth ≤ {levelFilter} · {
+                  [...conceptDepthLevels.values()].filter(d => d <= levelFilter).length
+                } 个节点
+              </div>
+            )}
+          </div>
         </div>
       )}
 
