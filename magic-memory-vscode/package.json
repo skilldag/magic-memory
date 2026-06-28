@@ -1,0 +1,48 @@
+{
+  "name": "magic-memory",
+  "displayName": "Magic Memory",
+  "description": "Select code, create knowledge graph concepts with code references",
+  "version": "0.1.0",
+  "publisher": "skilldag",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onCommand:magicMemory.createConcept"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "magicMemory.createConcept",
+        "title": "Magic Memory: 创建概念"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "magicMemory.createConcept",
+          "group": "magicMemory@1",
+          "when": "editorHasSelection"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Magic Memory",
+      "properties": {
+        "magicMemory.cliPath": {
+          "type": "string",
+          "default": "memo",
+          "description": "memo CLI 的路径（默认在 PATH 中查找）"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  }
+}
