@@ -1,0 +1,10 @@
+name: feat-graph-index-generation
+title: 知识图谱索引生成 — 自动/手动双模式
+description: 取代硬编码 mock 数据，通过自动扫描文档或手动 AI 添加两种方式生成知识图谱索引，支持项目目录持久化和文档文件读写。扫描逻辑由 CLI init-repo + graphBuilder.buildGraphFromDir 承接；manual-add-concept 接口不实现（前端走 QuickExploreDialog → /api/explore）。
+status: done
+dependencies: []
+artifacts:
+  - id: proposal
+    status: done
+  - id: tasks
+    status: done
